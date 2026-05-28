@@ -50,7 +50,7 @@ const AUDIENCES = [
 ];
 
 const FAQ = [
-  { q: "Comment me connecter ?", a: "Entrez votre numéro (+224 ou +33), puis votre code secret à 6 chiffres que vous choisissez à la première inscription. Pas de SMS — vous gardez le même code ensuite. Les administrateurs utilisent /admin-login." },
+  { q: "Comment me connecter ?", a: "Entrez votre numéro guinéen (+224), puis votre code secret à 6 chiffres que vous choisissez à la première inscription. Pas de SMS — vous gardez le même code ensuite. Les administrateurs utilisent /admin-login." },
   { q: "Est-ce que Zokko est gratuit ?", a: "Oui, l'inscription et la publication d'annonces sont 100% gratuites. Vous payez uniquement si vous souhaitez booster votre annonce (10 000 GNF), la passer Premium (20 000 GNF) ou activer l'abonnement Pro (50 000 GNF/mois)." },
   { q: "Comment payer en Orange Money ?", a: "Envoyez le montant exact au +224 612 51 64 88, puis remplissez le formulaire dans l'app avec votre code de transaction et une capture d'écran. Notre équipe valide en moins de 24h et active automatiquement votre service." },
   { q: "Comment éviter les arnaques ?", a: "Vérifiez le badge ✓ vert (profil OTP vérifié), regardez les avis ⭐ du vendeur, contactez-le par WhatsApp, et signalez toute annonce suspecte avec le bouton 🚩. Notre équipe modère 7j/7." },

@@ -326,6 +326,11 @@ def normalize_pin(pin: str) -> str:
         raise HTTPException(400, "Code à 6 chiffres requis")
     return p
 
+
+def require_guinea_user_country(country: str):
+    if (country or "GN").upper() != "GN":
+        raise HTTPException(400, "Zokko est réservé aux numéros guinéens (+224)")
+
 # ---------------- App ----------------
 api = APIRouter(prefix="/api")
 
@@ -533,6 +538,7 @@ async def api_root_no_slash():
 # ---------------- Auth ----------------
 @api.post("/auth/check-phone")
 async def check_phone(body: PhoneCheck):
+    require_guinea_user_country(body.country)
     phone = normalize_phone(body.phone, body.country)
     if not phone or len(phone) < 9:
         raise HTTPException(400, "Numéro de téléphone invalide")
@@ -544,6 +550,7 @@ async def check_phone(body: PhoneCheck):
 
 @api.post("/auth/phone-pin")
 async def phone_pin_auth(body: PhonePinAuth):
+    require_guinea_user_country(body.country)
     phone = normalize_phone(body.phone, body.country)
     if not phone or len(phone) < 9:
         raise HTTPException(400, "Numéro de téléphone invalide")
@@ -616,6 +623,7 @@ async def phone_pin_auth(body: PhonePinAuth):
 
 @api.post("/auth/request-otp")
 async def request_otp(body: OTPRequest):
+    require_guinea_user_country(body.country)
     phone = normalize_phone(body.phone, body.country)
     if not phone or len(phone) < 9:
         raise HTTPException(400, "Numéro de téléphone invalide")
@@ -677,6 +685,7 @@ async def admin_login(body: AdminLogin):
 
 @api.post("/auth/verify-otp")
 async def verify_otp(body: OTPVerify):
+    require_guinea_user_country(body.country)
     phone = normalize_phone(body.phone, body.country)
     if is_admin_phone(phone):
         raise HTTPException(400, "Connexion admin réservée à /admin-login (identifiant + mot de passe)")

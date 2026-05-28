@@ -8,14 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const COUNTRIES = [
-  { code: "GN", dial: "+224", label: "Guinée", placeholder: "612345678", hint: "9 chiffres sans le 224" },
-  { code: "FR", dial: "+33", label: "France", placeholder: "659497111", hint: "9 chiffres sans le 0 initial" },
-];
+const GUINEA = {
+  code: "GN",
+  dial: "+224",
+  placeholder: "612345678",
+  hint: "9 chiffres (ex. 612 51 64 88) — Guinée uniquement",
+};
 
 export default function Login() {
   const [step, setStep] = useState("phone");
-  const [country, setCountry] = useState("GN");
   const [phone, setPhone] = useState("");
   const [pin, setPin] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
@@ -29,7 +30,6 @@ export default function Login() {
   const { login } = useAuth();
   const nav = useNavigate();
 
-  const selected = COUNTRIES.find((c) => c.code === country) || COUNTRIES[0];
   const minDigits = 9;
 
   const continueWithPhone = async () => {
@@ -39,7 +39,7 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      const { data } = await api.post("/auth/check-phone", { phone, country });
+      const { data } = await api.post("/auth/check-phone", { phone, country: GUINEA.code });
       const register = !data.exists || !data.has_pin;
       setIsNewUser(!data.exists);
       setNeedsPinSetup(register);
@@ -85,7 +85,7 @@ export default function Login() {
     try {
       const { data } = await api.post("/auth/phone-pin", {
         phone,
-        country,
+        country: GUINEA.code,
         pin,
         pin_confirm: needsPinSetup ? pinConfirm : undefined,
         name: isNewUser ? name.trim() : undefined,
@@ -111,7 +111,7 @@ export default function Login() {
 
   const pinHint = needsPinSetup
     ? "Choisissez un code à 6 chiffres — vous le réutiliserez à chaque connexion"
-    : `Code secret pour ${selected.dial} ${phone}`;
+    : `Code secret pour +224 ${phone}`;
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-10">
@@ -140,39 +140,19 @@ export default function Login() {
         {step === "phone" ? (
           <div className="space-y-4">
             <div>
-              <Label className="text-[#1A2E22] font-medium mb-1.5 block">Pays</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {COUNTRIES.map((c) => (
-                  <button
-                    key={c.code}
-                    type="button"
-                    onClick={() => setCountry(c.code)}
-                    className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
-                      country === c.code
-                        ? "border-[#D84315] bg-[#D84315]/10 text-[#D84315]"
-                        : "border-[#E5E0D8] bg-[#FAF8F5] text-[#1A2E22] hover:border-[#D84315]/50"
-                    }`}
-                    data-testid={`country-${c.code}`}
-                  >
-                    {c.label} {c.dial}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label className="text-[#1A2E22] font-medium mb-1.5 block">Téléphone</Label>
+              <Label className="text-[#1A2E22] font-medium mb-1.5 block">Téléphone (Guinée 🇬🇳)</Label>
               <div className="flex gap-2">
-                <div className="flex items-center bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-3 text-sm text-[#1A2E22] font-medium">{selected.dial}</div>
+                <div className="flex items-center bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-3 text-sm text-[#1A2E22] font-medium">{GUINEA.dial}</div>
                 <Input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                  placeholder={selected.placeholder}
+                  placeholder={GUINEA.placeholder}
                   className="flex-1 bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-12"
                   data-testid="phone-input"
                 />
               </div>
-              <p className="text-xs text-[#4A5D50] mt-1.5">{selected.hint}</p>
+              <p className="text-xs text-[#4A5D50] mt-1.5">{GUINEA.hint}</p>
             </div>
             <Button onClick={continueWithPhone} disabled={loading} className="w-full bg-[#D84315] hover:bg-[#BF360C] text-white rounded-full h-12 font-semibold" data-testid="continue-btn">
               {loading ? "Vérification..." : "Continuer"}

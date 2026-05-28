@@ -11,7 +11,7 @@
 ## Utilisateurs (numéro + code à 6 chiffres)
 
 1. `https://zokko.net/login`
-2. Entrer le numéro (+224 Guinée ou +33 France)
+2. Entrer le numéro guinéen (+224 uniquement)
 3. **Première fois** : choisir **Particulier** ou **Entreprise**, un code à 6 chiffres + confirmation + nom
 4. **Ensuite** : même numéro + même code = connexion
 
