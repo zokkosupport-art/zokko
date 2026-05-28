@@ -45,7 +45,7 @@ export default function AdminLogin() {
             <ShieldWarning size={28} weight="duotone" />
           </div>
           <h1 className="font-heading font-bold text-2xl text-[#1A2E22]">Administration Zokko</h1>
-          <p className="text-sm text-[#4A5D50] mt-2">Connexion sécurisée par identifiant et mot de passe</p>
+          <p className="text-sm text-[#4A5D50] mt-2">Identifiant <strong>admin</strong> + mot de passe défini sur Railway</p>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div>

@@ -8,7 +8,7 @@ import {
   House, Car, DeviceMobile, TShirt, Wrench, Briefcase, ForkKnife,
   ArrowRight, Sparkle, Lightning, ShieldCheck, WhatsappLogo, Storefront,
   ChatCircleText, CurrencyCircleDollar, Camera, SealCheck, Star, Quotes,
-  CaretDown,
+  CaretDown, User, Buildings,
 } from "@phosphor-icons/react";
 
 const ICONS = { House, Car, DeviceMobile, TShirt, Wrench, Briefcase, ForkKnife };
@@ -30,7 +30,27 @@ const TESTIMONIALS = [
   { name: "Lancement 2026", city: "Conakry", role: "Plateforme en croissance", text: "Zokko vient d'ouvrir ses portes en Guinée. Publiez vos annonces, testez la plateforme et aidez-nous à construire la marketplace locale.", color: "#D84315" },
 ];
 
+const AUDIENCES = [
+  {
+    icon: User,
+    title: "Particuliers",
+    color: "#D84315",
+    points: ["Acheter & vendre près de chez vous", "Code secret à 6 chiffres (pas de SMS)", "WhatsApp en 1 clic", "Gratuit pour publier"],
+    cta: "Créer mon compte",
+    to: "/login",
+  },
+  {
+    icon: Buildings,
+    title: "Entreprises & pros",
+    color: "#2E7D32",
+    points: ["Compte Pro dès l'inscription", "Stats vues & clics WhatsApp", "Boost & Premium Orange Money", "Visible dans toute la Guinée"],
+    cta: "Ouvrir ma boutique",
+    to: "/login",
+  },
+];
+
 const FAQ = [
+  { q: "Comment me connecter ?", a: "Entrez votre numéro (+224 ou +33), puis votre code secret à 6 chiffres que vous choisissez à la première inscription. Pas de SMS — vous gardez le même code ensuite. Les administrateurs utilisent /admin-login." },
   { q: "Est-ce que Zokko est gratuit ?", a: "Oui, l'inscription et la publication d'annonces sont 100% gratuites. Vous payez uniquement si vous souhaitez booster votre annonce (10 000 GNF), la passer Premium (20 000 GNF) ou activer l'abonnement Pro (50 000 GNF/mois)." },
   { q: "Comment payer en Orange Money ?", a: "Envoyez le montant exact au +224 612 51 64 88, puis remplissez le formulaire dans l'app avec votre code de transaction et une capture d'écran. Notre équipe valide en moins de 24h et active automatiquement votre service." },
   { q: "Comment éviter les arnaques ?", a: "Vérifiez le badge ✓ vert (profil OTP vérifié), regardez les avis ⭐ du vendeur, contactez-le par WhatsApp, et signalez toute annonce suspecte avec le bouton 🚩. Notre équipe modère 7j/7." },
@@ -87,7 +107,7 @@ export default function Home() {
                 <span className="text-[#D84315]">près de chez vous.</span>
               </h1>
               <p className="text-base sm:text-lg text-[#4A5D50] max-w-md">
-                La marketplace simple et rapide de la Guinée. Profil vérifié, paiement Orange Money, partage WhatsApp.
+                La marketplace simple et rapide de la Guinée. Connexion par téléphone + code à 6 chiffres, profil vérifié, Orange Money, WhatsApp.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link to={user ? "/listings" : "/login"} className="inline-flex items-center gap-2 bg-[#D84315] hover:bg-[#BF360C] text-white px-6 py-3 rounded-full font-semibold transition-colors" data-testid="hero-cta-primary">
@@ -119,7 +139,7 @@ export default function Home() {
           <div className="text-center mb-10">
             <p className="text-xs uppercase tracking-widest font-bold text-[#D84315]">Simple comme bonjour</p>
             <h2 className="font-heading font-bold text-3xl sm:text-4xl text-[#1A2E22] mt-2">Comment ça marche ?</h2>
-            <p className="text-[#4A5D50] mt-3 max-w-xl mx-auto">Inscription en 30 secondes par téléphone. Pas de carte bancaire requise.</p>
+            <p className="text-[#4A5D50] mt-3 max-w-xl mx-auto">Numéro + code à 6 chiffres que vous créez vous-même. Pas de SMS, pas de carte bancaire.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {STEPS.map((s, i) => {
@@ -141,8 +161,49 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CATEGORIES */}
+      {/* PARTICULIERS / ENTREPRISES */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="text-center mb-10">
+          <p className="text-xs uppercase tracking-widest font-bold text-[#D84315]">Pour qui ?</p>
+          <h2 className="font-heading font-bold text-3xl sm:text-4xl text-[#1A2E22] mt-2">Particuliers ou entreprises</h2>
+          <p className="text-[#4A5D50] mt-3 max-w-xl mx-auto">Choisissez votre profil à l&apos;inscription — même app, expérience adaptée.</p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          {AUDIENCES.map((a) => {
+            const Icon = a.icon;
+            return (
+              <div
+                key={a.title}
+                className="bg-white border border-[#E5E0D8] rounded-3xl p-6 sm:p-8 gm-card-hover flex flex-col"
+                data-testid={`audience-${a.title}`}
+              >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-4" style={{ backgroundColor: a.color }}>
+                  <Icon size={28} weight="duotone" />
+                </div>
+                <h3 className="font-heading font-bold text-2xl text-[#1A2E22]">{a.title}</h3>
+                <ul className="mt-4 space-y-2 flex-1">
+                  {a.points.map((p) => (
+                    <li key={p} className="text-sm text-[#4A5D50] flex items-start gap-2">
+                      <SealCheck size={16} weight="fill" className="text-[#2E7D32] flex-shrink-0 mt-0.5" />
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to={a.to}
+                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full h-12 font-semibold text-white transition-colors"
+                  style={{ backgroundColor: a.color }}
+                >
+                  {a.cta} <ArrowRight size={18} weight="bold" />
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* CATEGORIES */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 border-t border-[#E5E0D8]">
         <div className="flex items-end justify-between mb-5">
           <div>
             <p className="text-xs uppercase tracking-widest font-bold text-[#D84315]">7 catégories</p>

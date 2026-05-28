@@ -79,7 +79,7 @@ APP_NAME = os.environ.get('APP_NAME', 'zokko')
 OTP_DEV_MODE = os.environ.get("OTP_DEV_MODE", "true").lower() in ("1", "true", "yes")
 FRONTEND_BUILD = Path(os.environ.get("FRONTEND_BUILD", ROOT_DIR.parent / "frontend" / "build"))
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin").strip().lower()
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Zokko2026!")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "300890")
 
 
 def _parse_admin_phones() -> List[str]:
@@ -149,6 +149,7 @@ class PhonePinAuth(BaseModel):
     name: Optional[str] = None
     city: Optional[str] = "Conakry"
     referral_code: Optional[str] = None
+    account_type: Optional[str] = "particulier"  # particulier | entreprise
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
@@ -292,6 +293,7 @@ def public_user(u: dict) -> dict:
         "role": u.get("role", "user"), "created_at": u.get("created_at"),
         "blocked": u.get("blocked", False),
         "verified": u.get("verified", False),
+        "account_type": u.get("account_type", "particulier"),
         "referral_code": u.get("referral_code"),
         "boost_credits": u.get("boost_credits", 0),
         "rating_avg": u.get("rating_avg", 0),
@@ -508,6 +510,7 @@ async def phone_pin_auth(body: PhonePinAuth):
         confirm = normalize_pin(body.pin_confirm or "")
         if pin != confirm:
             raise HTTPException(400, "Les deux codes doivent être identiques")
+        is_business = (body.account_type or "").strip().lower() in ("entreprise", "business", "pro")
         user = {
             "id": str(uuid.uuid4()),
             "phone": phone,
@@ -516,7 +519,8 @@ async def phone_pin_auth(body: PhonePinAuth):
             "quartier": "",
             "whatsapp": phone[3:] if phone.startswith("224") else phone,
             "role": "user",
-            "is_pro": False,
+            "account_type": "entreprise" if is_business else "particulier",
+            "is_pro": is_business,
             "blocked": False,
             "verified": True,
             "pin_hash": hash_password(pin),

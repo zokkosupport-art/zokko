@@ -22,6 +22,7 @@ export default function Login() {
   const [name, setName] = useState("");
   const [city, setCity] = useState("Conakry");
   const [referralCode, setReferralCode] = useState("");
+  const [accountType, setAccountType] = useState("particulier");
   const [isNewUser, setIsNewUser] = useState(false);
   const [needsPinSetup, setNeedsPinSetup] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -90,6 +91,7 @@ export default function Login() {
         name: isNewUser ? name.trim() : undefined,
         city,
         referral_code: isNewUser ? referralCode : undefined,
+        account_type: isNewUser ? accountType : undefined,
       });
       login(data.access_token, data.user);
       toast.success(data.is_new ? `Compte créé — bienvenue ${data.user.name} !` : `Bienvenue ${data.user.name} !`);
@@ -188,10 +190,54 @@ export default function Login() {
         ) : (
           <div className="space-y-4">
             {isNewUser && (
-              <div>
-                <Label className="text-[#1A2E22] font-medium mb-1.5 block">Votre nom</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Mamadou Diallo" className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-12" data-testid="name-input" />
-              </div>
+              <>
+                <div>
+                  <Label className="text-[#1A2E22] font-medium mb-1.5 block">Vous êtes</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAccountType("particulier")}
+                      className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                        accountType === "particulier"
+                          ? "border-[#D84315] bg-[#D84315]/10 text-[#D84315]"
+                          : "border-[#E5E0D8] bg-[#FAF8F5] text-[#1A2E22]"
+                      }`}
+                      data-testid="account-particulier"
+                    >
+                      Particulier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountType("entreprise")}
+                      className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                        accountType === "entreprise"
+                          ? "border-[#2E7D32] bg-[#2E7D32]/10 text-[#2E7D32]"
+                          : "border-[#E5E0D8] bg-[#FAF8F5] text-[#1A2E22]"
+                      }`}
+                      data-testid="account-entreprise"
+                    >
+                      Entreprise / Pro
+                    </button>
+                  </div>
+                  <p className="text-xs text-[#4A5D50] mt-1.5">
+                    {accountType === "entreprise"
+                      ? "Boutique, stats et visibilité Pro — idéal commerces & prestataires."
+                      : "Acheter, vendre ou proposer un service entre particuliers."}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-[#1A2E22] font-medium mb-1.5 block">
+                    {accountType === "entreprise" ? "Nom de l'entreprise ou boutique" : "Votre nom"}
+                  </Label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={accountType === "entreprise" ? "Boutique Kaloum SARL" : "Mamadou Diallo"}
+                    className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-12"
+                    data-testid="name-input"
+                  />
+                </div>
+              </>
             )}
             <div>
               <Label className="text-[#1A2E22] font-medium mb-1.5 block">
