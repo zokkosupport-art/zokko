@@ -131,12 +131,14 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="relative h-64 md:h-96 rounded-3xl overflow-hidden bg-[#F5E6D3] gm-fade-in">
+            <div className="relative h-64 md:h-96 rounded-3xl overflow-hidden bg-[#FAF8F5] shadow-lg ring-1 ring-[#E5E0D8] gm-fade-in">
               <img
                 src="/hero-market.png"
-                alt="Marché coloré en Guinée — illustration Zokko"
+                alt="Illustration marketplace Zokko — marché à Conakry, couleurs Guinée 🇬🇳"
                 className="w-full h-full object-cover object-center"
                 loading="eager"
+                width={800}
+                height={600}
               />
             </div>
           </div>
