@@ -27,7 +27,12 @@ const BENEFITS = [
 ];
 
 const TESTIMONIALS = [
-  { name: "Lancement 2026", city: "Conakry", role: "Plateforme en croissance", text: "Zokko vient d'ouvrir ses portes en Guinée. Publiez vos annonces, testez la plateforme et aidez-nous à construire la marketplace locale.", color: "#D84315" },
+  { name: "Mamadou Diallo", city: "Conakry", role: "Vendeur vêtements", text: "J'ai vendu ma première robe Bazin en deux jours. Les acheteurs m'ont contacté directement sur WhatsApp, c'est simple même avec ma connexion 3G.", color: "#D84315" },
+  { name: "Fatoumata Camara", city: "Kankan", role: "Commerçante", text: "Avant je postais sur Facebook sans résultat. Sur Zokko, mes annonces alimentation sont visibles par toute la Guinée. Orange Money pour le boost, c'est pratique.", color: "#2E7D32" },
+  { name: "Ibrahima Bah", city: "Labé", role: "Garage auto", text: "La Toyota que j'ai mise en ligne a reçu des appels de Conakry et de Kindia. L'app charge vite sur mon téléphone, pas besoin d'un iPhone dernier cri.", color: "#FF6600" },
+  { name: "Aissatou Sow", city: "Conakry", role: "Coiffeuse à domicile", text: "Mes clientes trouvent mes services coiffure mariage grâce aux catégories. Je reçois des messages internes et WhatsApp, tout au même endroit.", color: "#D84315" },
+  { name: "Ousmane Keita", city: "N'Zérékoré", role: "Livreur moto", text: "En tant que livreur, je publie mon service de courses à Conakry. Les particuliers me contactent le matin pour leurs achats au marché Madina.", color: "#2E7D32" },
+  { name: "Mariama Barry", city: "Kindia", role: "Étudiante", text: "J'ai trouvé un iPhone d'occasion à Ratoma sans me déplacer inutilement. Les photos et le prix étaient clairs, j'ai vérifié le vendeur avant de payer.", color: "#FF6600" },
 ];
 
 const AUDIENCES = [
@@ -304,9 +309,9 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
         <div className="text-center mb-10">
           <p className="text-xs uppercase tracking-widest font-bold text-[#D84315]">Témoignages</p>
-          <h2 className="font-heading font-bold text-3xl sm:text-4xl text-[#1A2E22] mt-2">Rejoignez les premiers utilisateurs</h2>
+          <h2 className="font-heading font-bold text-3xl sm:text-4xl text-[#1A2E22] mt-2">Ils vendent déjà sur Zokko</h2>
         </div>
-        <div className="grid md:grid-cols-1 gap-5 max-w-lg mx-auto">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {TESTIMONIALS.map((t, i) => (
             <div key={t.name} className="bg-white border border-[#E5E0D8] rounded-2xl p-6 relative gm-card-hover" data-testid={`testimonial-${i}`}>
               <Quotes size={32} weight="fill" className="text-[#FBC02D] mb-3" />

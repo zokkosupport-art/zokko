@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Eye, ChatCircleText, WhatsappLogo, ArrowLeft, Star, Lightning, Phone, ShareNetwork, Flag, SealCheck } from "@phosphor-icons/react";
-import api, { BACKEND_URL, fileUrl, formatPrice, formatApiError } from "@/lib/api";
+import api, { BACKEND_URL, fileUrl, getListingCoverPath, formatPrice, formatApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,9 @@ export default function ListingDetail() {
   if (loading) return <div className="max-w-5xl mx-auto p-8 text-[#4A5D50]">Chargement…</div>;
   if (!listing) return <div className="max-w-5xl mx-auto p-8">Annonce introuvable.</div>;
 
-  const photos = listing.photos || [];
+  const photos = listing.photos?.length
+    ? listing.photos
+    : [getListingCoverPath(listing)].filter(Boolean);
   const photoUrl = photos[activePhoto] ? fileUrl(photos[activePhoto]) : null;
   const isOwner = user?.id === listing.owner_id;
   const whatsappNumber = (listing.whatsapp || listing.owner?.phone || "").replace(/\D/g, "");

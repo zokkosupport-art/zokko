@@ -242,6 +242,37 @@ class ReviewCreate(BaseModel):
     rating: int  # 1-5
     comment: Optional[str] = ""
 
+# Demo listing cover URLs (used at seed + backfill when photos are empty)
+DEMO_LISTING_PHOTOS = {
+    "Toyota": "https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "Appartement": "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "iPhone": "https://images.pexels.com/photos/4158/apple-iphone-smartphone-desk.jpg?auto=compress&cs=tinysrgb&w=800",
+    "Coiffure": "https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "Bazin": "https://images.pexels.com/photos/29168547/pexels-photo-29168547.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "Livraison": "https://images.pexels.com/photos/4391470/pexels-photo-4391470.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "Riz": "https://images.pexels.com/photos/4113899/pexels-photo-4113899.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "Chauffeur": "https://images.pexels.com/photos/4484078/pexels-photo-4484078.jpeg?auto=compress&cs=tinysrgb&w=800",
+}
+
+def demo_photo_for_title(title: str) -> List[str]:
+    for key, url in DEMO_LISTING_PHOTOS.items():
+        if key.lower() in title.lower():
+            return [url]
+    return []
+
+
+async def backfill_demo_listing_photos():
+    """Ensure seeded demo ads show thumbnails in listing grids."""
+    patched = 0
+    async for listing in db.listings.find({"$or": [{"photos": {"$exists": False}}, {"photos": []}, {"photos": None}]}):
+        urls = demo_photo_for_title(listing.get("title", ""))
+        if urls:
+            await db.listings.update_one({"id": listing["id"]}, {"$set": {"photos": urls, "updated_at": now_iso()}})
+            patched += 1
+    if patched:
+        logger.info(f"Backfilled photos on {patched} demo listing(s)")
+
+
 # ---------------- Helpers ----------------
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
@@ -449,14 +480,14 @@ async def _initialize_app():
     if await db.listings.count_documents({}) == 0:
         admin = admin_user or await db.users.find_one({"role": "admin"}, {"_id": 0})
         demo = [
-            {"title": "Toyota Corolla 2015 - Excellent état", "description": "Voiture en bon état, climatisation, vitres électriques. Faible kilométrage.", "price": 75000000, "category": "vehicules", "city": "Conakry", "quartier": "Kaloum", "type": "product", "photos": []},
-            {"title": "Appartement 3 pièces à louer", "description": "Bel appartement meublé à Kipé, sécurisé, eau et électricité 24/24.", "price": 4500000, "category": "immobilier", "city": "Conakry", "quartier": "Kipé", "type": "product", "photos": []},
-            {"title": "iPhone 13 - Comme neuf", "description": "iPhone 13 128Go, garantie restante, avec accessoires originaux.", "price": 8500000, "category": "electronique", "city": "Conakry", "quartier": "Ratoma", "type": "product", "photos": []},
-            {"title": "Coiffure à domicile - Mariages", "description": "Coiffeuse professionnelle, déplacements à domicile, mariages et événements.", "price": 500000, "category": "services", "city": "Conakry", "quartier": "Matam", "type": "service", "photos": []},
-            {"title": "Robe traditionnelle Bazin", "description": "Tenue traditionnelle Bazin riche, couture sur mesure, qualité supérieure.", "price": 850000, "category": "mode", "city": "Kankan", "quartier": "Centre", "type": "product", "photos": []},
-            {"title": "Livraison de courses - Conakry", "description": "Service de livraison rapide partout à Conakry. Moto disponible 7/7.", "price": 50000, "category": "services", "city": "Conakry", "quartier": "Dixinn", "type": "service", "photos": []},
-            {"title": "Riz local 50kg", "description": "Riz produit en Guinée, qualité premium. Disponible immédiatement.", "price": 400000, "category": "alimentation", "city": "Faranah", "quartier": "Marché central", "type": "product", "photos": []},
-            {"title": "Chauffeur recherché - Permis B", "description": "Société cherche chauffeur expérimenté pour véhicules légers. CDI.", "price": 3000000, "category": "emploi", "city": "Conakry", "quartier": "Almamya", "type": "service", "photos": []},
+            {"title": "Toyota Corolla 2015 - Excellent état", "description": "Voiture en bon état, climatisation, vitres électriques. Faible kilométrage.", "price": 75000000, "category": "vehicules", "city": "Conakry", "quartier": "Kaloum", "type": "product", "photos": demo_photo_for_title("Toyota Corolla 2015 - Excellent état")},
+            {"title": "Appartement 3 pièces à louer", "description": "Bel appartement meublé à Kipé, sécurisé, eau et électricité 24/24.", "price": 4500000, "category": "immobilier", "city": "Conakry", "quartier": "Kipé", "type": "product", "photos": demo_photo_for_title("Appartement 3 pièces à louer")},
+            {"title": "iPhone 13 - Comme neuf", "description": "iPhone 13 128Go, garantie restante, avec accessoires originaux.", "price": 8500000, "category": "electronique", "city": "Conakry", "quartier": "Ratoma", "type": "product", "photos": demo_photo_for_title("iPhone 13 - Comme neuf")},
+            {"title": "Coiffure à domicile - Mariages", "description": "Coiffeuse professionnelle, déplacements à domicile, mariages et événements.", "price": 500000, "category": "services", "city": "Conakry", "quartier": "Matam", "type": "service", "photos": demo_photo_for_title("Coiffure à domicile - Mariages")},
+            {"title": "Robe traditionnelle Bazin", "description": "Tenue traditionnelle Bazin riche, couture sur mesure, qualité supérieure.", "price": 850000, "category": "mode", "city": "Kankan", "quartier": "Centre", "type": "product", "photos": demo_photo_for_title("Robe traditionnelle Bazin")},
+            {"title": "Livraison de courses - Conakry", "description": "Service de livraison rapide partout à Conakry. Moto disponible 7/7.", "price": 50000, "category": "services", "city": "Conakry", "quartier": "Dixinn", "type": "service", "photos": demo_photo_for_title("Livraison de courses - Conakry")},
+            {"title": "Riz local 50kg", "description": "Riz produit en Guinée, qualité premium. Disponible immédiatement.", "price": 400000, "category": "alimentation", "city": "Faranah", "quartier": "Marché central", "type": "product", "photos": demo_photo_for_title("Riz local 50kg")},
+            {"title": "Chauffeur recherché - Permis B", "description": "Société cherche chauffeur expérimenté pour véhicules légers. CDI.", "price": 3000000, "category": "emploi", "city": "Conakry", "quartier": "Almamya", "type": "service", "photos": demo_photo_for_title("Chauffeur recherché - Permis B")},
         ]
         for d in demo:
             d["id"] = str(uuid.uuid4())
@@ -472,6 +503,7 @@ async def _initialize_app():
             d["updated_at"] = now_iso()
             await db.listings.insert_one(d)
         logger.info(f"Seeded {len(demo)} demo listings")
+    await backfill_demo_listing_photos()
 
 
 @asynccontextmanager

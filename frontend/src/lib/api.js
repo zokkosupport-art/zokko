@@ -24,7 +24,41 @@ api.interceptors.response.use(
   }
 );
 
-export const fileUrl = (path) => (path ? `${API}/files/${path}` : null);
+export const fileUrl = (path) => {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API}/files/${path}`;
+};
+
+/** First listing image from API fields (photos, images, image_urls, photo). */
+export const getListingCoverPath = (listing) => {
+  if (!listing) return null;
+  if (listing.photos?.length) return listing.photos[0];
+  if (listing.images?.length) return listing.images[0];
+  if (listing.image_urls?.length) return listing.image_urls[0];
+  if (listing.photo) return listing.photo;
+  if (listing.cover_image) return listing.cover_image;
+  return null;
+};
+
+export const getListingCoverUrl = (listing) => fileUrl(getListingCoverPath(listing));
+
+/** Category fallback when no uploaded photo (demo / legacy listings). */
+export const CATEGORY_PLACEHOLDER_IMAGES = {
+  vehicules: "https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg?auto=compress&cs=tinysrgb&w=800",
+  immobilier: "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800",
+  electronique: "https://images.pexels.com/photos/4158/apple-iphone-smartphone-desk.jpg?auto=compress&cs=tinysrgb&w=800",
+  services: "https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=800",
+  mode: "https://images.pexels.com/photos/29168547/pexels-photo-29168547.jpeg?auto=compress&cs=tinysrgb&w=800",
+  alimentation: "https://images.pexels.com/photos/4113899/pexels-photo-4113899.jpeg?auto=compress&cs=tinysrgb&w=800",
+  emploi: "https://images.pexels.com/photos/4484078/pexels-photo-4484078.jpeg?auto=compress&cs=tinysrgb&w=800",
+};
+
+export const getListingThumbnailUrl = (listing) => {
+  const cover = getListingCoverUrl(listing);
+  if (cover) return cover;
+  return CATEGORY_PLACEHOLDER_IMAGES[listing?.category] || null;
+};
 
 export const formatPrice = (price, currency = "GNF") => {
   if (typeof price !== "number") return "";
