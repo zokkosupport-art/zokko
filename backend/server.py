@@ -9,8 +9,10 @@ load_dotenv(ROOT_DIR / '.env')
 import os
 import io
 import uuid
+import asyncio
 import logging
 import secrets
+from contextlib import asynccontextmanager, suppress
 import jwt
 import bcrypt
 import requests
@@ -288,11 +290,17 @@ def normalize_pin(pin: str) -> str:
     return p
 
 # ---------------- App ----------------
-app = FastAPI(title="GuinéeMarket API")
 api = APIRouter(prefix="/api")
 
-@app.on_event("startup")
-async def startup():
+
+async def _run_startup():
+    try:
+        await _initialize_app()
+    except Exception as e:
+        logger.exception("Startup initialization failed (app remains up for health): %s", e)
+
+
+async def _initialize_app():
     # Indexes
     await db.users.create_index("phone", unique=True)
     await db.users.create_index("id", unique=True)
@@ -391,9 +399,29 @@ async def startup():
             await db.listings.insert_one(d)
         logger.info(f"Seeded {len(demo)} demo listings")
 
-@app.on_event("shutdown")
-async def shutdown():
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_task = asyncio.create_task(_run_startup())
+    yield
+    if not init_task.done():
+        init_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await init_task
     client.close()
+
+
+app = FastAPI(title="GuinéeMarket API", lifespan=lifespan)
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
+@app.get("/api")
+async def api_root_no_slash():
+    return {"name": "GuinéeMarket API", "version": "1.0.0"}
 
 # ---------------- Auth ----------------
 @api.post("/auth/check-phone")
