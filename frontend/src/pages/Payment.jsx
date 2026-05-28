@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Star, Lightning, CrownSimple, ArrowLeft, Copy, Camera, X, UploadSimple, ShieldCheck, CheckCircle, Clock, CreditCard, DeviceMobile, Wallet } from "@phosphor-icons/react";
+import { Star, Lightning, CrownSimple, ArrowLeft, Copy, Camera, X, UploadSimple, ShieldCheck, CheckCircle, Clock } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import api, { fileUrl, formatApiError, formatPrice } from "@/lib/api";
 import { compressImage } from "@/lib/imageCompress";
@@ -14,13 +14,6 @@ const META = {
   pro_subscription: { label: "Abonnement Pro (1 mois)", desc: "Annonces illimitées + statistiques détaillées", icon: CrownSimple, color: "#2E7D32" },
 };
 
-const CHANNELS = [
-  { id: "ALL", label: "Tout", icon: Wallet },
-  { id: "MOBILE_MONEY", label: "Mobile Money", icon: DeviceMobile },
-  { id: "CREDIT_CARD", label: "Carte", icon: CreditCard },
-  { id: "WALLET", label: "Portefeuille", icon: Wallet },
-];
-
 export default function Payment() {
   const [params] = useSearchParams();
   const nav = useNavigate();
@@ -30,25 +23,19 @@ export default function Payment() {
   const Icon = meta.icon;
 
   const [info, setInfo] = useState(null);
-  const [cpConfig, setCpConfig] = useState(null);
-  const [payMethod, setPayMethod] = useState("cinetpay");
-  const [channel, setChannel] = useState("ALL");
   const [step, setStep] = useState("instructions");
   const [senderPhone, setSenderPhone] = useState("");
   const [txCode, setTxCode] = useState("");
   const [proofPath, setProofPath] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [payingOnline, setPayingOnline] = useState(false);
   const [paymentRef, setPaymentRef] = useState(null);
 
   useEffect(() => {
     api.get("/payments/orange-money/info").then(({ data }) => setInfo(data)).catch(() => {});
-    api.get("/payments/cinetpay/config").then(({ data }) => setCpConfig(data)).catch(() => {});
   }, []);
 
-  const amount = info?.prices_gnf?.[purpose] || cpConfig?.prices_gnf?.[purpose] || 0;
-  const cpMock = cpConfig?.configured === false;
+  const amount = info?.prices_gnf?.[purpose] || 0;
 
   const copyNumber = () => {
     navigator.clipboard.writeText(info?.number || "");
@@ -98,26 +85,6 @@ export default function Payment() {
     }
   };
 
-  const payOnline = async () => {
-    setPayingOnline(true);
-    try {
-      const { data } = await api.post("/payments/cinetpay/initiate", {
-        purpose,
-        listing_id: listingId,
-        channels: channel,
-      });
-      if (data.payment_url) {
-        window.location.href = data.payment_url;
-        return;
-      }
-      toast.error("Lien de paiement indisponible");
-    } catch (e) {
-      toast.error(formatApiError(e));
-    } finally {
-      setPayingOnline(false);
-    }
-  };
-
   return (
     <div className="max-w-md mx-auto px-4 sm:px-6 py-6">
       <button onClick={() => nav(-1)} className="text-[#4A5D50] flex items-center gap-1 text-sm mb-4 hover:text-[#D84315]" data-testid="back-btn">
@@ -125,7 +92,6 @@ export default function Payment() {
       </button>
 
       <div className="bg-white border border-[#E5E0D8] rounded-3xl overflow-hidden gm-shadow-soft gm-fade-in">
-        {/* Header */}
         <div className="p-6 text-center border-b border-[#E5E0D8]" style={{ backgroundColor: `${meta.color}10` }}>
           <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-3 text-white" style={{ backgroundColor: meta.color }}>
             <Icon size={32} weight="fill" />
@@ -133,75 +99,10 @@ export default function Payment() {
           <h1 className="font-heading font-bold text-xl text-[#1A2E22]">{meta.label}</h1>
           <p className="text-sm text-[#4A5D50] mt-1">{meta.desc}</p>
           <div className="mt-3 font-heading font-bold text-4xl text-[#1A2E22]">{amount ? formatPrice(amount, "GNF") : "…"}</div>
+          <p className="text-xs text-[#FF6600] font-semibold mt-2">Paiement Orange Money + preuve de transaction</p>
         </div>
 
-        {/* Payment method tabs */}
-        <div className="grid grid-cols-2 border-b border-[#E5E0D8]">
-          <button
-            type="button"
-            onClick={() => { setPayMethod("cinetpay"); setStep("instructions"); }}
-            className={`py-3 text-sm font-semibold transition-colors ${payMethod === "cinetpay" ? "text-[#D84315] border-b-2 border-[#D84315] bg-[#FAF8F5]" : "text-[#4A5D50] hover:text-[#1A2E22]"}`}
-            data-testid="tab-cinetpay"
-          >
-            Payer en ligne
-          </button>
-          <button
-            type="button"
-            onClick={() => { setPayMethod("orange"); setStep("instructions"); }}
-            className={`py-3 text-sm font-semibold transition-colors ${payMethod === "orange" ? "text-[#FF6600] border-b-2 border-[#FF6600] bg-[#FAF8F5]" : "text-[#4A5D50] hover:text-[#1A2E22]"}`}
-            data-testid="tab-orange-money"
-          >
-            Orange Money (manuel)
-          </button>
-        </div>
-
-        {payMethod === "cinetpay" && step !== "submitted" && (
-          <div className="p-6 space-y-4">
-            <div className="bg-[#FAF8F5] rounded-xl p-4 text-sm text-[#4A5D50] leading-relaxed">
-              Payez en ligne via CinetPay : Orange Money, MTN, carte bancaire ou portefeuille selon disponibilité.
-            </div>
-
-            {cpMock && (
-              <div className="bg-[#FBC02D]/10 border border-[#FBC02D]/40 rounded-xl p-3 text-xs text-[#1A2E22]" data-testid="cinetpay-mock-notice">
-                Mode démo — clés CinetPay non configurées. Le paiement sera simulé.
-              </div>
-            )}
-
-            <div>
-              <p className="text-xs font-semibold text-[#4A5D50] uppercase tracking-wide mb-2">Canal de paiement</p>
-              <div className="grid grid-cols-2 gap-2">
-                {CHANNELS.map((c) => {
-                  const ChIcon = c.icon;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setChannel(c.id)}
-                      className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-semibold transition-colors ${channel === c.id ? "border-[#D84315] bg-[#D84315]/5 text-[#D84315]" : "border-[#E5E0D8] text-[#4A5D50] hover:border-[#D84315]/40"}`}
-                      data-testid={`channel-${c.id}`}
-                    >
-                      <ChIcon size={16} weight="duotone" /> {c.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <Button
-              onClick={payOnline}
-              disabled={payingOnline || !amount}
-              className="w-full bg-[#D84315] hover:bg-[#BF360C] text-white rounded-xl h-12 font-bold"
-              data-testid="cinetpay-pay-btn"
-            >
-              {payingOnline ? "Redirection…" : `Payer ${amount ? formatPrice(amount, "GNF") : ""}`}
-            </Button>
-            <p className="text-[10px] text-center text-[#4A5D50] flex items-center justify-center gap-1">
-              <ShieldCheck size={12} weight="fill" className="text-[#2E7D32]" /> Paiement sécurisé via CinetPay
-            </p>
-          </div>
-        )}
-
-        {payMethod === "orange" && step === "instructions" && info && (
+        {step === "instructions" && info && (
           <div className="p-6 space-y-4">
             <div className="bg-gradient-to-br from-[#FF6600] to-[#E65C00] text-white rounded-2xl p-5">
               <p className="text-xs uppercase font-bold opacity-80 tracking-wide">Envoyer le paiement à</p>
@@ -213,14 +114,14 @@ export default function Payment() {
             </div>
 
             <div className="bg-[#FAF8F5] rounded-xl p-4 space-y-2">
-              <p className="font-heading font-semibold text-[#1A2E22] text-sm mb-2">📱 Comment payer ?</p>
+              <p className="font-heading font-semibold text-[#1A2E22] text-sm mb-2">Comment payer ?</p>
               <ol className="text-sm text-[#4A5D50] space-y-1.5 list-decimal list-inside leading-relaxed">
                 {info.instructions.map((ins, i) => <li key={i}>{ins}</li>)}
               </ol>
             </div>
 
             <div className="bg-[#FBC02D]/10 border border-[#FBC02D]/40 rounded-xl p-3 text-xs text-[#1A2E22]">
-              💡 <strong>Important</strong> : Envoyez exactement <strong>{formatPrice(amount, "GNF")}</strong>. Tout montant différent sera refusé.
+              Important : envoyez exactement <strong>{formatPrice(amount, "GNF")}</strong> au numéro Orange Money ci-dessus, puis envoyez votre preuve (code + capture) pour validation admin.
             </div>
 
             <Button onClick={() => setStep("form")} className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-xl h-12 font-bold" data-testid="proceed-form-btn">
@@ -229,10 +130,10 @@ export default function Payment() {
           </div>
         )}
 
-        {payMethod === "orange" && step === "form" && (
+        {step === "form" && (
           <div className="p-6 space-y-4">
             <button onClick={() => setStep("instructions")} className="text-xs text-[#4A5D50] flex items-center gap-1 hover:text-[#D84315]" data-testid="back-instructions">
-              <ArrowLeft size={14} /> Revoir les instructions
+              <ArrowLeft size={14} /> Revoir les instructions Orange Money
             </button>
 
             <div>
@@ -276,7 +177,7 @@ export default function Payment() {
           </div>
         )}
 
-        {payMethod === "orange" && step === "submitted" && (
+        {step === "submitted" && (
           <div className="p-6 text-center space-y-4">
             <CheckCircle size={72} weight="fill" className="text-[#2E7D32] mx-auto" />
             <h2 className="font-heading font-bold text-2xl text-[#1A2E22]">Preuve envoyée !</h2>
@@ -286,7 +187,7 @@ export default function Payment() {
               <div className="flex justify-between"><span className="text-[#4A5D50]">Statut</span><span className="text-[#FBC02D] font-bold flex items-center gap-1"><Clock size={12} weight="fill" /> EN ATTENTE</span></div>
             </div>
             <p className="text-sm text-[#4A5D50]">
-              Notre équipe va vérifier votre paiement et activer votre service. Vous recevrez une notification dès la validation (en général en moins de 24h).
+              Notre équipe va vérifier votre paiement Orange Money et activer votre service. Vous recevrez une notification dès la validation (en général en moins de 24h).
             </p>
             <div className="grid grid-cols-2 gap-2">
               <Button onClick={() => nav("/payments")} variant="outline" className="rounded-full border-2 border-[#E5E0D8]" data-testid="view-history-btn">Mes paiements</Button>

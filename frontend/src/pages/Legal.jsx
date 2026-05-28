@@ -41,8 +41,9 @@ export default function Legal() {
         <section className="bg-white border border-[#E5E0D8] rounded-2xl p-6">
           <h2 className="font-heading font-bold text-xl mb-3">4. Paiements</h2>
           <p className="text-sm text-[#4A5D50] leading-relaxed">
-            Les services payants (boost, premium, abonnement pro) peuvent être réglés via Orange Money ou CinetPay selon
-            les options disponibles. Les transactions entre acheteurs et vendeurs se font directement entre les parties ;
+            Les services payants (boost, premium, abonnement pro) se règlent par Orange Money : transfert au numéro
+            indiqué dans l&apos;application, puis envoi de la preuve de transaction (code + capture d&apos;écran) pour
+            validation par notre équipe. Les transactions entre acheteurs et vendeurs se font directement entre les parties ;
             Zokko n&apos;encaisse pas le prix des biens vendus sur la plateforme.
           </p>
         </section>
