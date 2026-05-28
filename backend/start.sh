@@ -6,7 +6,7 @@ PORT="${PORT:-8000}"
 for var in MONGO_URL JWT_SECRET DB_NAME; do
   eval "val=\$$var"
   if [ -z "$val" ]; then
-    echo "[start.sh] FATAL: $var is not set. Railway → Variables → add it, then Redeploy." >&2
+    echo "[start.sh] FATAL: $var is not set. Railway -> Variables -> add it, then Redeploy." >&2
     exit 1
   fi
 done

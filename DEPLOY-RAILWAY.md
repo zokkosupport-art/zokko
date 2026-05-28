@@ -103,8 +103,12 @@ Avec `STORAGE_BACKEND=local` sur Railway, les images peuvent être perdues à un
 
 ### Healthcheck FAILED (Build OK, Deploy OK)
 
-1. **Deploy Logs** (pas Build) : cherchez `FATAL: MONGO_URL`, `Error loading ASGI`, `Address already in use`, ou crash Python. Le conteneur doit afficher `[start.sh] uvicorn server:app on 0.0.0.0:…`.
+**Cause fréquente corrigée dans le repo :** `start.sh` avec fins de ligne Windows (CRLF) → sur Linux Docker : `/bin/sh\r: bad interpreter` → le conteneur ne démarre jamais. Le Dockerfile convertit maintenant le fichier en LF.
+
+1. **Deploy Logs** (pas Build) : cherchez `FATAL: MONGO_URL`, `bad interpreter`, `Error loading ASGI`, `ModuleNotFoundError: server`. Le conteneur doit afficher `[start.sh] uvicorn server:app on 0.0.0.0:…`.
 2. **Variables** (obligatoires) : `MONGO_URL`, `JWT_SECRET`, `DB_NAME` — ne pas commiter `.env`. `PORT` est injecté par Railway ; ne le définissez pas vous-même.
 3. **Settings → Health Check** : chemin **`/health`** (pas `/api`). Si un chemin est déjà saisi dans l’interface Railway, il **remplace** `railway.toml` — corrigez-le dans l’UI puis **Redeploy**.
 4. **Start command** : laissez Railway utiliser le **Dockerfile** (`/app/backend/start.sh`). N’ajoutez pas un `startCommand` manuel du type `uvicorn …` depuis la racine du repo (module `server` introuvable).
 5. Après correction → **Deployments → Redeploy**. Test : `https://VOTRE-DOMAINE.up.railway.app/health` doit renvoyer `{"status":"ok",…}`.
+
+Guide ultra-simple : **`FAIRE-MAINTENANT-RAILWAY.md`**

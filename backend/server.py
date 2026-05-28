@@ -34,13 +34,44 @@ from rate_limit import enforce_limit
 logger = logging.getLogger("guinee-market")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-# ---------------- MongoDB ----------------
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# ---------------- MongoDB (lazy — import must not crash if env missing; start.sh validates) ----------------
+_mongo_client: Optional[AsyncIOMotorClient] = None
+_db = None
+
+
+def _mongo_url() -> str:
+    url = os.environ.get("MONGO_URL", "").strip()
+    if not url:
+        raise RuntimeError("MONGO_URL is not set")
+    return url
+
+
+def _db_name() -> str:
+    name = os.environ.get("DB_NAME", "").strip()
+    if not name:
+        raise RuntimeError("DB_NAME is not set")
+    return name
+
+
+def get_db():
+    global _mongo_client, _db
+    if _db is None:
+        _mongo_client = AsyncIOMotorClient(_mongo_url())
+        _db = _mongo_client[_db_name()]
+    return _db
+
+
+class _DbProxy:
+    """Defer Motor connection until first DB use (after uvicorn binds)."""
+
+    def __getattr__(self, name):
+        return getattr(get_db(), name)
+
+
+db = _DbProxy()
 
 # ---------------- Constants --------------
-JWT_SECRET = os.environ['JWT_SECRET']
+JWT_SECRET = os.environ.get("JWT_SECRET") or ""
 JWT_ALGORITHM = "HS256"
 ADMIN_NAME = os.environ.get('ADMIN_NAME', 'Admin Zokko')
 APP_NAME = os.environ.get('APP_NAME', 'zokko')
@@ -408,7 +439,8 @@ async def lifespan(app: FastAPI):
         init_task.cancel()
         with suppress(asyncio.CancelledError):
             await init_task
-    client.close()
+    if _mongo_client is not None:
+        _mongo_client.close()
 
 
 app = FastAPI(title="GuinéeMarket API", lifespan=lifespan)

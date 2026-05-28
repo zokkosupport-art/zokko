@@ -15,9 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
-RUN chmod +x start.sh
+# Windows CRLF in start.sh breaks shebang on Linux (/bin/sh\r: bad interpreter)
+RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
 COPY --from=frontend-build /app/frontend/build /app/frontend/build
 ENV FRONTEND_BUILD=/app/frontend/build
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
-CMD ["/app/backend/start.sh"]
+CMD ["sh", "start.sh"]
