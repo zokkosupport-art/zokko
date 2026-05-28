@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Eye, ChatCircleText, WhatsappLogo, ArrowLeft, Star, Lightning, Phone, ShareNetwork, Flag, SealCheck } from "@phosphor-icons/react";
 import FavoriteButton from "@/components/FavoriteButton";
-import api, { BACKEND_URL, fileUrl, getListingCoverPath, formatPrice, formatApiError } from "@/lib/api";
+import api, { BACKEND_URL, fileUrl, getListingCoverPath, getListingThumbnailUrl, formatPrice, formatApiError } from "@/lib/api";
+import { applyPageSeo, listingSeo } from "@/lib/seo";
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,13 @@ export default function ListingDetail() {
       }
     }).finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!listing) return;
+    const thumb = getListingThumbnailUrl(listing);
+    const image = thumb && (thumb.startsWith("http") ? thumb : fileUrl(thumb));
+    applyPageSeo(listingSeo(listing, image));
+  }, [listing]);
 
   if (loading) return <div className="max-w-5xl mx-auto p-8 text-[#4A5D50]">Chargement…</div>;
   if (!listing) return <div className="max-w-5xl mx-auto p-8">Annonce introuvable.</div>;

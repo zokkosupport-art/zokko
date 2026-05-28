@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { House, MagnifyingGlass, Plus, ChatCircleText, User, ShieldWarning, WhatsappLogo, ShieldCheck } from "@phosphor-icons/react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import PageSeo from "@/components/PageSeo";
 
 const TRUST_TIPS = [
   "Rencontrez le vendeur en personne dans un lieu public",
@@ -26,6 +27,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col">
+      <PageSeo />
       {/* Top bar - desktop */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E0D8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">

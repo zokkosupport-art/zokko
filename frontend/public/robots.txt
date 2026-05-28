@@ -1,6 +1,9 @@
 User-agent: *
 Allow: /
+Allow: /listings
+Allow: /legal
 Disallow: /admin
+Disallow: /admin-login
 Disallow: /admin/*
 Disallow: /api/admin/*
 Disallow: /messages
@@ -10,5 +13,8 @@ Disallow: /payment
 Disallow: /payment/*
 Disallow: /payments
 Disallow: /my-ads
+Disallow: /publish
 
-Sitemap: https://zokko.net/api/sitemap.xml
+# Sitemaps (domaine canonique www)
+Sitemap: https://www.zokko.net/sitemap.xml
+Sitemap: https://www.zokko.net/api/sitemap.xml

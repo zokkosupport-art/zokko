@@ -376,6 +376,25 @@ export default function Home() {
         </div>
       </section>
 
+      {/* SEO — liens villes (référencement local Guinée) */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-10" aria-label="Annonces par ville">
+        <h2 className="font-heading font-bold text-xl text-[#1A2E22] mb-3">Petites annonces par ville en Guinée</h2>
+        <p className="text-sm text-[#4A5D50] mb-4">
+          Zokko — marketplace gratuite pour acheter et vendre à Conakry, Labé, Kankan, Kindia et dans tout le pays.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {["Conakry", "Kankan", "Labé", "Kindia", "Nzérékoré", "Boké", "Faranah", "Mamou", "Siguiri", "Kissidougou"].map((city) => (
+            <Link
+              key={city}
+              to={`/listings?city=${encodeURIComponent(city)}`}
+              className="text-sm px-3 py-1.5 rounded-full bg-white border border-[#E5E0D8] text-[#1A2E22] hover:border-[#D84315] hover:text-[#D84315] transition-colors"
+            >
+              Annonces {city}
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* FINAL CTA */}
       <section className="bg-gradient-to-br from-[#D84315] via-[#BF360C] to-[#1A2E22] text-white py-14 md:py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center space-y-5">

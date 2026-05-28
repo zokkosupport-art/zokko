@@ -1638,12 +1638,13 @@ async def sitemap_xml(request: Request):
     static_pages = [
         ("/", "1.0", "daily"),
         ("/listings", "0.9", "hourly"),
+        ("/legal", "0.4", "monthly"),
         ("/login", "0.5", "monthly"),
-        ("/publish", "0.6", "monthly"),
     ]
-    # Add category pages
     for c in CATEGORIES:
         static_pages.append((f"/listings?category={c['slug']}", "0.8", "daily"))
+    for city in GUINEA_CITIES:
+        static_pages.append((f"/listings?city={city}", "0.75", "daily"))
 
     listings = await db.listings.find(
         {"status": "approved"},
@@ -1669,6 +1670,13 @@ async def sitemap_xml(request: Request):
     )
     return Response(content=xml, media_type="application/xml")
 
+
+@app.get("/sitemap.xml")
+async def sitemap_xml_root(request: Request):
+    """Same sitemap at root for Google Search Console."""
+    return await sitemap_xml(request)
+
+
 # ---------------- Open Graph share endpoint (under /api so kubernetes ingress routes correctly) ----------------
 @app.get("/api/s/{listing_id}", response_class=HTMLResponse)
 async def og_share(listing_id: str, request: Request):
@@ -1687,7 +1695,8 @@ async def og_share(listing_id: str, request: Request):
     listing_url = f"{base}/listings/{listing_id}"
     image_url = ""
     if listing.get("photos"):
-        image_url = f"{base}/api/files/{listing['photos'][0]}"
+        p0 = listing["photos"][0]
+        image_url = p0 if str(p0).startswith(("http://", "https://")) else f"{base}/api/files/{p0}"
     title = (listing.get("title") or "Annonce")[:80]
     price = f"{int(listing.get('price', 0)):,} {listing.get('currency', 'GNF')}".replace(",", " ")
     city = listing.get("city", "")
