@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #FAF8F5;
+  --bg-secondary: #F0EBE1;
+  --bg-card: #FFFFFF;
+  --text-primary: #1A2E22;
+  --text-secondary: #4A5D50;
+  --brand-primary: #D84315;
+  --brand-secondary: #2E7D32;
+  --brand-tertiary: #FBC02D;
+  --border: #E5E0D8;
+  --orange-money: #FF6600;
+  --whatsapp: #25D366;
+}
+
+html, body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Work Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Outfit', system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+@layer base {
+  :root {
+    --background: 40 38% 97%;
+    --foreground: 145 28% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 145 28% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 145 28% 14%;
+    --primary: 14 79% 43%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 36 30% 92%;
+    --secondary-foreground: 145 28% 14%;
+    --muted: 36 30% 92%;
+    --muted-foreground: 145 13% 33%;
+    --accent: 36 30% 92%;
+    --accent-foreground: 145 28% 14%;
+    --destructive: 0 65% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 36 22% 88%;
+    --input: 36 22% 88%;
+    --ring: 14 79% 43%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Marketplace specific */
+.gm-shadow-soft {
+  box-shadow: 0 1px 2px rgba(26, 46, 34, 0.04), 0 2px 8px rgba(26, 46, 34, 0.04);
+}
+
+.gm-shadow-lift {
+  box-shadow: 0 4px 12px rgba(26, 46, 34, 0.08), 0 2px 4px rgba(26, 46, 34, 0.04);
+}
+
+.gm-card-hover {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.gm-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(26, 46, 34, 0.1);
+}
+
+.gm-fade-in {
+  animation: gmFadeIn 360ms ease both;
+}
+
+@keyframes gmFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gm-noise {
+  background-image: radial-gradient(rgba(216,67,21,0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Hide scrollbar for horizontal scroll */
+.gm-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.gm-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+/* Pulse for OTP */
+@keyframes gmPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.gm-pulse {
+  animation: gmPulse 1.4s ease-in-out infinite;
+}
+
+/* Image placeholder shimmer for low-bandwidth */
+.gm-img-placeholder {
+  background: linear-gradient(90deg, #F0EBE1 0%, #FAF8F5 50%, #F0EBE1 100%);
+  background-size: 200% 100%;
+  animation: gmShimmer 1.4s ease-in-out infinite;
+}
+@keyframes gmShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

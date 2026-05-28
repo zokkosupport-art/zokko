@@ -1,0 +1,26 @@
+{
+  "short_name": "Zokko",
+  "name": "Zokko · Marketplace Guinée",
+  "description": "Achetez, vendez et proposez des services en Guinée. Paiement Orange Money, partage WhatsApp.",
+  "icons": [
+    {
+      "src": "/branding/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/branding/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#D84315",
+  "background_color": "#FAF8F5",
+  "lang": "fr",
+  "categories": ["shopping", "marketplace", "business"]
+}

@@ -1,0 +1,44 @@
+{
+  "summary": "Phase 4 CinetPay integration tested end-to-end. Backend: 29/29 pytest (10 new CinetPay tests + 19 existing nafamarket tests) all passing, covering /config (configured:false, prices_gnf), /initiate (mock:true, payment_url with mock=1, transaction_id starts NAFA-), /check/:tx (activates + idempotent on 2nd call), /webhook (already_processed:true for completed; 400 when cpm_trans_id missing), boost effect (boosted_until set 7d future + status=approved), premium effect (premium=true), pro effect (is_pro=true), wrong purpose returns 400, /payments/me lists CinetPay payments with provider=cinetpay/mock=true/GNF. Frontend Playwright: /payment?purpose=boost displays CinetPay banner, 4 channel buttons (ALL/MOBILE_MONEY/CREDIT_CARD/WALLET), mock-notice (Mode démo), 'Payer 10 000 GNF' button; clicking it calls /initiate, redirects to /payment/return?tx=NAFA-...&mock=1; success screen shows transaction_ref + 10 000 GNF + COMPLETED badge; /payments history page shows CP badge + 'démo' label + COMPLETED. ListingDetail premium/boost buttons route to /payment with correct query params; Profile + MyAds reference 50 000 GNF Pro.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/me & public_user()", "issue": "pro_until is set in DB on successful pro_subscription payment but is not included in the public_user() serializer, so the frontend cannot show subscription expiry. Consider adding pro_until to public_user()."},
+      {"endpoint": "/api/payments/cinetpay/initiate (mock mode)", "issue": "cinetpay.initiate_payment builds payment_url as f'{return_url}&mock=1&tx={transaction_id}', but return_url already contains '?tx={transaction_id}'. Result URL contains tx= twice (e.g. /payment/return?tx=NAFA-...&mock=1&tx=NAFA-...). Harmless because PaymentReturn uses the first occurrence, but redundant - either drop the second tx= in cinetpay.py or remove tx from return_url."},
+      {"endpoint": "/api/payments/orange-money/initiate & /confirm", "issue": "Legacy Orange Money simulated endpoints still exist alongside the new CinetPay flow. Consider deprecating to avoid duplicate payment paths."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_cinetpay.py",
+    "/app/backend/tests/test_nafamarket.py",
+    "/app/test_reports/pytest/pytest_cinetpay.xml"
+  ],
+  "action_items": [
+    "(Optional) Expose pro_until in public_user() so the frontend can display Pro expiry date.",
+    "(Optional) Remove duplicate tx parameter in mock payment_url construction in /app/backend/cinetpay.py (line 41).",
+    "(Optional) Decide whether to keep or remove legacy /payments/orange-money/* simulated endpoints now that CinetPay covers the same purposes."
+  ],
+  "critical_code_review_comments": [
+    "server.py is now 1100+ lines - strongly consider splitting into routers (auth, listings, payments, admin, reviews, reports, messages) for maintainability.",
+    "cinetpay_webhook returns 401 on bad signature, which is correct, but verify_webhook_signature defaults to True when CINETPAY_WEBHOOK_SECRET is unset/placeholder - acceptable for dev but document/enforce in production.",
+    "_apply_payment_effect is idempotent at the listing level (setting premium=true twice is safe) but for pro_subscription it overwrites pro_until on every successful call. If a user pays twice in the same month, they lose the cumulative time. Consider stacking (pro_until = max(now, pro_until) + 30 days).",
+    "Admin /admin/stats uses sum([p['amount'] async for p in db.payments...]) - will load all payment docs into memory; switch to a $group aggregation for scale.",
+    "cinetpay.is_configured() returns truthy strings rather than a bool in some paths; final '== False' check on /config works thanks to coercion but consider returning explicit bool(...)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_cinetpay.py (new)",
+    "/app/test_reports/iteration_2.json (new)"
+  ],
+  "success_rate": {"backend": "100% (29/29)", "frontend": "100% (full /payment -> /payment/return -> /payments flow verified end-to-end)"},
+  "test_credentials": "Admin phone=620000000 OTP=123456 universal. Any 9-digit phone + OTP 123456 for new users. CinetPay keys are placeholders => mock mode active (payment_url returns to /payment/return?mock=1, verify_payment always returns ACCEPTED).",
+  "seed_data_creation": "Created several TEST_-prefixed listings and ~6 CinetPay mock payments (boost/premium/pro) for the random test users. Existing TEST_ data from iteration_1 still present.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "CinetPay tests live in /app/backend/tests/test_cinetpay.py (10 cases) and reuse the universal OTP login pattern. All 29 backend tests pass in ~6s. Frontend Payment.jsx, PaymentReturn.jsx and Payments history all rendered correctly with the new CP/démo badges. Listing categories accepted by backend are: immobilier, vehicules, electronique, mode, services, emploi, alimentation (not 'vehicles' or 'cars').",
+  "rca of the issue": "No new bugs found. Two cosmetic/minor inconsistencies surfaced during testing: (1) duplicate tx= query param in mock CinetPay return URL (cinetpay.py line 41 appends &tx={id} to a return_url that already contains ?tx={id}); (2) pro_until is persisted in users collection but absent from public_user serializer, so /auth/me cannot expose subscription expiry to UI."
+}

@@ -1,0 +1,31 @@
+{
+  "summary": "Nafamarket Phase 2 end-to-end testing complete. Backend (19/19 pytest cases passing) covers: /auth/me new fields, referral +1 boost both parties, /reports CRUD, admin reports list & resolve, /reviews with rating_avg recompute, /listings/:id/use-boost with credit decrement, existing listings/payments/messages/admin. Frontend critical bug found and fixed: missing `referralCode` useState in Login.jsx caused a ReferenceError that blocked all login. After fix, end-to-end UI verified: Nafamarket branding (N logo + orange gradient + hero text), Login referral input visible, Profile shows verified badge, rating 5.0(1), NAFA-XXXXX code with Copier + Partager WhatsApp buttons and 2 boost credits, Admin tab 'Signalements (1)' lists reports with Résoudre + RESOLVED states, ListingDetail shows Contacter WhatsApp (primary), Message interne, Appeler, Partager, Signaler, verified seal next to seller, and Avis section.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Login.jsx (FIXED)", "issue": "`referralCode` state was used (lines 47, 125) but never declared with useState - ReferenceError crashed login flow entirely after sending OTP", "selector": "[data-testid='referral-input']", "priority": "CRITICAL (FIXED by testing agent: added `const [referralCode, setReferralCode] = useState('')`)"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_nafamarket.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Review Login.jsx fix applied by testing agent (added missing useState for referralCode)",
+    "Consider also ensuring all useState declarations are linted/checked at build (eslint react/no-undef did not catch it because referralCode was referenced inside a JSX child but the missing import was a real ReferenceError at runtime)"
+  ],
+  "critical_code_review_comments": [
+    "Login.jsx: referralCode state was missing - illustrates need for ESLint no-undef pass on JSX",
+    "server.py is 800+ lines; consider splitting into routers (auth/listings/reviews/reports/admin) for maintainability",
+    "Admin payments revenue sum uses async generator inside sum() which is fine but could overflow with large datasets - consider an aggregation pipeline",
+    "/api/reviews unique index on (from_user_id, target_user_id) is correct but startup will fail on existing duplicate data; verify in production migration",
+    "Frontend bundle.js path /static/js/bundle.js indicates CRA - lint with react-hooks/exhaustive-deps recommended"
+  ],
+  "updated_files": ["/app/frontend/src/pages/Login.jsx", "/app/backend/tests/test_nafamarket.py", "/app/test_reports/iteration_1.json"],
+  "success_rate": {"backend": "100% (19/19)", "frontend": "100% after fix (all 6 phase-2 UI flows verified)"},
+  "test_credentials": "Admin phone=620000000 OTP=123456; any 9-digit phone with OTP 123456 for new users. Admin referral code observed: NAFA-1CCF1 (rotates per fresh seed)",
+  "seed_data_creation": "Created TEST_ prefixed listings, a TEST report (now resolved) and a TEST review during tests; left in DB for next agent",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Pytest file at /app/backend/tests/test_nafamarket.py - 19 cases pass in ~4s. Login.jsx had a critical missing useState that has been fixed. Test data is prefixed TEST_ for easy cleanup. Universal OTP=123456 works for any phone. Admin user is now 'Admin Nafamarket'.",
+  "rca of the issue": "Login.jsx referenced `referralCode` and `setReferralCode` on lines 47 and 125-126 but `const [referralCode, setReferralCode] = useState('')` was never declared (only step/phone/otp/name/city/devOtp/loading were declared at lines 12-18). React threw 'ReferenceError: referralCode is not defined' as soon as the OTP step rendered the referral input field. Reproduction: navigate to /login, enter any phone, click 'Recevoir le code' -> red error overlay appears. Mitigation applied: inserted `const [referralCode, setReferralCode] = useState('');` between devOtp and loading state declarations in Login.jsx. Verified fix by completing admin login and reaching authenticated /profile and /admin pages."
+}

@@ -1,0 +1,33 @@
+# Dev local : MongoDB + API (frontend en npm start séparé)
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - zokko_mongo_data:/data/db
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_BACKEND_URL: http://localhost:8000
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      DB_NAME: zokko
+      STORAGE_BACKEND: local
+      STORAGE_LOCAL_PATH: /app/backend/data/uploads
+      FRONTEND_BUILD: /app/frontend/build
+      OTP_DEV_MODE: "true"
+    depends_on:
+      - mongo
+    volumes:
+      - ./backend/data:/app/backend/data
+
+volumes:
+  zokko_mongo_data:

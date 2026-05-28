@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api/admin/*
+Disallow: /messages
+Disallow: /messages/*
+Disallow: /profile
+Disallow: /payment
+Disallow: /payment/*
+Disallow: /payments
+Disallow: /my-ads
+
+Sitemap: https://zokko.net/api/sitemap.xml
