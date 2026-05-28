@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Zokko — Affiche éléphant Guinée</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    body { background: #222; display: flex; justify-content: center; padding: 20px; font-family: system-ui, sans-serif; }
+    .poster {
+      width: 1080px; height: 1080px; position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #009460 0%, #009460 38%, #FCD116 38%, #FCD116 62%, #CE1126 62%);
+    }
+    .panel {
+      position: absolute; inset: 36px; background: #FAF8F5; border-radius: 40px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 48px;
+    }
+    .logo {
+      width: 280px; height: 280px; background: #fff; border-radius: 56px;
+      box-shadow: 0 16px 48px rgba(26,46,34,.15);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 32px;
+      border: 6px solid transparent;
+      border-image: linear-gradient(135deg, #CE1126, #FCD116, #009460) 1;
+    }
+    .logo img { width: 220px; height: 220px; }
+    .brand { font-size: 96px; font-weight: 900; color: #1A2E22; letter-spacing: -3px; }
+    .brand span {
+      background: linear-gradient(90deg, #CE1126, #FCD116, #009460);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hook {
+      font-size: 52px; font-weight: 800; color: #D84315; margin: 20px 0 16px;
+      line-height: 1.1;
+    }
+    .sub { font-size: 34px; color: #4A5D50; max-width: 800px; line-height: 1.4; }
+    .url {
+      margin-top: 36px; font-size: 44px; font-weight: 800; color: #009460;
+      padding: 16px 40px; background: #E8F5E9; border-radius: 16px;
+    }
+    .flag { font-size: 48px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="poster">
+    <div class="panel">
+      <div class="flag">🇬🇳</div>
+      <div class="logo">
+        <img src="../frontend/public/branding/icon-guinea.svg" alt="Zokko éléphant"
+             onerror="this.src='../frontend/public/branding/icon-192.png'; this.style.filter='hue-rotate(85deg) saturate(1.4)';" />
+      </div>
+      <div class="brand">Zok<span>ko</span></div>
+      <p class="hook">Annonces 100% GRATUITES</p>
+      <p class="sub">Vendez par téléphone · Contact WhatsApp · Toute la Guinée</p>
+      <p class="url">www.zokko.net</p>
+    </div>
+  </div>
+</body>
+</html>
