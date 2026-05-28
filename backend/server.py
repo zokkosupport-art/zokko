@@ -99,6 +99,23 @@ ADMIN_PHONES = _parse_admin_phones()
 ADMIN_PHONE = ADMIN_PHONES[0] if ADMIN_PHONES else normalize_phone("612516488", "GN")
 ORANGE_MONEY_NUMBER = os.environ.get('ORANGE_MONEY_NUMBER', '+224612516488')
 ORANGE_MONEY_HOLDER = os.environ.get('ORANGE_MONEY_HOLDER', 'Zokko')
+AUTO_APPROVE_LISTINGS = os.environ.get("AUTO_APPROVE_LISTINGS", "false").lower() in ("1", "true", "yes")
+
+_DEFAULT_CORS_ORIGINS = [
+    "https://zokko-production.up.railway.app",
+    "https://zokko.net",
+    "https://www.zokko.net",
+    "http://localhost:3000",
+]
+
+
+def _cors_origins() -> List[str]:
+    raw = os.environ.get("CORS_ORIGINS", "").strip()
+    if not raw:
+        return _DEFAULT_CORS_ORIGINS
+    if raw == "*":
+        return ["*"]
+    return [o.strip() for o in raw.split(",") if o.strip()]
 
 CATEGORIES = [
     {"slug": "immobilier", "name": "Immobilier", "icon": "House"},
@@ -868,7 +885,7 @@ async def create_listing(body: ListingCreate, user=Depends(get_current_user)):
         "photos": body.photos,
         "type": body.type,
         "whatsapp": body.whatsapp or user.get("whatsapp") or user.get("phone"),
-        "status": "pending",  # admin must approve
+        "status": "approved" if AUTO_APPROVE_LISTINGS else "pending",
         "premium": False,
         "boosted_until": None,
         "views": 0,
@@ -1664,7 +1681,7 @@ async def og_share(listing_id: str, request: Request):
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=_cors_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )

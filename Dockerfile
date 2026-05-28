@@ -4,6 +4,8 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install --legacy-peer-deps
 COPY frontend/ .
+# REACT_APP_BACKEND_URL vide = same-origin (FastAPI sert /api + le build React).
+# Ne pas hardcoder l'URL Railway ici — laisser vide en prod Docker/Railway.
 ARG REACT_APP_BACKEND_URL=
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 ENV CI=false

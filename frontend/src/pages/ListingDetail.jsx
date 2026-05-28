@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Eye, ChatCircleText, WhatsappLogo, ArrowLeft, Star, Lightning, Phone, ShareNetwork, Flag, SealCheck } from "@phosphor-icons/react";
-import api, { fileUrl, formatPrice, formatApiError } from "@/lib/api";
+import api, { BACKEND_URL, fileUrl, formatPrice, formatApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export default function ListingDetail() {
   const whatsappNumber = (listing.whatsapp || listing.owner?.phone || "").replace(/\D/g, "");
   const whatsappLink = `https://wa.me/224${whatsappNumber}?text=${encodeURIComponent(`Bonjour, je suis intéressé par : ${listing.title}`)}`;
   // Use backend OG-share URL for rich WhatsApp/social previews
-  const shareUrl = `${process.env.REACT_APP_BACKEND_URL}/api/s/${listing.id}`;
+  const shareUrl = `${BACKEND_URL}/api/s/${listing.id}`;
   const shareText = `${listing.title} - ${formatPrice(listing.price, listing.currency)} - ${listing.city}\n\n${shareUrl}\n\nVu sur Zokko 🇬🇳`;
   const shareLink = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
@@ -181,14 +181,15 @@ export default function ListingDetail() {
           <div className="bg-white border border-[#E5E0D8] rounded-2xl p-5 space-y-3">
             <h3 className="font-heading font-semibold text-[#1A2E22]">Vendeur</h3>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#D84315]/10 text-[#D84315] font-heading font-bold flex items-center justify-center text-lg">
-                {(listing.owner?.name || "U").charAt(0).toUpperCase()}
-              </div>
+              <UserAvatar user={listing.owner} size={48} />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-[#1A2E22] flex items-center gap-1">
                   {listing.owner?.name || "Utilisateur"}
                   {listing.owner?.verified && <SealCheck size={16} weight="fill" className="text-[#2E7D32]" title="Profil vérifié" />}
                 </p>
+                {listing.owner?.username && (
+                  <p className="text-xs text-[#D84315] font-medium">@{listing.owner.username}</p>
+                )}
                 <div className="flex items-center gap-2 text-xs text-[#4A5D50]">
                   <span>{listing.owner?.city}</span>
                   {ratingCount > 0 && (

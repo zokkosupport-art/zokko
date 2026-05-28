@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth";
 import {
   House, Car, DeviceMobile, TShirt, Wrench, Briefcase, ForkKnife,
   ArrowRight, Sparkle, Lightning, ShieldCheck, WhatsappLogo, Storefront,
-  ChatCircleText, CurrencyCircleDollar, Camera, SealCheck, Star, Quotes,
+  CurrencyCircleDollar, Camera, SealCheck, Star, Quotes,
   CaretDown, User, Buildings,
 } from "@phosphor-icons/react";
 
@@ -21,7 +21,7 @@ const STEPS = [
 
 const BENEFITS = [
   { icon: Lightning, title: "Ultra rapide", desc: "Conçu pour les téléphones bas de gamme et la connexion 2G/3G en Guinée", color: "#D84315" },
-  { icon: ShieldCheck, title: "Confiance", desc: "Profils vérifiés par OTP, avis 5 étoiles, signalement instantané anti-arnaque", color: "#2E7D32" },
+  { icon: ShieldCheck, title: "Confiance", desc: "Compte protégé par code secret, avis vendeurs, signalement anti-arnaque", color: "#2E7D32" },
   { icon: WhatsappLogo, title: "WhatsApp natif", desc: "Bouton WhatsApp direct sur chaque annonce, partage en 1 clic", color: "#25D366" },
   { icon: Storefront, title: "100% Guinée", desc: "7 catégories locales, 10 villes, paiement Orange Money +224", color: "#FF6600" },
 ];
@@ -53,7 +53,7 @@ const FAQ = [
   { q: "Comment me connecter ?", a: "Entrez votre numéro guinéen (+224), puis votre code secret à 6 chiffres que vous choisissez à la première inscription. Pas de SMS — vous gardez le même code ensuite. Les administrateurs utilisent /admin-login." },
   { q: "Est-ce que Zokko est gratuit ?", a: "Oui, l'inscription et la publication d'annonces sont 100% gratuites. Vous payez uniquement si vous souhaitez booster votre annonce (10 000 GNF), la passer Premium (20 000 GNF) ou activer l'abonnement Pro (50 000 GNF/mois)." },
   { q: "Comment payer en Orange Money ?", a: "Envoyez le montant exact au +224 612 51 64 88, puis remplissez le formulaire dans l'app avec votre code de transaction et une capture d'écran. Notre équipe valide en moins de 24h et active automatiquement votre service." },
-  { q: "Comment éviter les arnaques ?", a: "Vérifiez le badge ✓ vert (profil OTP vérifié), regardez les avis ⭐ du vendeur, contactez-le par WhatsApp, et signalez toute annonce suspecte avec le bouton 🚩. Notre équipe modère 7j/7." },
+  { q: "Comment éviter les arnaques ?", a: "Consultez les avis ⭐ du vendeur, contactez-le par WhatsApp, privilégiez une rencontre en personne, et signalez toute annonce suspecte avec le bouton 🚩. Notre équipe modère 7j/7." },
   { q: "Sur quel téléphone ça marche ?", a: "Zokko fonctionne sur tous les téléphones : iPhone, Android, et même les téléphones d'entrée de gamme. L'app est légère et économe en data. Vous pouvez l'installer sur votre écran d'accueil comme une vraie app." },
   { q: "Combien je gagne en parrainant un ami ?", a: "Votre code parrain ZOK-XXXXX donne +1 boost gratuit (7 jours) à vous ET à votre filleul. Plus vous invitez, plus vous boostez gratuitement vos annonces." },
 ];
@@ -93,6 +93,11 @@ export default function Home() {
 
   return (
     <div className="bg-[#FAF8F5]">
+      {/* Launch bandeau */}
+      <div className="bg-[#1A2E22] text-white text-center text-xs sm:text-sm py-2 px-4">
+        <span className="opacity-90">🚀 Zokko est ouvert en Guinée — publiez gratuitement et partagez vos annonces sur WhatsApp.</span>
+      </div>
+
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 gm-noise opacity-60" />
@@ -107,7 +112,7 @@ export default function Home() {
                 <span className="text-[#D84315]">près de chez vous.</span>
               </h1>
               <p className="text-base sm:text-lg text-[#4A5D50] max-w-md">
-                La marketplace simple et rapide de la Guinée. Connexion par téléphone + code à 6 chiffres, profil vérifié, Orange Money, WhatsApp.
+                La marketplace simple et rapide de la Guinée. Connexion par téléphone + code à 6 chiffres, paiement Orange Money, partage WhatsApp.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link to={user ? "/listings" : "/login"} className="inline-flex items-center gap-2 bg-[#D84315] hover:bg-[#BF360C] text-white px-6 py-3 rounded-full font-semibold transition-colors" data-testid="hero-cta-primary">
@@ -126,8 +131,13 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="relative h-64 md:h-96 rounded-3xl overflow-hidden bg-gradient-to-br from-[#D84315] to-[#2E7D32] gm-fade-in flex items-center justify-center">
-              <Storefront size={120} weight="duotone" className="text-white/90" aria-hidden />
+            <div className="relative h-64 md:h-96 rounded-3xl overflow-hidden bg-[#F5E6D3] gm-fade-in">
+              <img
+                src="/hero-market.png"
+                alt="Marché coloré en Guinée — illustration Zokko"
+                className="w-full h-full object-cover object-center"
+                loading="eager"
+              />
             </div>
           </div>
         </div>
@@ -374,48 +384,6 @@ export default function Home() {
           <p className="text-xs text-white/60 pt-3">Pas de carte bancaire · 100% Guinée · Orange Money</p>
         </div>
       </section>
-
-      {/* FOOTER */}
-      <footer className="bg-[#1A2E22] text-white/70 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-4 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <img src="/branding/icon-192.png" alt="Zokko" className="w-9 h-9 rounded-xl object-contain bg-white" />
-              <span className="font-heading font-bold text-xl text-white">Zo<span className="text-[#FBC02D]">kko</span></span>
-            </div>
-            <p className="text-sm">La marketplace simple et rapide de la Guinée 🇬🇳</p>
-          </div>
-          <div>
-            <p className="font-heading font-semibold text-white mb-3">Marketplace</p>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/listings" className="hover:text-white">Toutes les annonces</Link></li>
-              <li><Link to="/publish" className="hover:text-white">Publier une annonce</Link></li>
-              <li><Link to="/listings?category=services" className="hover:text-white">Services</Link></li>
-              <li><Link to="/listings?category=immobilier" className="hover:text-white">Immobilier</Link></li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-heading font-semibold text-white mb-3">Compte</p>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/login" className="hover:text-white">Se connecter</Link></li>
-              <li><Link to="/profile" className="hover:text-white">Mon profil</Link></li>
-              <li><Link to="/my-ads" className="hover:text-white">Mes annonces</Link></li>
-              <li><Link to="/payments" className="hover:text-white">Mes paiements</Link></li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-heading font-semibold text-white mb-3">Contact</p>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-center gap-2"><WhatsappLogo size={16} weight="fill" className="text-[#25D366]" /> +224 612 51 64 88</li>
-              <li className="flex items-center gap-2"><ChatCircleText size={16} /> support@zokko.gn</li>
-              <li>Conakry, Guinée</li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-white/10 text-center text-xs text-white/50">
-          © 2026 Zokko · La marketplace de la Guinée · Tous droits réservés
-        </div>
-      </footer>
     </div>
   );
 }

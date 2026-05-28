@@ -16,6 +16,7 @@ import Payment from "@/pages/Payment";
 import PaymentReturn from "@/pages/PaymentReturn";
 import PaymentsHistory from "@/pages/PaymentsHistory";
 import Admin from "@/pages/Admin";
+import Legal from "@/pages/Legal";
 import "@/App.css";
 
 function Protected({ children, admin }) {
@@ -46,6 +47,7 @@ function App() {
             <Route path="/payment/return" element={<Protected><PaymentReturn /></Protected>} />
             <Route path="/payments" element={<Protected><PaymentsHistory /></Protected>} />
             <Route path="/admin" element={<Protected admin><Admin /></Protected>} />
+            <Route path="/legal" element={<Legal />} />
           </Route>
         </Routes>
       </BrowserRouter>
