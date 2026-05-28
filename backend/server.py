@@ -506,12 +506,23 @@ async def health_db():
 async def health_env():
     """Vérifie que Railway injecte les variables (sans afficher les secrets)."""
     mongo = os.environ.get("MONGO_URL", "").strip()
+    zokko_keys = sorted(
+        k for k in os.environ
+        if k.startswith(("MONGO_", "DB_", "JWT_", "ADMIN_", "STORAGE_", "OTP_", "CORS_", "FRONTEND_"))
+    )
     return {
         "MONGO_URL_set": bool(mongo),
         "MONGO_URL_length": len(mongo),
         "DB_NAME": os.environ.get("DB_NAME", "").strip() or None,
         "JWT_SECRET_set": len(os.environ.get("JWT_SECRET", "").strip()) >= 16,
         "ADMIN_PASSWORD_set": bool(os.environ.get("ADMIN_PASSWORD", "").strip()),
+        "PORT": os.environ.get("PORT"),
+        "RAILWAY_ENVIRONMENT": os.environ.get("RAILWAY_ENVIRONMENT"),
+        "zokko_env_keys_found": zokko_keys,
+        "hint": (
+            "Si tout est vide : Variables sur le service zokko (pas Shared seul), "
+            "bouton + New Variable, puis Redeploy."
+        ),
     }
 
 
