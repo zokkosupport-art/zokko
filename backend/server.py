@@ -242,15 +242,15 @@ class ReviewCreate(BaseModel):
     rating: int  # 1-5
     comment: Optional[str] = ""
 
-# Demo listing cover URLs (used at seed + backfill when photos are empty)
+# Demo listing cover URLs — must match ad titles (stock photos)
 DEMO_LISTING_PHOTOS = {
-    "Toyota": "https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "Toyota": "https://images.unsplash.com/photo-1623869674694-dcd959eca434?auto=format&fit=crop&w=800&q=80",
     "Appartement": "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800",
     "iPhone": "https://images.pexels.com/photos/4158/apple-iphone-smartphone-desk.jpg?auto=compress&cs=tinysrgb&w=800",
-    "Coiffure": "https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "Coiffure": "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
     "Bazin": "https://images.pexels.com/photos/29168547/pexels-photo-29168547.jpeg?auto=compress&cs=tinysrgb&w=800",
     "Livraison": "https://images.pexels.com/photos/4391470/pexels-photo-4391470.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "Riz": "https://images.pexels.com/photos/4113899/pexels-photo-4113899.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "Riz": "https://images.unsplash.com/photo-1586201375767-2b532b21d645?auto=format&fit=crop&w=800&q=80",
     "Chauffeur": "https://images.pexels.com/photos/4484078/pexels-photo-4484078.jpeg?auto=compress&cs=tinysrgb&w=800",
 }
 
@@ -262,15 +262,21 @@ def demo_photo_for_title(title: str) -> List[str]:
 
 
 async def backfill_demo_listing_photos():
-    """Ensure seeded demo ads show thumbnails in listing grids."""
+    """Sync demo ad photos so thumbnails match titles (fixes wrong stock images on redeploy)."""
     patched = 0
-    async for listing in db.listings.find({"$or": [{"photos": {"$exists": False}}, {"photos": []}, {"photos": None}]}):
+    async for listing in db.listings.find({}, {"_id": 0, "id": 1, "title": 1, "photos": 1}):
         urls = demo_photo_for_title(listing.get("title", ""))
-        if urls:
-            await db.listings.update_one({"id": listing["id"]}, {"$set": {"photos": urls, "updated_at": now_iso()}})
+        if not urls:
+            continue
+        current = listing.get("photos") or []
+        if current != urls:
+            await db.listings.update_one(
+                {"id": listing["id"]},
+                {"$set": {"photos": urls, "updated_at": now_iso()}},
+            )
             patched += 1
     if patched:
-        logger.info(f"Backfilled photos on {patched} demo listing(s)")
+        logger.info(f"Synced photos on {patched} demo listing(s)")
 
 
 # ---------------- Helpers ----------------

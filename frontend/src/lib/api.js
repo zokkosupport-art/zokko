@@ -45,12 +45,12 @@ export const getListingCoverUrl = (listing) => fileUrl(getListingCoverPath(listi
 
 /** Category fallback when no uploaded photo (demo / legacy listings). */
 export const CATEGORY_PLACEHOLDER_IMAGES = {
-  vehicules: "https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg?auto=compress&cs=tinysrgb&w=800",
+  vehicules: "https://images.unsplash.com/photo-1623869674694-dcd959eca434?auto=format&fit=crop&w=800&q=80",
   immobilier: "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800",
   electronique: "https://images.pexels.com/photos/4158/apple-iphone-smartphone-desk.jpg?auto=compress&cs=tinysrgb&w=800",
-  services: "https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=800",
+  services: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
   mode: "https://images.pexels.com/photos/29168547/pexels-photo-29168547.jpeg?auto=compress&cs=tinysrgb&w=800",
-  alimentation: "https://images.pexels.com/photos/4113899/pexels-photo-4113899.jpeg?auto=compress&cs=tinysrgb&w=800",
+  alimentation: "https://images.unsplash.com/photo-1586201375767-2b532b21d645?auto=format&fit=crop&w=800&q=80",
   emploi: "https://images.pexels.com/photos/4484078/pexels-photo-4484078.jpeg?auto=compress&cs=tinysrgb&w=800",
 };
 

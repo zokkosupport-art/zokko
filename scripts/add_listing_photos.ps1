@@ -13,8 +13,8 @@ New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
 # keyword -> URL + label (for logs)
 $photoMap = [ordered]@{
     "Toyota" = @{
-        Url = "https://unsplash.com/photos/iM22SSg5LjI/download?force=true&w=1200"
-        Label = "Toyota Corolla noire (sedan)"
+        Url = "https://images.unsplash.com/photo-1623869674694-dcd959eca434?auto=format&fit=crop&w=1200&q=80"
+        Label = "Berline noire (type Corolla)"
     }
     "Appartement" = @{
         Url = "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1200"
@@ -25,8 +25,8 @@ $photoMap = [ordered]@{
         Label = "iPhone sur bureau"
     }
     "Coiffure" = @{
-        Url = "https://unsplash.com/photos/oJ9JC4wwFBY/download?force=true&w=1200"
-        Label = "Coiffeuse + mariee (mariage)"
+        Url = "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80"
+        Label = "Salon coiffure / mariage"
     }
     "Bazin" = @{
         Url = "https://images.pexels.com/photos/29168547/pexels-photo-29168547.jpeg?auto=compress&cs=tinysrgb&w=1200"
@@ -37,7 +37,7 @@ $photoMap = [ordered]@{
         Label = "Livreur avec cartons"
     }
     "Riz" = @{
-        Url = "https://unsplash.com/photos/rg6JWlyTsrw/download?force=true&w=1200"
+        Url = "https://images.unsplash.com/photo-1586201375767-2b532b21d645?auto=format&fit=crop&w=1200&q=80"
         Label = "Sacs de riz au marche"
     }
     "Chauffeur" = @{

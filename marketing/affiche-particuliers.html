@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Zokko — Particuliers</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    body { background: #111; display: flex; justify-content: center; padding: 24px; font-family: system-ui, Segoe UI, sans-serif; }
+    .poster {
+      width: 1080px; height: 1080px; position: relative;
+      background: #1A2E22;
+    }
+    .top { height: 12px; background: linear-gradient(90deg, #CE1126, #FCD116, #009460); }
+    .content { padding: 64px 56px; color: #fff; height: calc(100% - 12px); display: flex; flex-direction: column; }
+    .logo { font-size: 72px; font-weight: 800; }
+    .logo span { color: #FF6600; }
+    .badge {
+      align-self: flex-start; margin: 28px 0; background: #009460; padding: 14px 28px;
+      border-radius: 999px; font-size: 28px; font-weight: 700;
+    }
+    h1 { font-size: 58px; font-weight: 800; line-height: 1.1; margin: 16px 0 32px; }
+    .items { font-size: 36px; line-height: 1.55; flex: 1; }
+    .items div { margin: 18px 0; padding-left: 8px; border-left: 6px solid #FF6600; padding-left: 20px; }
+    .cta {
+      background: #D84315; text-align: center; padding: 28px; border-radius: 20px;
+      font-size: 38px; font-weight: 800; margin-top: auto;
+    }
+    .url { text-align: center; font-size: 40px; color: #FCD116; margin-top: 20px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="poster">
+    <div class="top"></div>
+    <div class="content">
+      <div class="logo">Zok<span>ko</span></div>
+      <div class="badge">🇬🇳 Particuliers</div>
+      <h1>Vendez ce que vous n’utilisez plus</h1>
+      <div class="items">
+        <div>Téléphone, moto, mode, maison…</div>
+        <div>Publication <strong>gratuite</strong></div>
+        <div>Pas de carte bancaire</div>
+        <div>Acheteurs sur <strong>WhatsApp</strong></div>
+      </div>
+      <div class="cta">Créez votre compte en 1 minute</div>
+      <p class="url">www.zokko.net</p>
+    </div>
+  </div>
+</body>
+</html>
