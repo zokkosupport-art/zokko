@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Phone, ShieldCheck, ArrowLeft, Key } from "@phosphor-icons/react";
+import { Phone, ShieldCheck, ArrowLeft, Key, Camera, UserCircle } from "@phosphor-icons/react";
 import api, { formatApiError } from "@/lib/api";
+import { compressImage } from "@/lib/imageCompress";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,9 @@ export default function Login() {
   const [pin, setPin] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const [city, setCity] = useState("Conakry");
   const [referralCode, setReferralCode] = useState("");
   const [accountType, setAccountType] = useState("particulier");
@@ -89,12 +93,24 @@ export default function Login() {
         pin,
         pin_confirm: needsPinSetup ? pinConfirm : undefined,
         name: isNewUser ? name.trim() : undefined,
+        username: isNewUser && username.trim() ? username.trim() : undefined,
         city,
         referral_code: isNewUser ? referralCode : undefined,
         account_type: isNewUser ? accountType : undefined,
       });
-      login(data.access_token, data.user);
-      toast.success(data.is_new ? `Compte créé — bienvenue ${data.user.name} !` : `Bienvenue ${data.user.name} !`);
+      let token = data.access_token;
+      let user = data.user;
+      login(token, user);
+      if (isNewUser && avatarFile) {
+        const compressed = await compressImage(avatarFile).catch(() => avatarFile);
+        const fd = new FormData();
+        fd.append("file", compressed);
+        const up = await api.post("/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
+        const { data: me } = await api.patch("/auth/me", { avatar: up.data.path });
+        user = me;
+        login(token, me);
+      }
+      toast.success(data.is_new ? `Compte créé — bienvenue ${user.name} !` : `Bienvenue ${user.name} !`);
       nav("/");
     } catch (e) {
       toast.error(formatApiError(e));
@@ -103,15 +119,25 @@ export default function Login() {
     }
   };
 
+  const onAvatarPick = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    e.target.value = "";
+  };
+
   const pinTitle = needsPinSetup
     ? isNewUser
-      ? "Créer votre code secret"
-      : "Choisissez votre code"
-    : "Entrez votre code";
+      ? "Créer votre compte"
+      : "Choisissez votre mot de passe"
+    : "Connexion";
 
   const pinHint = needsPinSetup
-    ? "Choisissez un code à 6 chiffres — vous le réutiliserez à chaque connexion"
-    : `Code secret pour +224 ${phone}`;
+    ? isNewUser
+      ? "Nom visible sur l'app, téléphone +224, mot de passe à 6 chiffres"
+      : "Choisissez un mot de passe à 6 chiffres pour ce numéro"
+    : `Mot de passe pour +224 ${phone}`;
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-10">
@@ -133,7 +159,7 @@ export default function Login() {
             {step === "phone" ? "Connexion / Inscription" : pinTitle}
           </h1>
           <p className="text-sm text-[#4A5D50] mt-2">
-            {step === "phone" ? "Votre numéro + un code à 6 chiffres que vous choisissez" : pinHint}
+            {step === "phone" ? "Numéro guinéen (+224) et mot de passe à 6 chiffres" : pinHint}
           </p>
         </div>
 
@@ -207,7 +233,7 @@ export default function Login() {
                 </div>
                 <div>
                   <Label className="text-[#1A2E22] font-medium mb-1.5 block">
-                    {accountType === "entreprise" ? "Nom de l'entreprise ou boutique" : "Votre nom"}
+                    {accountType === "entreprise" ? "Nom affiché (boutique / entreprise)" : "Nom affiché sur Zokko"}
                   </Label>
                   <Input
                     value={name}
@@ -217,11 +243,46 @@ export default function Login() {
                     data-testid="name-input"
                   />
                 </div>
+                <div>
+                  <Label className="text-[#1A2E22] font-medium mb-1.5 block">
+                    Identifiant <span className="text-[#4A5D50] font-normal">(optionnel)</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#4A5D50] text-sm">@</span>
+                    <Input
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
+                      placeholder="mamadou_shop"
+                      className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-12 flex-1"
+                      data-testid="username-input"
+                    />
+                  </div>
+                  <p className="text-xs text-[#4A5D50] mt-1">Pour vous retrouver sur l&apos;app (3–24 caractères).</p>
+                </div>
+                <div>
+                  <Label className="text-[#1A2E22] font-medium mb-1.5 block">
+                    Photo de profil <span className="text-[#4A5D50] font-normal">(optionnel)</span>
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-[#FAF8F5] border border-[#E5E0D8] overflow-hidden flex items-center justify-center text-[#D84315]">
+                      {avatarPreview ? (
+                        <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <UserCircle size={40} weight="duotone" />
+                      )}
+                    </div>
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[#E5E0D8] text-sm font-medium text-[#D84315] cursor-pointer hover:bg-[#D84315]/5">
+                      <Camera size={18} />
+                      Choisir une photo
+                      <input type="file" accept="image/*" className="hidden" onChange={onAvatarPick} data-testid="avatar-input" />
+                    </label>
+                  </div>
+                </div>
               </>
             )}
             <div>
               <Label className="text-[#1A2E22] font-medium mb-1.5 block">
-                {needsPinSetup ? "Choisissez un code (6 chiffres)" : "Votre code secret"}
+                {needsPinSetup ? "Mot de passe (6 chiffres)" : "Mot de passe"}
               </Label>
               <Input
                 type="password"
@@ -236,7 +297,7 @@ export default function Login() {
             </div>
             {needsPinSetup && (
               <div>
-                <Label className="text-[#1A2E22] font-medium mb-1.5 block">Confirmez le code</Label>
+                <Label className="text-[#1A2E22] font-medium mb-1.5 block">Confirmez le mot de passe</Label>
                 <Input
                   type="password"
                   inputMode="numeric"

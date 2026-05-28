@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import UserAvatar from "@/components/UserAvatar";
 
 export default function ListingDetail() {
   const { id } = useParams();

@@ -148,15 +148,19 @@ class PhonePinAuth(BaseModel):
     pin: str
     pin_confirm: Optional[str] = None
     name: Optional[str] = None
+    username: Optional[str] = None
     city: Optional[str] = "Conakry"
     referral_code: Optional[str] = None
     account_type: Optional[str] = "particulier"  # particulier | entreprise
+    avatar: Optional[str] = None  # storage path after upload
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
+    username: Optional[str] = None
     city: Optional[str] = None
     quartier: Optional[str] = None
     whatsapp: Optional[str] = None
+    avatar: Optional[str] = None
     is_pro: Optional[bool] = None
 
 class ListingCreate(BaseModel):
@@ -287,9 +291,19 @@ async def get_admin_user(user=Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Accès admin requis")
     return user
 
+def normalize_username(raw: Optional[str]) -> Optional[str]:
+    if not raw or not str(raw).strip():
+        return None
+    u = re.sub(r"[^a-z0-9_]", "", str(raw).strip().lower().replace(" ", "_"))
+    if len(u) < 3 or len(u) > 24:
+        raise HTTPException(400, "Identifiant : 3 à 24 caractères (lettres, chiffres, _)")
+    return u
+
+
 def public_user(u: dict) -> dict:
     return {
-        "id": u["id"], "name": u.get("name"), "phone": u.get("phone"),
+        "id": u["id"], "name": u.get("name"), "username": u.get("username"),
+        "phone": u.get("phone"), "avatar": u.get("avatar"),
         "city": u.get("city"), "quartier": u.get("quartier"),
         "whatsapp": u.get("whatsapp"), "is_pro": u.get("is_pro", False),
         "pro_until": u.get("pro_until"),
@@ -348,6 +362,7 @@ async def _initialize_app():
     await db.users.create_index("id", unique=True)
     await db.users.create_index("referral_code", sparse=True)
     await db.users.create_index("admin_username", sparse=True, unique=True)
+    await db.users.create_index("username", sparse=True, unique=True)
     await db.listings.create_index("id", unique=True)
     await db.listings.create_index("owner_id")
     await db.listings.create_index("category")
@@ -588,10 +603,17 @@ async def phone_pin_auth(body: PhonePinAuth):
         if pin != confirm:
             raise HTTPException(400, "Les deux codes doivent être identiques")
         is_business = (body.account_type or "").strip().lower() in ("entreprise", "business", "pro")
+        username = normalize_username(body.username)
+        if username:
+            taken = await db.users.find_one({"username": username}, {"_id": 1})
+            if taken:
+                raise HTTPException(400, "Cet identifiant est déjà pris")
         user = {
             "id": str(uuid.uuid4()),
             "phone": phone,
             "name": body.name.strip(),
+            "username": username,
+            "avatar": (body.avatar or "").strip() or None,
             "city": body.city or "Conakry",
             "quartier": "",
             "whatsapp": phone[3:] if phone.startswith("224") else phone,
@@ -749,6 +771,16 @@ async def me(user=Depends(get_current_user)):
 @api.patch("/auth/me")
 async def update_me(body: UserUpdate, user=Depends(get_current_user)):
     updates = {k: v for k, v in body.model_dump(exclude_none=True).items()}
+    if "username" in updates:
+        raw_u = updates.get("username")
+        if raw_u is None or (isinstance(raw_u, str) and not raw_u.strip()):
+            updates["username"] = None
+        else:
+            uname = normalize_username(raw_u)
+            taken = await db.users.find_one({"username": uname, "id": {"$ne": user["id"]}}, {"_id": 1})
+            if taken:
+                raise HTTPException(400, "Cet identifiant est déjà pris")
+            updates["username"] = uname
     if updates:
         await db.users.update_one({"id": user["id"]}, {"$set": updates})
         user.update(updates)

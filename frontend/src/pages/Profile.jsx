@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CrownSimple, SignOut, Wallet, SealCheck, Copy, Gift, Star } from "@phosphor-icons/react";
+import { CrownSimple, SignOut, Wallet, SealCheck, Copy, Gift, Star, Camera } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import api, { formatApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { compressImage } from "@/lib/imageCompress";
+import UserAvatar from "@/components/UserAvatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,22 +14,48 @@ export default function Profile() {
   const { user, setUser, logout } = useAuth();
   const nav = useNavigate();
   const [form, setForm] = useState({
-    name: user?.name || "", city: user?.city || "", quartier: user?.quartier || "", whatsapp: user?.whatsapp || "",
+    name: user?.name || "",
+    username: user?.username || "",
+    city: user?.city || "",
+    quartier: user?.quartier || "",
+    whatsapp: user?.whatsapp || "",
   });
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = async () => {
     setSaving(true);
     try {
-      const { data } = await api.patch("/auth/me", form);
+      const payload = { ...form, username: form.username.trim() || null };
+      const { data } = await api.patch("/auth/me", payload);
       setUser(data);
       toast.success("Profil mis à jour");
     } catch (e) {
       toast.error(formatApiError(e));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const onAvatarPick = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setUploadingAvatar(true);
+    try {
+      const compressed = await compressImage(file).catch(() => file);
+      const fd = new FormData();
+      fd.append("file", compressed);
+      const { data: up } = await api.post("/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      const { data } = await api.patch("/auth/me", { avatar: up.path });
+      setUser(data);
+      toast.success("Photo de profil mise à jour");
+    } catch (err) {
+      toast.error(formatApiError(err));
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -41,18 +69,26 @@ export default function Profile() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
+  const phoneDisplay = user?.phone?.startsWith("224") ? user.phone.slice(3) : user?.phone;
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
       <div className="flex items-center gap-4 mb-6">
-        <div className="w-16 h-16 rounded-full bg-[#D84315]/10 text-[#D84315] font-heading font-bold flex items-center justify-center text-2xl">
-          {(user?.name || "U").charAt(0).toUpperCase()}
+        <div className="relative">
+          <UserAvatar user={user} size={72} />
+          <label className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-[#D84315] text-white flex items-center justify-center cursor-pointer shadow-md">
+            <Camera size={18} weight="fill" />
+            <input type="file" accept="image/*" className="hidden" onChange={onAvatarPick} data-testid="profile-avatar-input" />
+          </label>
         </div>
         <div>
           <h1 className="font-heading font-bold text-2xl text-[#1A2E22] flex items-center gap-1">
             {user?.name}
             {user?.verified && <SealCheck size={20} weight="fill" className="text-[#2E7D32]" />}
           </h1>
-          <p className="text-sm text-[#4A5D50]">+224 {user?.phone}</p>
+          {user?.username && <p className="text-sm text-[#D84315] font-medium">@{user.username}</p>}
+          <p className="text-sm text-[#4A5D50]">+224 {phoneDisplay}</p>
+          {uploadingAvatar && <p className="text-xs text-[#4A5D50] mt-1">Envoi de la photo…</p>}
           <div className="flex items-center gap-2 mt-1">
             {user?.is_pro && <span className="inline-flex items-center gap-1 text-xs bg-[#FBC02D]/20 text-[#1A2E22] px-2 py-0.5 rounded-full font-semibold"><CrownSimple size={12} weight="fill" /> Pro</span>}
             {user?.rating_count > 0 && (
@@ -85,8 +121,18 @@ export default function Profile() {
         <h2 className="font-heading font-semibold text-lg text-[#1A2E22]">Mes informations</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <Label className="font-medium mb-1.5 block">Nom</Label>
+            <Label className="font-medium mb-1.5 block">Nom affiché</Label>
             <Input value={form.name} onChange={(e) => set("name", e.target.value)} className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-11" data-testid="profile-name" />
+          </div>
+          <div>
+            <Label className="font-medium mb-1.5 block">Identifiant (@)</Label>
+            <Input
+              value={form.username}
+              onChange={(e) => set("username", e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
+              placeholder="mamadou_shop"
+              className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-11"
+              data-testid="profile-username"
+            />
           </div>
           <div>
             <Label className="font-medium mb-1.5 block">Ville</Label>
@@ -96,11 +142,12 @@ export default function Profile() {
             <Label className="font-medium mb-1.5 block">Quartier</Label>
             <Input value={form.quartier} onChange={(e) => set("quartier", e.target.value)} className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-11" data-testid="profile-quartier" />
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <Label className="font-medium mb-1.5 block">WhatsApp</Label>
             <Input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-11" data-testid="profile-whatsapp" />
           </div>
         </div>
+        <p className="text-xs text-[#4A5D50]">Connexion : numéro +224 et mot de passe à 6 chiffres (modifiable uniquement ici pour le nom / photo).</p>
         <Button onClick={save} disabled={saving} className="bg-[#D84315] hover:bg-[#BF360C] text-white rounded-full px-6" data-testid="profile-save">
           {saving ? "Sauvegarde..." : "Sauvegarder"}
         </Button>
