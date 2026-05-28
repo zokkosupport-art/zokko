@@ -480,6 +480,15 @@ async def health():
 @app.get("/health/db")
 async def health_db():
     """Diagnostic MongoDB (Railway / Atlas)."""
+    if not os.environ.get("MONGO_URL", "").strip():
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "detail": "MONGO_URL is not set",
+                "hint": "Railway → service zokko → Variables → Raw Editor : une ligne par variable, sans texte en plus.",
+            },
+        )
     try:
         await get_db().command("ping")
         users = await db.users.count_documents({})
@@ -491,6 +500,19 @@ async def health_db():
             status_code=503,
             content={"status": "error", "detail": "MongoDB injoignable", "type": type(e).__name__},
         )
+
+
+@app.get("/health/env")
+async def health_env():
+    """Vérifie que Railway injecte les variables (sans afficher les secrets)."""
+    mongo = os.environ.get("MONGO_URL", "").strip()
+    return {
+        "MONGO_URL_set": bool(mongo),
+        "MONGO_URL_length": len(mongo),
+        "DB_NAME": os.environ.get("DB_NAME", "").strip() or None,
+        "JWT_SECRET_set": len(os.environ.get("JWT_SECRET", "").strip()) >= 16,
+        "ADMIN_PASSWORD_set": bool(os.environ.get("ADMIN_PASSWORD", "").strip()),
+    }
 
 
 @app.get("/api")
