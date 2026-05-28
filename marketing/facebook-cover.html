@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Facebook cover 820×312 — Zokko</title>
+  <style>
+    * { margin: 0; box-sizing: border-box; }
+    body { background: #333; display: flex; flex-direction: column; align-items: center; padding: 20px; font-family: system-ui, sans-serif; color: #ccc; }
+    .cover {
+      width: 820px; height: 312px; overflow: hidden; position: relative;
+      background: linear-gradient(90deg, #CE1126 0%, #CE1126 33%, #FCD116 33%, #FCD116 66%, #009460 66%);
+    }
+    .inner {
+      position: absolute; inset: 0; display: flex; align-items: center;
+      padding: 0 48px; gap: 36px; background: rgba(250,248,245,0.92);
+    }
+    .logo {
+      width: 160px; height: 160px; flex-shrink: 0; background: #fff; border-radius: 28px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    }
+    .logo img { width: 130px; height: 130px; }
+    h1 { font-size: 52px; font-weight: 900; color: #1A2E22; line-height: 1; }
+    h1 span {
+      background: linear-gradient(90deg, #CE1126, #009460);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .tag { font-size: 26px; font-weight: 700; color: #D84315; margin-top: 8px; }
+    .url { font-size: 28px; font-weight: 800; color: #009460; margin-top: 12px; }
+    .gn { font-size: 32px; }
+    p.hint { margin-top: 16px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="cover" id="capture">
+    <div class="inner">
+      <div class="logo">
+        <img src="../frontend/public/branding/icon-guinea.svg" alt=""
+             onerror="this.src='../frontend/public/branding/icon-192.png'" />
+      </div>
+      <div>
+        <div class="gn">🇬🇳</div>
+        <h1>Zok<span>ko</span> — Guinée</h1>
+        <p class="tag">Annonces 100% GRATUITES · WhatsApp</p>
+        <p class="url">www.zokko.net</p>
+      </div>
+    </div>
+  </div>
+  <p class="hint">Capture uniquement le rectangle 820×312 (outil capture Windows ou extension). Puis Page Facebook → Photo de couverture.</p>
+</body>
+</html>
