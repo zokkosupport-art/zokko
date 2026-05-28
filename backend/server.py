@@ -572,7 +572,7 @@ async def phone_pin_auth(body: PhonePinAuth):
     if is_admin_phone(phone):
         raise HTTPException(400, "Connexion admin via /admin-login")
     pin = normalize_pin(body.pin)
-    await enforce_limit(
+    await _safe_rate_limit(
         f"pin:{phone}", max_requests=15, window_seconds=3600,
         error_msg="Trop de tentatives. Réessayez dans 1 heure.",
     )
@@ -651,7 +651,7 @@ async def request_otp(body: OTPRequest):
         raise HTTPException(400, "Numéro de téléphone invalide")
     if is_admin_phone(phone):
         raise HTTPException(400, "Connexion admin via /admin-login (identifiant + mot de passe)")
-    await enforce_limit(
+    await _safe_rate_limit(
         f"otp:{phone}", max_requests=3, window_seconds=3600,
         error_msg="Trop de demandes de code. Réessayez dans 1 heure.",
     )

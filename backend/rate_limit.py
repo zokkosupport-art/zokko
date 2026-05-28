@@ -29,14 +29,15 @@ async def enforce_limit(key: str, max_requests: int, window_seconds: int, error_
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(seconds=window_seconds)
     db = _get_db()
-    # Remove old entries + add new one
+    # Initialize doc if missing — cannot combine $setOnInsert and $pull on the same field
     await db.rate_limit.update_one(
         {"key": key},
-        {
-            "$setOnInsert": {"timestamps": []},
-            "$pull": {"timestamps": {"$lt": cutoff.isoformat()}},
-        },
+        {"$setOnInsert": {"timestamps": []}},
         upsert=True,
+    )
+    await db.rate_limit.update_one(
+        {"key": key},
+        {"$pull": {"timestamps": {"$lt": cutoff.isoformat()}}},
     )
     record = await db.rate_limit.find_one({"key": key}, {"_id": 0, "timestamps": 1})
     recent = (record or {}).get("timestamps") or []
@@ -50,5 +51,4 @@ async def enforce_limit(key: str, max_requests: int, window_seconds: int, error_
     await db.rate_limit.update_one(
         {"key": key},
         {"$push": {"timestamps": now.isoformat()}, "$set": {"updated_at": now.isoformat()}},
-        upsert=True,
     )
