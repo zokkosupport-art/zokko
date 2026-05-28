@@ -415,8 +415,10 @@ app = FastAPI(title="GuinéeMarket API", lifespan=lifespan)
 
 
 @app.get("/health")
+@app.head("/health")
 async def health():
-    return {"status": "ok"}
+    """Liveness for Railway — must not depend on Mongo or startup task."""
+    return {"status": "ok", "service": APP_NAME}
 
 
 @app.get("/api")

@@ -15,8 +15,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
+RUN chmod +x start.sh
 COPY --from=frontend-build /app/frontend/build /app/frontend/build
 ENV FRONTEND_BUILD=/app/frontend/build
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
-CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["/app/backend/start.sh"]

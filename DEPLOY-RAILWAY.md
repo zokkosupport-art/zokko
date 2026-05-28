@@ -96,6 +96,15 @@ Avec `STORAGE_BACKEND=local` sur Railway, les images peuvent être perdues à un
 | Problème | Solution |
 |----------|----------|
 | Build échoue | Logs Railway → souvent `npm` ; relancer Deploy |
+| **Healthcheck FAILED** (~2 min) | Voir section ci-dessous |
 | Site blanc | Vérifier `FRONTEND_BUILD` et logs uvicorn |
 | Erreur Mongo | Atlas IP 0.0.0.0/0 + bon `MONGO_URL` |
 | Login ne marche pas | `OTP_DEV_MODE=false` en prod |
+
+### Healthcheck FAILED (Build OK, Deploy OK)
+
+1. **Deploy Logs** (pas Build) : cherchez `FATAL: MONGO_URL`, `Error loading ASGI`, `Address already in use`, ou crash Python. Le conteneur doit afficher `[start.sh] uvicorn server:app on 0.0.0.0:…`.
+2. **Variables** (obligatoires) : `MONGO_URL`, `JWT_SECRET`, `DB_NAME` — ne pas commiter `.env`. `PORT` est injecté par Railway ; ne le définissez pas vous-même.
+3. **Settings → Health Check** : chemin **`/health`** (pas `/api`). Si un chemin est déjà saisi dans l’interface Railway, il **remplace** `railway.toml` — corrigez-le dans l’UI puis **Redeploy**.
+4. **Start command** : laissez Railway utiliser le **Dockerfile** (`/app/backend/start.sh`). N’ajoutez pas un `startCommand` manuel du type `uvicorn …` depuis la racine du repo (module `server` introuvable).
+5. Après correction → **Deployments → Redeploy**. Test : `https://VOTRE-DOMAINE.up.railway.app/health` doit renvoyer `{"status":"ok",…}`.

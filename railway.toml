@@ -1,9 +1,11 @@
+# Railway config (repo root). Docker CMD in Dockerfile runs backend/start.sh.
+# If healthcheck still fails: Railway UI → Service → Settings → Health Check
+#   Path = /health  (not /api). Dashboard settings override railway.toml when set.
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "uvicorn server:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
-healthcheckTimeout = 180
+healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
