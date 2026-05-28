@@ -21,7 +21,8 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, UploadFile, File, Header, Query, Response
-from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
+from pymongo.errors import PyMongoError
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
@@ -225,6 +226,8 @@ def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 def create_jwt(user_id: str, role: str) -> str:
+    if not JWT_SECRET or len(JWT_SECRET) < 16:
+        raise HTTPException(503, "JWT_SECRET manquant ou trop court sur le serveur")
     payload = {
         "sub": user_id,
         "role": role,
@@ -449,11 +452,45 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="GuinéeMarket API", lifespan=lifespan)
 
 
+@app.exception_handler(RuntimeError)
+async def runtime_error_handler(request: Request, exc: RuntimeError):
+    if "MONGO" in str(exc).upper() or "DB_NAME" in str(exc).upper():
+        logger.error("DB config error: %s", exc)
+        return JSONResponse(status_code=503, content={"detail": "Base de données non configurée (MONGO_URL / DB_NAME)"})
+    logger.exception("RuntimeError")
+    return JSONResponse(status_code=500, content={"detail": "Erreur serveur"})
+
+
+@app.exception_handler(PyMongoError)
+async def mongo_error_handler(request: Request, exc: PyMongoError):
+    logger.error("MongoDB error on %s: %s", request.url.path, exc)
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Base de données inaccessible. Vérifiez MONGO_URL sur Railway et Atlas (IP 0.0.0.0/0)."},
+    )
+
+
 @app.get("/health")
 @app.head("/health")
 async def health():
     """Liveness for Railway — must not depend on Mongo or startup task."""
     return {"status": "ok", "service": APP_NAME}
+
+
+@app.get("/health/db")
+async def health_db():
+    """Diagnostic MongoDB (Railway / Atlas)."""
+    try:
+        await get_db().command("ping")
+        users = await db.users.count_documents({})
+        return {"status": "ok", "db": _db_name(), "users": users}
+    except RuntimeError as e:
+        return JSONResponse(status_code=503, content={"status": "error", "detail": str(e)})
+    except PyMongoError as e:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "error", "detail": "MongoDB injoignable", "type": type(e).__name__},
+        )
 
 
 @app.get("/api")

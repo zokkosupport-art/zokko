@@ -33,6 +33,7 @@ async def enforce_limit(key: str, max_requests: int, window_seconds: int, error_
     await db.rate_limit.update_one(
         {"key": key},
         {
+            "$setOnInsert": {"timestamps": []},
             "$pull": {"timestamps": {"$lt": cutoff.isoformat()}},
         },
         upsert=True,
