@@ -15,10 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
-# Windows CRLF in start.sh breaks shebang on Linux (/bin/sh\r: bad interpreter)
-RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
 COPY --from=frontend-build /app/frontend/build /app/frontend/build
 ENV FRONTEND_BUILD=/app/frontend/build
 ENV PYTHONUNBUFFERED=1
-EXPOSE 8000
-CMD ["sh", "start.sh"]
+# Direct uvicorn — no start.sh (CRLF / missing-env exit blocked Railway healthcheck)
+CMD ["sh", "-c", "exec uvicorn server:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info"]

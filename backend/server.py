@@ -1,4 +1,5 @@
 """GuinéeMarket backend - FastAPI + MongoDB."""
+print("ZOKKO_BOOT: importing server.py", flush=True)
 from dotenv import load_dotenv
 from pathlib import Path
 import re

@@ -1,90 +1,110 @@
-# Zokko sur Railway — 5 étapes (si le déploiement reste rouge)
+# Zokko sur Railway — checklist (si le déploiement reste rouge)
 
 **Symptôme :** Build OK, mais **Healthcheck FAILED** après 2–3 minutes.
 
 ---
 
-## Étape 1 — Ouvrir les bons logs
+## Checklist Railway (dans l’ordre)
 
-1. Railway → votre service **zokko**
-2. Onglet **Deployments** → cliquez le déploiement en échec
-3. Ouvrez **Deploy Logs** (pas Build Logs)
-4. Cherchez (Ctrl+F) : `FATAL`, `Error`, `bad interpreter`, `ModuleNotFoundError`
+### 1. Builder = Dockerfile (pas Railpack)
 
-**Vous devez voir :**
-```text
-[start.sh] uvicorn server:app on 0.0.0.0:XXXX
-INFO:     Uvicorn running on http://0.0.0.0:XXXX
-```
+1. Railway → service **zokko** → **Settings** → **Build**
+2. **Builder** = **Dockerfile** (ou « Dockerfile » / « DOCKERFILE »)
+3. **Dockerfile path** = `Dockerfile` (à la racine du repo)
+4. **Root Directory** = **vide** ou `.` (racine du repo — **pas** `frontend/`)
 
-Si vous ne voyez **jamais** cette ligne → le conteneur ne démarre pas (variables manquantes ou script cassé).
+Si Railway détecte Railpack ou Node seul, le healthcheck échouera.
 
 ---
 
-## Étape 2 — Start Command (important)
+### 2. Start Command = VIDE
 
-1. Railway → **Settings** → **Deploy**
-2. Champ **Custom Start Command** : **vide** (supprimez tout)
-3. Railway doit utiliser le **Dockerfile** → `sh start.sh`
+1. **Settings** → **Deploy**
+2. Champ **Custom Start Command** / **Start Command** : **totalement vide**
+3. Supprimez tout `uvicorn …`, `npm start`, `sh start.sh`, etc.
 
-Si un `uvicorn server:app …` est écrit ici, ça casse le déploiement (mauvais dossier).
+Le conteneur doit utiliser uniquement le `CMD` du **Dockerfile** :
+`uvicorn server:app --host 0.0.0.0 --port $PORT`
+
+Un start command dans l’UI **remplace** le Dockerfile et casse souvent le déploiement (mauvais dossier, mauvais port).
 
 ---
 
-## Étape 3 — Health Check Path
+### 3. Health Check Path = `/health`
 
-1. Railway → **Settings** → **Health Check**
-2. **Path** = `/health` (pas `/api`)
+1. **Settings** → **Health Check**
+2. **Path** = `/health` (pas `/api`, pas `/`)
 3. Si un chemin est déjà dans l’interface, il **remplace** `railway.toml` — corrigez ici puis **Redeploy**
 
-Test dans le navigateur :
-`https://VOTRE-URL.up.railway.app/health`  
+Test navigateur : `https://VOTRE-URL.up.railway.app/health`  
 → doit afficher `{"status":"ok","service":"zokko"}`
 
 ---
 
-## Étape 4 — Variables obligatoires
+### 4. Variables obligatoires (noms exacts)
 
-Onglet **Variables** → vérifiez que ces 3 existent (sans faute de frappe) :
+Onglet **Variables** — ces 3 noms doivent exister **exactement** (copier-coller) :
 
-| Variable | Exemple |
-|----------|---------|
-| `MONGO_URL` | `mongodb+srv://user:MDP@cluster….mongodb.net/…` |
-| `DB_NAME` | `zokko` |
-| `JWT_SECRET` | longue chaîne aléatoire |
+| Variable | Rôle |
+|----------|------|
+| `MONGO_URL` | URL MongoDB Atlas (`mongodb+srv://…`) |
+| `DB_NAME` | Nom de la base (ex. `zokko`) |
+| `JWT_SECRET` | Chaîne secrète longue et aléatoire |
 
-Copiez aussi le reste depuis `railway.env.example` (OTP, CORS, storage, admin…).
+**Ne pas définir `PORT`** — Railway l’injecte automatiquement.
 
-**Ne définissez pas `PORT`** — Railway l’injecte tout seul.
+Copiez le reste depuis `railway.env.example` (OTP, CORS, storage, admin…).
 
-MongoDB Atlas → **Network Access** → `0.0.0.0/0` obligatoire.
+MongoDB Atlas → **Network Access** → autoriser `0.0.0.0/0`.
 
 ---
 
-## Étape 5 — Redeploy et test
+### 5. Deploy Logs — à quoi ressemble le SUCCÈS
+
+1. **Deployments** → déploiement en cours ou échoué
+2. Onglet **Deploy Logs** (⚠️ pas **Build Logs**)
+3. Cherchez (Ctrl+F) :
+
+```text
+ZOKKO_BOOT: importing server.py
+INFO:     Uvicorn running on http://0.0.0.0:XXXX
+```
+
+- **`ZOKKO_BOOT`** = Python a chargé `server.py` (même si Mongo échoue plus tard)
+- **`Uvicorn running`** = le serveur écoute — le healthcheck peut répondre sur `/health`
+
+Si vous ne voyez **jamais** `ZOKKO_BOOT` → crash à l’import (variable manquante, module absent).  
+Si `ZOKKO_BOOT` mais **pas** `Uvicorn running` → crash au démarrage uvicorn (port, commande UI).
+
+Erreurs fréquentes dans les logs : `KeyError: 'MONGO_URL'`, `ModuleNotFoundError`, `Address already in use`.
+
+---
+
+### 6. Redeploy
 
 1. **Deployments** → ⋮ → **Redeploy**
 2. Attendez le vert (5–10 min)
-3. Testez `/health` puis `https://zokko.net`
+3. Testez `/health` puis votre domaine
 
 ---
 
-## Toujours bloqué ? Envoyez une capture
+## Toujours bloqué ?
 
-Dans Cursor, écrivez : **« Railway échoue encore »** et joignez une capture avec :
+Écrivez **« Railway échoue encore »** et collez les **15 dernières lignes des Deploy Logs** (pas Build Logs), plus :
 
-1. **Deploy Logs** — les 30 dernières lignes (autour de `FATAL` ou `Error`)
-2. **Settings → Health Check** — le chemin affiché
-3. **Settings → Deploy** — Start Command (vide ou pas)
-4. **Variables** — liste des **noms** seulement (pas les mots de passe)
+1. **Settings → Health Check** — chemin affiché
+2. **Settings → Deploy** — Start Command (vide ou pas)
+3. **Settings → Build** — Builder + Root Directory
+4. **Variables** — liste des **noms** seulement (sans mots de passe)
 
 ---
 
-## Résumé
+## Résumé rapide
 
 | Où | Quoi |
 |----|------|
-| Deploy Logs | `[start.sh] uvicorn …` doit apparaître |
-| Start Command | **Vide** |
-| Health path | **`/health`** |
+| Build | Builder **Dockerfile**, Root Directory **vide** |
+| Deploy | Start Command **vide** |
+| Health | Path **`/health`** |
 | Variables | `MONGO_URL`, `JWT_SECRET`, `DB_NAME` |
+| Deploy Logs | `ZOKKO_BOOT` puis `Uvicorn running on` |
