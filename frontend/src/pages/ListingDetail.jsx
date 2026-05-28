@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Eye, ChatCircleText, WhatsappLogo, ArrowLeft, Star, Lightning, Phone, ShareNetwork, Flag, SealCheck } from "@phosphor-icons/react";
+import FavoriteButton from "@/components/FavoriteButton";
 import api, { BACKEND_URL, fileUrl, getListingCoverPath, formatPrice, formatApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
@@ -172,11 +173,17 @@ export default function ListingDetail() {
         <div className="space-y-4">
           <div className="bg-white border border-[#E5E0D8] rounded-2xl p-5 space-y-3">
             <div className="text-xs uppercase font-bold tracking-wide text-[#2E7D32]">{listing.type === "service" ? "Service" : "Produit"} · {listing.category}</div>
-            <h1 className="font-heading font-bold text-2xl text-[#1A2E22] leading-tight">{listing.title}</h1>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="font-heading font-bold text-2xl text-[#1A2E22] leading-tight flex-1">{listing.title}</h1>
+              <FavoriteButton listingId={listing.id} className="flex-shrink-0" />
+            </div>
             <div className="font-heading font-bold text-3xl text-[#D84315]">{formatPrice(listing.price, listing.currency)}</div>
             <div className="flex items-center gap-4 text-sm text-[#4A5D50] pt-2 border-t border-[#E5E0D8]">
               <span className="flex items-center gap-1"><MapPin size={16} />{listing.city}{listing.quartier && `, ${listing.quartier}`}</span>
               <span className="flex items-center gap-1"><Eye size={16} />{listing.views || 0} vues</span>
+              {(listing.whatsapp_clicks || 0) > 0 && (
+                <span className="flex items-center gap-1 text-[#25D366]"><WhatsappLogo size={16} weight="fill" />{listing.whatsapp_clicks} contact{listing.whatsapp_clicks > 1 ? "s" : ""} WA</span>
+              )}
             </div>
           </div>
 
@@ -207,20 +214,22 @@ export default function ListingDetail() {
             {!isOwner && (
               <div className="space-y-2 pt-2">
                 {whatsappNumber && (
-                  <a href={whatsappLink} target="_blank" rel="noreferrer" onClick={trackWhatsApp} className="block">
-                    <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full h-12 font-semibold" data-testid="whatsapp-btn">
-                      <WhatsappLogo size={20} weight="fill" className="mr-2" /> Contacter sur WhatsApp
-                    </Button>
-                  </a>
+                  <>
+                    <a href={whatsappLink} target="_blank" rel="noreferrer" onClick={trackWhatsApp} className="block">
+                      <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full h-12 font-semibold" data-testid="whatsapp-btn">
+                        <WhatsappLogo size={20} weight="fill" className="mr-2" /> Contacter sur WhatsApp
+                      </Button>
+                    </a>
+                    <a href={`tel:+224${whatsappNumber}`} className="block">
+                      <Button variant="outline" className="w-full border-2 border-[#25D366]/40 text-[#1A2E22] hover:border-[#25D366] hover:text-[#128C7E] rounded-full h-12" data-testid="call-btn">
+                        <Phone size={18} className="mr-2" /> Appeler
+                      </Button>
+                    </a>
+                  </>
                 )}
                 <Button onClick={openChat} variant="outline" className="w-full border-2 border-[#E5E0D8] hover:border-[#D84315] hover:text-[#D84315] rounded-full" data-testid="chat-btn">
                   <ChatCircleText size={18} className="mr-2" /> Message interne
                 </Button>
-                <a href={`tel:+224${whatsappNumber}`} className="block">
-                  <Button variant="outline" className="w-full border-2 border-[#E5E0D8] hover:border-[#D84315] hover:text-[#D84315] rounded-full" data-testid="call-btn">
-                    <Phone size={18} className="mr-2" /> Appeler
-                  </Button>
-                </a>
               </div>
             )}
 

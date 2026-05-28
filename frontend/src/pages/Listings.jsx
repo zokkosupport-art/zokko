@@ -3,6 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { MagnifyingGlass, X, Funnel } from "@phosphor-icons/react";
 import api from "@/lib/api";
 import ListingCard from "@/components/ListingCard";
+import { CONAKRY_QUARTIERS } from "@/lib/quartiers";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,7 @@ export default function Listings() {
 
   const category = params.get("category") || "";
   const city = params.get("city") || "";
+  const quartier = params.get("quartier") || "";
   const q = params.get("q") || "";
   const type = params.get("type") || "";
   const [search, setSearch] = useState(q);
@@ -30,13 +32,14 @@ export default function Listings() {
     const p = new URLSearchParams();
     if (category) p.append("category", category);
     if (city) p.append("city", city);
+    if (quartier) p.append("quartier", quartier);
     if (q) p.append("q", q);
     if (type) p.append("type", type);
     p.append("limit", "60");
     api.get(`/listings?${p.toString()}`)
       .then(({ data }) => setItems(data.items || []))
       .finally(() => setLoading(false));
-  }, [category, city, q, type]);
+  }, [category, city, quartier, q, type]);
 
   const update = (key, val) => {
     const np = new URLSearchParams(params);
@@ -73,13 +76,14 @@ export default function Listings() {
       </form>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {(category || city || q || type) && (
+        {(category || city || quartier || q || type) && (
           <button onClick={clearAll} className="text-xs bg-[#D84315]/10 text-[#D84315] rounded-full px-3 py-1.5 flex items-center gap-1" data-testid="clear-filters">
             <X size={12} /> Effacer
           </button>
         )}
         {category && <span className="text-xs bg-white border border-[#E5E0D8] rounded-full px-3 py-1.5">Catégorie: {categories.find(c => c.slug === category)?.name || category}</span>}
         {city && <span className="text-xs bg-white border border-[#E5E0D8] rounded-full px-3 py-1.5">Ville: {city}</span>}
+        {quartier && <span className="text-xs bg-white border border-[#E5E0D8] rounded-full px-3 py-1.5">Quartier: {quartier}</span>}
         {q && <span className="text-xs bg-white border border-[#E5E0D8] rounded-full px-3 py-1.5">Recherche: {q}</span>}
         {type && <span className="text-xs bg-white border border-[#E5E0D8] rounded-full px-3 py-1.5">Type: {type === "service" ? "Service" : "Produit"}</span>}
       </div>
@@ -102,10 +106,21 @@ export default function Listings() {
             <button onClick={() => update("type", "service")} className={`w-full text-left px-3 py-1.5 rounded-lg text-sm ${type === "service" ? "bg-[#2E7D32] text-white" : "text-[#4A5D50] hover:bg-[#FAF8F5]"}`}>Services</button>
           </div>
           <h3 className="font-heading font-semibold text-[#1A2E22] mb-3">Ville</h3>
-          <select value={city} onChange={(e) => update("city", e.target.value)} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-3 py-2 text-sm" data-testid="filter-city-select">
+          <select value={city} onChange={(e) => { update("city", e.target.value); if (e.target.value !== "Conakry") update("quartier", ""); }} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-3 py-2 text-sm" data-testid="filter-city-select">
             <option value="">Toutes les villes</option>
             {cities.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
+          {(city === "Conakry" || !city) && (
+            <>
+              <h3 className="font-heading font-semibold text-[#1A2E22] mb-3 mt-4">Quartier (Conakry)</h3>
+              <select value={quartier} onChange={(e) => update("quartier", e.target.value)} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-3 py-2 text-sm" data-testid="filter-quartier-select">
+                <option value="">Tous les quartiers</option>
+                {CONAKRY_QUARTIERS.filter((q) => q !== "Autre").map((q) => (
+                  <option key={q} value={q}>{q}</option>
+                ))}
+              </select>
+            </>
+          )}
         </aside>
 
         <div>

@@ -856,6 +856,7 @@ async def list_cities():
 async def list_listings(
     category: Optional[str] = None,
     city: Optional[str] = None,
+    quartier: Optional[str] = None,
     q: Optional[str] = None,
     type: Optional[str] = None,
     owner_id: Optional[str] = None,
@@ -870,6 +871,8 @@ async def list_listings(
         query["category"] = category
     if city:
         query["city"] = city
+    if quartier:
+        query["quartier"] = {"$regex": f"^{re.escape(quartier)}$", "$options": "i"}
     if type:
         query["type"] = type
     if owner_id:
@@ -1168,7 +1171,7 @@ async def cinetpay_initiate(body: CinetPayInitiate, request: Request, user=Depen
             amount=amount,
             description=description,
             customer_name=user.get("name") or "Client",
-            customer_email=f"{user.get('phone')}@zokko.gn",
+            customer_email=f"{user.get('phone')}@zokko.net",
             customer_phone=user.get("phone") or "",
             notify_url=notify_url,
             return_url=return_url,

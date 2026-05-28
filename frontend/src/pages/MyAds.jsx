@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
 import ListingCard from "@/components/ListingCard";
 import { Plus, Star, Eye, WhatsappLogo, ChatCircleText } from "@phosphor-icons/react";

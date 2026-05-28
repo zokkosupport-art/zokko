@@ -58,7 +58,7 @@ def initiate_payment(
         "channels": channels,
         "customer_name": (customer_name or "Client")[:50],
         "customer_surname": "Zokko",
-        "customer_email": customer_email or "noreply@zokko.gn",
+        "customer_email": customer_email or "noreply@zokko.net",
         "customer_phone_number": customer_phone or "",
         "customer_address": "Conakry",
         "customer_city": "Conakry",

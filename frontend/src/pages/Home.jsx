@@ -27,12 +27,12 @@ const BENEFITS = [
 ];
 
 const TESTIMONIALS = [
-  { name: "Mamadou Diallo", city: "Conakry", role: "Vendeur vêtements", text: "J'ai vendu ma première robe Bazin en deux jours. Les acheteurs m'ont contacté directement sur WhatsApp, c'est simple même avec ma connexion 3G.", color: "#D84315" },
-  { name: "Fatoumata Camara", city: "Kankan", role: "Commerçante", text: "Avant je postais sur Facebook sans résultat. Sur Zokko, mes annonces alimentation sont visibles par toute la Guinée. Orange Money pour le boost, c'est pratique.", color: "#2E7D32" },
-  { name: "Ibrahima Bah", city: "Labé", role: "Garage auto", text: "La Toyota que j'ai mise en ligne a reçu des appels de Conakry et de Kindia. L'app charge vite sur mon téléphone, pas besoin d'un iPhone dernier cri.", color: "#FF6600" },
-  { name: "Aissatou Sow", city: "Conakry", role: "Coiffeuse à domicile", text: "Mes clientes trouvent mes services coiffure mariage grâce aux catégories. Je reçois des messages internes et WhatsApp, tout au même endroit.", color: "#D84315" },
-  { name: "Ousmane Keita", city: "N'Zérékoré", role: "Livreur moto", text: "En tant que livreur, je publie mon service de courses à Conakry. Les particuliers me contactent le matin pour leurs achats au marché Madina.", color: "#2E7D32" },
-  { name: "Mariama Barry", city: "Kindia", role: "Étudiante", text: "J'ai trouvé un iPhone d'occasion à Ratoma sans me déplacer inutilement. Les photos et le prix étaient clairs, j'ai vérifié le vendeur avant de payer.", color: "#FF6600" },
+  { label: "Vendeur · Conakry", city: "Conakry", role: "Vêtements", text: "J'ai vendu ma première robe Bazin en deux jours. Les acheteurs m'ont contacté directement sur WhatsApp, c'est simple même avec ma connexion 3G.", color: "#D84315" },
+  { label: "Commerçante · Kankan", city: "Kankan", role: "Alimentation", text: "Avant je postais sur Facebook sans résultat. Sur Zokko, mes annonces alimentation sont visibles par toute la Guinée. Orange Money pour le boost, c'est pratique.", color: "#2E7D32" },
+  { label: "Garage · Labé", city: "Labé", role: "Véhicules", text: "La Toyota que j'ai mise en ligne a reçu des appels de Conakry et de Kindia. L'app charge vite sur mon téléphone, pas besoin d'un iPhone dernier cri.", color: "#FF6600" },
+  { label: "Prestataire · Conakry", city: "Conakry", role: "Coiffure", text: "Mes clientes trouvent mes services coiffure mariage grâce aux catégories. Je reçois des messages internes et WhatsApp, tout au même endroit.", color: "#D84315" },
+  { label: "Livreur · N'Zérékoré", city: "N'Zérékoré", role: "Services", text: "En tant que livreur, je publie mon service de courses à Conakry. Les particuliers me contactent le matin pour leurs achats au marché Madina.", color: "#2E7D32" },
+  { label: "Acheteuse · Kindia", city: "Kindia", role: "Électronique", text: "J'ai trouvé un iPhone d'occasion à Ratoma sans me déplacer inutilement. Les photos et le prix étaient clairs, j'ai vérifié le vendeur avant de payer.", color: "#FF6600" },
 ];
 
 const AUDIENCES = [
@@ -308,20 +308,21 @@ export default function Home() {
       {/* TESTIMONIALS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
         <div className="text-center mb-10">
-          <p className="text-xs uppercase tracking-widest font-bold text-[#D84315]">Témoignages</p>
-          <h2 className="font-heading font-bold text-3xl sm:text-4xl text-[#1A2E22] mt-2">Ils vendent déjà sur Zokko</h2>
+          <p className="text-xs uppercase tracking-widest font-bold text-[#D84315]">Retours early adopters</p>
+          <h2 className="font-heading font-bold text-3xl sm:text-4xl text-[#1A2E22] mt-2">Utilisateurs early adopters</h2>
+          <p className="text-sm text-[#4A5D50] mt-2 max-w-xl mx-auto">Témoignages illustratifs de premiers testeurs — profils anonymisés, pas de noms réels affichés.</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {TESTIMONIALS.map((t, i) => (
-            <div key={t.name} className="bg-white border border-[#E5E0D8] rounded-2xl p-6 relative gm-card-hover" data-testid={`testimonial-${i}`}>
+            <div key={t.label} className="bg-white border border-[#E5E0D8] rounded-2xl p-6 relative gm-card-hover" data-testid={`testimonial-${i}`}>
               <Quotes size={32} weight="fill" className="text-[#FBC02D] mb-3" />
               <p className="text-[#1A2E22] leading-relaxed">« {t.text} »</p>
               <div className="flex items-center gap-3 mt-5 pt-5 border-t border-[#E5E0D8]">
                 <div className="w-12 h-12 rounded-full text-white font-heading font-bold flex items-center justify-center text-lg" style={{ backgroundColor: t.color }}>
-                  {t.name.charAt(0)}
+                  {t.label.charAt(0)}
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1A2E22] flex items-center gap-1">{t.name} <SealCheck size={14} weight="fill" className="text-[#2E7D32]" /></p>
+                  <p className="font-semibold text-[#1A2E22] flex items-center gap-1">{t.label}</p>
                   <p className="text-xs text-[#4A5D50]">{t.role} · {t.city}</p>
                 </div>
                 <div className="ml-auto flex">{[1,2,3,4,5].map(s => <Star key={s} size={14} weight="fill" className="text-[#FBC02D]" />)}</div>

@@ -9,6 +9,8 @@ import UserAvatar from "@/components/UserAvatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import QuartierField from "@/components/QuartierField";
+import FavoriteListings from "@/components/FavoriteListings";
 
 export default function Profile() {
   const { user, setUser, logout } = useAuth();
@@ -140,7 +142,7 @@ export default function Profile() {
           </div>
           <div>
             <Label className="font-medium mb-1.5 block">Quartier</Label>
-            <Input value={form.quartier} onChange={(e) => set("quartier", e.target.value)} className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-11" data-testid="profile-quartier" />
+            <QuartierField city={form.city} value={form.quartier} onChange={(v) => set("quartier", v)} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl h-11 px-3 text-sm" testId="profile-quartier" />
           </div>
           <div className="sm:col-span-2">
             <Label className="font-medium mb-1.5 block">WhatsApp</Label>
@@ -152,6 +154,8 @@ export default function Profile() {
           {saving ? "Sauvegarde..." : "Sauvegarder"}
         </Button>
       </div>
+
+      <FavoriteListings />
 
       <div className="bg-white border border-[#E5E0D8] rounded-2xl p-5 sm:p-6 mb-4 space-y-3">
         <h2 className="font-heading font-semibold text-lg text-[#1A2E22]">Compte Pro</h2>

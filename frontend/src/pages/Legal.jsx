@@ -81,7 +81,7 @@ export default function Legal() {
             </li>
             <li className="flex items-center gap-2">
               <ChatCircleText size={18} />
-              E-mail : support@zokko.gn
+              <a href="mailto:support@zokko.net" className="hover:text-[#D84315]">E-mail : support@zokko.net</a>
             </li>
             <li>Adresse : Conakry, Guinée</li>
           </ul>

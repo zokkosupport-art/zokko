@@ -118,7 +118,7 @@ export default function Layout() {
             <ul className="space-y-2 text-sm">
               <li><Link to="/legal" className="hover:text-white">Conditions d&apos;utilisation</Link></li>
               <li className="flex items-center gap-2"><WhatsappLogo size={16} weight="fill" className="text-[#25D366]" /> +224 612 51 64 88</li>
-              <li>support@zokko.gn</li>
+              <li><a href="mailto:support@zokko.net" className="hover:text-white">support@zokko.net</a></li>
             </ul>
           </div>
         </div>

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Camera, X, UploadSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import api, { fileUrl, formatApiError } from "@/lib/api";
+import { compressImage } from "@/lib/imageCompress";
+import QuartierField from "@/components/QuartierField";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -115,13 +117,13 @@ export default function Publish() {
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <Label className="text-[#1A2E22] font-medium mb-1.5 block">Ville</Label>
-            <select value={form.city} onChange={(e) => setField("city", e.target.value)} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl h-12 px-3 text-sm" data-testid="city-select">
+            <select value={form.city} onChange={(e) => { const c = e.target.value; setForm((f) => ({ ...f, city: c, quartier: c === "Conakry" ? f.quartier : "" })); }} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl h-12 px-3 text-sm" data-testid="city-select">
               {cities.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
             <Label className="text-[#1A2E22] font-medium mb-1.5 block">Quartier</Label>
-            <Input value={form.quartier} onChange={(e) => setField("quartier", e.target.value)} placeholder="Ex: Ratoma" className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-12" data-testid="quartier-input" />
+            <QuartierField city={form.city} value={form.quartier} onChange={(v) => setField("quartier", v)} testId="quartier-input" />
           </div>
         </div>
 
