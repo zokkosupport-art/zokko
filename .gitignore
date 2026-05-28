@@ -3,6 +3,8 @@ backend/.env
 frontend/.env
 .env
 *.env.local
+backend/COLLEZ-DANS-RAILWAY.txt
+railway-variables*.txt
 
 # Python
 __pycache__/
