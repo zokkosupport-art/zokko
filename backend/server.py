@@ -644,12 +644,24 @@ async def request_otp(body: OTPRequest):
         payload["message"] = "Mode test — code affiché à l'écran (SMS désactivé pour le moment)"
     return payload
 
+async def _safe_rate_limit(key: str, max_requests: int, window_seconds: int, error_msg: str = None):
+    """Rate limit when Mongo is ready; never block login if rate_limit collection fails."""
+    try:
+        await enforce_limit(key, max_requests, window_seconds, error_msg=error_msg)
+    except PyMongoError as e:
+        logger.warning("Rate limit skipped (%s): %s", key, e)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning("Rate limit skipped (%s): %s", key, e)
+
+
 @api.post("/auth/admin-login")
 async def admin_login(body: AdminLogin):
     username = (body.username or "").strip().lower()
     if not username or not body.password:
         raise HTTPException(400, "Identifiant et mot de passe requis")
-    await enforce_limit(
+    await _safe_rate_limit(
         f"admin-login:{username}", max_requests=10, window_seconds=3600,
         error_msg="Trop de tentatives. Réessayez dans 1 heure.",
     )

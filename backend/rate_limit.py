@@ -39,7 +39,9 @@ async def enforce_limit(key: str, max_requests: int, window_seconds: int, error_
         upsert=True,
     )
     record = await db.rate_limit.find_one({"key": key}, {"_id": 0, "timestamps": 1})
-    recent = (record or {}).get("timestamps", [])
+    recent = (record or {}).get("timestamps") or []
+    if not isinstance(recent, list):
+        recent = []
     if len(recent) >= max_requests:
         raise HTTPException(
             status_code=429,
