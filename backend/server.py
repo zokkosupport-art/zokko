@@ -1132,15 +1132,18 @@ async def upload_image(file: UploadFile = File(...), user=Depends(get_current_us
 
 @api.get("/files/{path:path}")
 async def serve_file(path: str):
+    path = path.lstrip("/")
     record = await db.files.find_one({"storage_path": path, "is_deleted": False})
-    if not record:
+    # Avatars / uploads : servir si le fichier existe (volume ou secours R2), même sans entrée files.
+    if not record and not path.startswith(f"{APP_NAME}/uploads/"):
         raise HTTPException(404, "Fichier introuvable")
     try:
         data, ct = get_object(path)
     except Exception as e:
-        logger.error(f"Get object failed: {e}")
+        logger.error("Get object failed for %s: %s", path, e)
         raise HTTPException(404, "Fichier introuvable")
-    return StreamingResponse(io.BytesIO(data), media_type=record.get("content_type", ct))
+    content_type = (record or {}).get("content_type") or ct
+    return StreamingResponse(io.BytesIO(data), media_type=content_type)
 
 # ---------------- Messaging ----------------
 def conv_key(a: str, b: str, listing_id: Optional[str] = None) -> str:

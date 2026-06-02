@@ -92,6 +92,9 @@ export default function Profile() {
           {user?.username && <p className="text-sm text-[#D84315] font-medium">@{user.username}</p>}
           <p className="text-sm text-[#4A5D50]">+224 {phoneDisplay}</p>
           {uploadingAvatar && <p className="text-xs text-[#4A5D50] mt-1">Envoi de la photo…</p>}
+          {!uploadingAvatar && user?.avatar && (
+            <p className="text-xs text-[#4A5D50] mt-1">Photo absente ? Touchez l&apos;icône appareil pour la remettre.</p>
+          )}
           <div className="flex items-center gap-2 mt-1">
             {user?.is_pro && <span className="inline-flex items-center gap-1 text-xs bg-[#FBC02D]/20 text-[#1A2E22] px-2 py-0.5 rounded-full font-semibold"><CrownSimple size={12} weight="fill" /> Boutique Pro</span>}
             {user?.account_type === "entreprise" && !user?.is_pro && (
