@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Camera, X, UploadSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import api, { fileUrl, formatApiError } from "@/lib/api";
@@ -11,11 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 export default function Publish() {
+  const [params] = useSearchParams();
+  const editId = params.get("edit");
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(!!editId);
   const [form, setForm] = useState({
     title: "", description: "", price: "", category: "", city: "Conakry", quartier: "", type: "product", whatsapp: "",
   });
@@ -25,6 +28,27 @@ export default function Publish() {
     api.get("/categories").then(({ data }) => setCategories(data));
     api.get("/cities").then(({ data }) => setCities(data));
   }, []);
+
+  useEffect(() => {
+    if (!editId) return;
+    setLoadingEdit(true);
+    api.get(`/listings/${editId}`)
+      .then(({ data }) => {
+        setForm({
+          title: data.title || "",
+          description: data.description || "",
+          price: String(data.price ?? ""),
+          category: data.category || "",
+          city: data.city || "Conakry",
+          quartier: data.quartier || "",
+          type: data.type || "product",
+          whatsapp: data.whatsapp || "",
+        });
+        setPhotos(data.photos || []);
+      })
+      .catch(() => toast.error("Annonce introuvable"))
+      .finally(() => setLoadingEdit(false));
+  }, [editId]);
 
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -61,13 +85,16 @@ export default function Publish() {
     }
     setSubmitting(true);
     try {
-      const { data } = await api.post("/listings", {
-        ...form,
-        price: parseFloat(form.price),
-        photos,
-      });
-      toast.success("Annonce publiée ! En attente de validation.");
-      nav(`/listings/${data.id}`);
+      const payload = { ...form, price: parseFloat(form.price), photos };
+      if (editId) {
+        await api.patch(`/listings/${editId}`, payload);
+        toast.success("Annonce mise à jour");
+        nav(`/listings/${editId}`);
+      } else {
+        const { data } = await api.post("/listings", payload);
+        toast.success("Annonce publiée ! En attente de validation.");
+        nav(`/listings/${data.id}`);
+      }
     } catch (e) {
       toast.error(formatApiError(e));
     } finally {
@@ -75,9 +102,13 @@ export default function Publish() {
     }
   };
 
+  if (loadingEdit) {
+    return <div className="max-w-3xl mx-auto px-4 py-12 text-center text-[#4A5D50]">Chargement…</div>;
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
-      <h1 className="font-heading font-bold text-3xl text-[#1A2E22] mb-2">Publier une annonce</h1>
+      <h1 className="font-heading font-bold text-3xl text-[#1A2E22] mb-2">{editId ? "Modifier l'annonce" : "Publier une annonce"}</h1>
       <p className="text-[#4A5D50] mb-6">Vendez vos produits ou proposez vos services. Validation rapide.</p>
 
       <form onSubmit={submit} className="space-y-5 bg-white border border-[#E5E0D8] rounded-2xl p-5 sm:p-7" data-testid="publish-form">
@@ -154,7 +185,7 @@ export default function Publish() {
         </div>
 
         <Button type="submit" disabled={submitting} className="w-full bg-[#D84315] hover:bg-[#BF360C] text-white rounded-full h-12 font-semibold" data-testid="submit-listing-btn">
-          {submitting ? "Publication..." : "Publier l'annonce"}
+          {submitting ? "Enregistrement..." : editId ? "Enregistrer" : "Publier l'annonce"}
         </Button>
       </form>
     </div>

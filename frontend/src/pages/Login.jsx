@@ -222,12 +222,12 @@ export default function Login() {
                       }`}
                       data-testid="account-entreprise"
                     >
-                      Entreprise / Pro
+                      Boutique (entreprise)
                     </button>
                   </div>
                   <p className="text-xs text-[#4A5D50] mt-1.5">
                     {accountType === "entreprise"
-                      ? "Boutique, stats et visibilité Pro — idéal commerces & prestataires."
+                      ? "Compte Boutique gratuit. Passez à Boutique Pro (50 000 GNF/mois) pour les stats et la mise en avant."
                       : "Acheter, vendre ou proposer un service entre particuliers."}
                   </p>
                 </div>

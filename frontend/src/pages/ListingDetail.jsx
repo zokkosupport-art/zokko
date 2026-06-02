@@ -214,7 +214,10 @@ export default function ListingDetail() {
                       <Star size={12} weight="fill" /> {ratingAvg.toFixed(1)} <span className="text-[#4A5D50]">({ratingCount})</span>
                     </span>
                   )}
-                  {listing.owner?.is_pro && <span className="text-[#D84315] font-semibold">Pro</span>}
+                  {listing.owner?.is_pro && <span className="text-[#FBC02D] font-semibold flex items-center gap-1"><Star size={14} weight="fill" /> Boutique Pro</span>}
+                  {listing.owner?.account_type === "entreprise" && !listing.owner?.is_pro && (
+                    <span className="text-[#2E7D32] font-semibold">Boutique</span>
+                  )}
                 </div>
               </div>
             </div>

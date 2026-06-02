@@ -338,7 +338,7 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="Utilisateur introuvable")
     if user.get("blocked"):
         raise HTTPException(status_code=403, detail="Compte bloqué")
-    return user
+    return await sync_pro_expiry(user)
 
 async def get_admin_user(user=Depends(get_current_user)):
     if user.get("role") != "admin":
@@ -354,12 +354,86 @@ def normalize_username(raw: Optional[str]) -> Optional[str]:
     return u
 
 
+def parse_iso_dt(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+
+
+def effective_is_pro(u: Optional[dict]) -> bool:
+    """Paid Pro subscription only (admin always Pro). Entreprise accounts are not Pro."""
+    if not u:
+        return False
+    if u.get("role") == "admin":
+        return True
+    if not u.get("is_pro"):
+        return False
+    until = parse_iso_dt(u.get("pro_until"))
+    if not until:
+        return False
+    return until > datetime.now(timezone.utc)
+
+
+async def sync_pro_expiry(user: dict) -> dict:
+    if user.get("role") == "admin":
+        return user
+    if user.get("is_pro") and user.get("pro_until"):
+        until = parse_iso_dt(user.get("pro_until"))
+        if until and until <= datetime.now(timezone.utc):
+            await db.users.update_one({"id": user["id"]}, {"$set": {"is_pro": False}})
+            user = {**user, "is_pro": False}
+    return user
+
+
+def listing_is_boosted(listing: dict) -> bool:
+    until = parse_iso_dt(listing.get("boosted_until"))
+    return bool(until and until > datetime.now(timezone.utc))
+
+
+def _pro_until_extended(current_until: Optional[str]) -> str:
+    base = datetime.now(timezone.utc)
+    existing = parse_iso_dt(current_until)
+    if existing and existing > base:
+        base = existing
+    return (base + timedelta(days=30)).isoformat()
+
+
+async def enrich_listings(items: list) -> list:
+    if not items:
+        return items
+    owner_ids = list({i["owner_id"] for i in items if i.get("owner_id")})
+    owners = {}
+    if owner_ids:
+        async for u in db.users.find({"id": {"$in": owner_ids}}, {"_id": 0}):
+            owners[u["id"]] = u
+    enriched = []
+    for item in items:
+        owner = owners.get(item.get("owner_id")) or {}
+        enriched.append({
+            **item,
+            "owner_is_pro": effective_is_pro(owner),
+            "owner_account_type": owner.get("account_type", "particulier"),
+        })
+    enriched.sort(
+        key=lambda i: (
+            0 if i.get("premium") else 1,
+            0 if listing_is_boosted(i) else 1,
+            0 if i.get("owner_is_pro") else 1,
+            -(parse_iso_dt(i.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc)).timestamp(),
+        )
+    )
+    return enriched
+
+
 def public_user(u: dict) -> dict:
     return {
         "id": u["id"], "name": u.get("name"), "username": u.get("username"),
         "phone": u.get("phone"), "avatar": u.get("avatar"),
         "city": u.get("city"), "quartier": u.get("quartier"),
-        "whatsapp": u.get("whatsapp"), "is_pro": u.get("is_pro", False),
+        "whatsapp": u.get("whatsapp"), "is_pro": effective_is_pro(u),
         "pro_until": u.get("pro_until"),
         "role": u.get("role", "user"), "created_at": u.get("created_at"),
         "blocked": u.get("blocked", False),
@@ -674,7 +748,8 @@ async def phone_pin_auth(body: PhonePinAuth):
             "whatsapp": phone[3:] if phone.startswith("224") else phone,
             "role": "user",
             "account_type": "entreprise" if is_business else "particulier",
-            "is_pro": is_business,
+            "is_pro": False,
+            "pro_until": None,
             "blocked": False,
             "verified": True,
             "pin_hash": hash_password(pin),
@@ -888,19 +963,37 @@ async def list_listings(
             {"title": {"$regex": q, "$options": "i"}},
             {"description": {"$regex": q, "$options": "i"}},
         ]
-    cursor = db.listings.find(query, {"_id": 0}).sort([("premium", -1), ("boosted_until", -1), ("created_at", -1)]).skip(skip).limit(limit)
-    items = await cursor.to_list(length=limit)
+    fetch_limit = min(limit * 3, 200) if status in (None, "approved", "") else limit
+    cursor = db.listings.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(fetch_limit)
+    items = await cursor.to_list(length=fetch_limit)
+    if status in (None, "approved") and not owner_id:
+        items = await enrich_listings(items)
+    items = items[:limit]
     total = await db.listings.count_documents(query)
     return {"items": items, "total": total}
 
 @api.get("/listings/{listing_id}")
-async def get_listing(listing_id: str):
+async def get_listing(listing_id: str, authorization: Optional[str] = Header(None)):
     listing = await db.listings.find_one({"id": listing_id}, {"_id": 0})
     if not listing:
         raise HTTPException(404, "Annonce introuvable")
-    await db.listings.update_one({"id": listing_id}, {"$inc": {"views": 1}})
+    viewer = None
+    if authorization and authorization.startswith("Bearer "):
+        with suppress(Exception):
+            payload = jwt.decode(authorization[7:], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            viewer = await db.users.find_one({"id": payload["sub"]}, {"_id": 0})
+    if listing.get("status") != "approved":
+        allowed = viewer and (
+            viewer.get("role") == "admin"
+            or viewer.get("id") == listing.get("owner_id")
+        )
+        if not allowed:
+            raise HTTPException(404, "Annonce introuvable")
+    if listing.get("status") == "approved":
+        await db.listings.update_one({"id": listing_id}, {"$inc": {"views": 1}})
     owner = await db.users.find_one({"id": listing["owner_id"]}, {"_id": 0})
     listing["owner"] = public_user(owner) if owner else None
+    listing["owner_is_pro"] = effective_is_pro(owner) if owner else False
     return listing
 
 @api.post("/listings")
@@ -1121,7 +1214,8 @@ async def confirm_payment(body: PaymentConfirm, user=Depends(get_current_user)):
         boost_until = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
         await db.listings.update_one({"id": payment["listing_id"]}, {"$set": {"boosted_until": boost_until, "status": "approved"}})
     elif payment["purpose"] == "pro_subscription":
-        until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        doc = await db.users.find_one({"id": user["id"]}, {"pro_until": 1})
+        until = _pro_until_extended(doc.get("pro_until") if doc else None)
         await db.users.update_one({"id": user["id"]}, {"$set": {"is_pro": True, "pro_until": until}})
     payment["status"] = "completed"
     return payment
@@ -1152,7 +1246,8 @@ async def _apply_payment_effect(payment: dict):
         boost_until = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
         await db.listings.update_one({"id": listing_id}, {"$set": {"boosted_until": boost_until, "status": "approved"}})
     elif purpose == "pro_subscription" and user_id:
-        until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        doc = await db.users.find_one({"id": user_id}, {"pro_until": 1})
+        until = _pro_until_extended(doc.get("pro_until") if doc else None)
         await db.users.update_one({"id": user_id}, {"$set": {"is_pro": True, "pro_until": until}})
 
 
@@ -1469,6 +1564,7 @@ async def admin_stats(_admin=Depends(get_admin_user)):
         "listings_total": await db.listings.count_documents({}),
         "listings_pending": await db.listings.count_documents({"status": "pending"}),
         "listings_approved": await db.listings.count_documents({"status": "approved"}),
+        "listings_hidden": await db.listings.count_documents({"status": "hidden"}),
         "payments_total": await db.payments.count_documents({}),
         "payments_completed": await db.payments.count_documents({"status": "completed"}),
         "revenue": sum([p["amount"] async for p in db.payments.find({"status": "completed"}, {"amount": 1, "_id": 0})]),
@@ -1504,7 +1600,31 @@ async def admin_approve(listing_id: str, _admin=Depends(get_admin_user)):
 
 @api.post("/admin/listings/{listing_id}/reject")
 async def admin_reject(listing_id: str, _admin=Depends(get_admin_user)):
-    await db.listings.update_one({"id": listing_id}, {"$set": {"status": "rejected"}})
+    await db.listings.update_one({"id": listing_id}, {"$set": {"status": "rejected", "updated_at": now_iso()}})
+    return {"success": True}
+
+
+@api.post("/admin/listings/{listing_id}/hide")
+async def admin_hide_listing(listing_id: str, _admin=Depends(get_admin_user)):
+    res = await db.listings.update_one({"id": listing_id}, {"$set": {"status": "hidden", "updated_at": now_iso()}})
+    if res.matched_count == 0:
+        raise HTTPException(404, "Annonce introuvable")
+    return {"success": True}
+
+
+@api.post("/admin/listings/{listing_id}/restore")
+async def admin_restore_listing(listing_id: str, _admin=Depends(get_admin_user)):
+    res = await db.listings.update_one({"id": listing_id}, {"$set": {"status": "approved", "updated_at": now_iso()}})
+    if res.matched_count == 0:
+        raise HTTPException(404, "Annonce introuvable")
+    return {"success": True}
+
+
+@api.delete("/admin/listings/{listing_id}")
+async def admin_delete_listing(listing_id: str, _admin=Depends(get_admin_user)):
+    res = await db.listings.delete_one({"id": listing_id})
+    if res.deleted_count == 0:
+        raise HTTPException(404, "Annonce introuvable")
     return {"success": True}
 
 @api.get("/admin/payments")

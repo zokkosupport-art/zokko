@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
@@ -28,6 +29,20 @@ function Protected({ children, admin }) {
 }
 
 function App() {
+  useEffect(() => {
+    const gaId = process.env.REACT_APP_GA_MEASUREMENT_ID;
+    if (!gaId || typeof window === "undefined") return;
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { window.dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag("js", new Date());
+    gtag("config", gaId);
+  }, []);
+
   return (
     <AuthProvider>
       <BrowserRouter>

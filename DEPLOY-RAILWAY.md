@@ -56,6 +56,7 @@ ADMIN_PHONES=612516488,659497111
 ORANGE_MONEY_NUMBER=+224612516488
 ORANGE_MONEY_HOLDER=Zokko
 FRONTEND_BUILD=/app/frontend/build
+REACT_APP_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
 
 **Ne commitez jamais ce fichier avec les vrais mots de passe sur GitHub.**

@@ -48,7 +48,7 @@ const AUDIENCES = [
     icon: Buildings,
     title: "Entreprises & pros",
     color: "#2E7D32",
-    points: ["Compte Pro dès l'inscription", "Stats vues & clics WhatsApp", "Boost & Premium Orange Money", "Visible dans toute la Guinée"],
+    points: ["Compte Boutique gratuit", "Boutique Pro : stats & mise en avant", "Boost & Premium Orange Money", "Visible dans toute la Guinée"],
     cta: "Ouvrir ma boutique",
     to: "/login",
   },
@@ -67,6 +67,7 @@ export default function Home() {
   const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [featured, setFeatured] = useState([]);
+  const [proShops, setProShops] = useState([]);
   const [recent, setRecent] = useState([]);
   const [stats, setStats] = useState({ users: 0, listings: 0 });
   const [loading, setLoading] = useState(true);
@@ -83,7 +84,8 @@ export default function Home() {
         setCategories(cats.data);
         const items = listings.data.items || [];
         setFeatured(items.filter((i) => i.premium || (i.boosted_until && new Date(i.boosted_until) > new Date())).slice(0, 4));
-        setRecent(items.slice(0, 8));
+        setProShops(items.filter((i) => i.owner_is_pro).slice(0, 8));
+        setRecent(items.filter((i) => !i.owner_is_pro).slice(0, 8));
         setStats({
           users: statsRes.data.users ?? 0,
           listings: statsRes.data.listings ?? listings.data.total ?? 0,
@@ -247,6 +249,25 @@ export default function Home() {
           })}
         </div>
       </section>
+
+      {/* BOUTIQUES PRO */}
+      {proShops.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+          <div className="flex items-end justify-between mb-5">
+            <h2 className="font-heading font-bold text-2xl sm:text-3xl text-[#1A2E22] flex items-center gap-2">
+              <Star size={26} weight="fill" className="text-[#FBC02D]" /> Boutiques Pro
+            </h2>
+            <Link to="/listings" className="text-sm font-medium text-[#D84315] hover:underline">Tout voir →</Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x">
+            {proShops.map((l) => (
+              <div key={l.id} className="flex-shrink-0 w-[42vw] sm:w-56 snap-start">
+                <ListingCard listing={l} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* FEATURED LISTINGS */}
       {featured.length > 0 && (

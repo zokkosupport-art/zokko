@@ -1,15 +1,19 @@
 import { Link } from "react-router-dom";
-import { MapPin, Lightning, Star, SealCheck, Image as ImageIcon } from "@phosphor-icons/react";
+import { MapPin, Lightning, Star, SealCheck, Image as ImageIcon, Storefront, Crown } from "@phosphor-icons/react";
 import { getListingThumbnailUrl, formatPrice } from "@/lib/api";
 import FavoriteButton from "@/components/FavoriteButton";
 
 export default function ListingCard({ listing }) {
   const thumbnail = getListingThumbnailUrl(listing);
   const isBoosted = listing.boosted_until && new Date(listing.boosted_until) > new Date();
+  const isPro = listing.owner_is_pro || listing.owner?.is_pro;
+  const isBoutique = listing.owner_account_type === "entreprise" && !isPro;
   return (
     <Link
       to={`/listings/${listing.id}`}
-      className="block bg-white rounded-2xl border border-[#E5E0D8] overflow-hidden gm-card-hover gm-shadow-soft"
+      className={`block bg-white rounded-2xl border overflow-hidden gm-card-hover gm-shadow-soft ${
+        isPro ? "border-[#FBC02D] ring-1 ring-[#FBC02D]/40" : "border-[#E5E0D8]"
+      }`}
       data-testid={`listing-card-${listing.id}`}
     >
       <div className="aspect-[4/3] bg-[#F0EBE1] relative overflow-hidden">
@@ -42,6 +46,16 @@ export default function ListingCard({ listing }) {
           {isBoosted && (
             <span className="bg-[#D84315] text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1">
               <Lightning size={12} weight="fill" /> Boosté
+            </span>
+          )}
+          {isPro && (
+            <span className="bg-[#1A2E22] text-[#FBC02D] text-[10px] font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1">
+              <Crown size={12} weight="fill" /> Boutique Pro
+            </span>
+          )}
+          {isBoutique && (
+            <span className="bg-[#2E7D32] text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1">
+              <Storefront size={12} weight="fill" /> Boutique
             </span>
           )}
         </div>

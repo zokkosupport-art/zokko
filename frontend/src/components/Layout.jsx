@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { House, MagnifyingGlass, Plus, ChatCircleText, User, ShieldWarning, WhatsappLogo, ShieldCheck } from "@phosphor-icons/react";
+import { House, MagnifyingGlass, Plus, ChatCircleText, User, ShieldWarning, WhatsappLogo, ShieldCheck, Package } from "@phosphor-icons/react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import PageSeo from "@/components/PageSeo";
@@ -17,10 +17,17 @@ export default function Layout() {
 
   const navItems = [
     { to: "/", icon: House, label: "Accueil", testid: "nav-home" },
-    { to: "/listings", icon: MagnifyingGlass, label: "Rechercher", testid: "nav-search" },
+    { to: "/listings", icon: MagnifyingGlass, label: "Chercher", testid: "nav-search" },
     { to: "/publish", icon: Plus, label: "Publier", testid: "nav-publish", center: true },
-    { to: "/messages", icon: ChatCircleText, label: "Messages", testid: "nav-messages" },
-    { to: user ? "/profile" : "/login", icon: User, label: user ? "Profil" : "Connexion", testid: "nav-profile" },
+    ...(user
+      ? [
+          { to: "/my-ads", icon: Package, label: "Mes ads", testid: "nav-myads" },
+          { to: "/profile", icon: User, label: "Profil", testid: "nav-profile" },
+        ]
+      : [
+          { to: "/messages", icon: ChatCircleText, label: "Messages", testid: "nav-messages" },
+          { to: "/login", icon: User, label: "Connexion", testid: "nav-profile" },
+        ]),
   ];
 
   const isActive = (to) => location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
