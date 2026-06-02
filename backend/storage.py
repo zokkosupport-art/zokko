@@ -9,7 +9,17 @@ from typing import Optional, Tuple
 logger = logging.getLogger("zokko.storage")
 
 BACKEND = os.environ.get("STORAGE_BACKEND", "local").strip().lower()
-LOCAL_ROOT = Path(os.environ.get("STORAGE_LOCAL_PATH", str(Path(__file__).parent / "data" / "uploads")))
+
+
+def get_local_root() -> Path:
+    """Chemin d'écriture des uploads. Priorité: Volume Railway > STORAGE_LOCAL_PATH > défaut."""
+    railway_mount = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "").strip()
+    if railway_mount:
+        return Path(railway_mount)
+    custom = os.environ.get("STORAGE_LOCAL_PATH", "").strip()
+    if custom:
+        return Path(custom)
+    return Path(__file__).parent / "data" / "uploads"
 
 _s3_client = None
 
@@ -44,8 +54,20 @@ def _bucket() -> str:
 def init_storage() -> bool:
     """Vérifie que le stockage est utilisable (appelé au startup)."""
     if BACKEND == "local":
-        LOCAL_ROOT.mkdir(parents=True, exist_ok=True)
-        logger.info("Storage: local → %s", LOCAL_ROOT.resolve())
+        root = get_local_root()
+        root.mkdir(parents=True, exist_ok=True)
+        vol = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "").strip() or None
+        logger.info(
+            "Storage: local → %s (RAILWAY_VOLUME_MOUNT_PATH=%s, STORAGE_LOCAL_PATH=%s)",
+            root.resolve(),
+            vol,
+            os.environ.get("STORAGE_LOCAL_PATH", "").strip() or None,
+        )
+        if not vol:
+            logger.warning(
+                "Aucun Volume Railway détecté (RAILWAY_VOLUME_MOUNT_PATH vide). "
+                "Les photos seront perdues à chaque redeploy."
+            )
         return True
     if BACKEND == "s3":
         client = _get_s3()
@@ -58,7 +80,7 @@ def init_storage() -> bool:
 def put_object(path: str, data: bytes, content_type: str) -> dict:
     path = path.lstrip("/")
     if BACKEND == "local":
-        dest = LOCAL_ROOT / path
+        dest = get_local_root() / path
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(data)
         return {"path": path, "size": len(data)}
@@ -76,7 +98,7 @@ def put_object(path: str, data: bytes, content_type: str) -> dict:
 def get_object(path: str) -> Tuple[bytes, str]:
     path = path.lstrip("/")
     if BACKEND == "local":
-        dest = LOCAL_ROOT / path
+        dest = get_local_root() / path
         if not dest.is_file():
             raise FileNotFoundError(path)
         return dest.read_bytes(), "application/octet-stream"

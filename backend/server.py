@@ -1570,6 +1570,43 @@ async def admin_stats(_admin=Depends(get_admin_user)):
         "revenue": sum([p["amount"] async for p in db.payments.find({"status": "completed"}, {"amount": 1, "_id": 0})]),
     }
 
+
+@api.get("/admin/storage-check")
+async def admin_storage_check(_admin=Depends(get_admin_user)):
+    """Vérifie que le Volume Railway est bien monté (évite perte photos au redeploy)."""
+    root = storage.get_local_root()
+    writable = False
+    err = None
+    file_count = 0
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        probe = root / ".zokko_write_probe"
+        probe.write_text("ok", encoding="utf-8")
+        writable = probe.is_file()
+        probe.unlink(missing_ok=True)
+        file_count = sum(1 for p in root.rglob("*") if p.is_file())
+    except Exception as exc:
+        err = str(exc)
+    vol = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "").strip()
+    return {
+        "storage_backend": storage.BACKEND,
+        "local_root": str(root),
+        "railway_volume_mount_path": vol or None,
+        "storage_local_path_env": os.environ.get("STORAGE_LOCAL_PATH", "").strip() or None,
+        "volume_detected": bool(vol),
+        "root_exists": root.exists(),
+        "writable": writable,
+        "upload_file_count": file_count,
+        "error": err,
+        "ok": bool(vol) and writable,
+        "hint": (
+            "Volume OK — les photos survivent aux redeploys."
+            if vol and writable
+            else "PAS DE VOLUME — ajoutez un Volume (Ctrl+K) monté sur /app/backend/data/uploads puis Redeploy."
+        ),
+    }
+
+
 @api.get("/admin/users")
 async def admin_users(_admin=Depends(get_admin_user), skip: int = 0, limit: int = 100):
     users = await db.users.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)

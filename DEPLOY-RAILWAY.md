@@ -61,9 +61,16 @@ REACT_APP_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 
 **Ne commitez jamais ce fichier avec les vrais mots de passe sur GitHub.**
 
-4. **Redeploy** (Deployments → trois points → Redeploy).
+4. **Volume photos (obligatoire)** — sinon **perte des images à chaque Redeploy** :
+   - Vue projet → **Ctrl+K** → `Create Volume` → service **zokko**
+   - **Mount path** : `/app/backend/data/uploads`
+   - **Variables** : `STORAGE_LOCAL_PATH=/app/backend/data/uploads`
+   - **Deploy** (bouton « Apply changes »)
+   - Après deploy : connecté en admin → `GET /api/admin/storage-check` → `"ok": true`
 
-5. **Settings** → **Networking** → **Generate Domain** → vous obtenez une URL `xxx.up.railway.app`. Testez-la dans le navigateur.
+5. **Redeploy** (Deployments → trois points → Redeploy).
+
+6. **Settings** → **Networking** → **Generate Domain** → vous obtenez une URL `xxx.up.railway.app`. Testez-la dans le navigateur.
 
 ---
 
