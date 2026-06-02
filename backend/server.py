@@ -262,21 +262,24 @@ def demo_photo_for_title(title: str) -> List[str]:
 
 
 async def backfill_demo_listing_photos():
-    """Sync demo ad photos so thumbnails match titles (fixes wrong stock images on redeploy)."""
+    """Fill demo ads that have no photos only — never overwrite user uploads (zokko/uploads/...)."""
     patched = 0
     async for listing in db.listings.find({}, {"_id": 0, "id": 1, "title": 1, "photos": 1}):
         urls = demo_photo_for_title(listing.get("title", ""))
         if not urls:
             continue
         current = listing.get("photos") or []
-        if current != urls:
-            await db.listings.update_one(
-                {"id": listing["id"]},
-                {"$set": {"photos": urls, "updated_at": now_iso()}},
-            )
-            patched += 1
+        if any(str(p).startswith("zokko/") for p in current):
+            continue
+        if current:
+            continue
+        await db.listings.update_one(
+            {"id": listing["id"]},
+            {"$set": {"photos": urls, "updated_at": now_iso()}},
+        )
+        patched += 1
     if patched:
-        logger.info(f"Synced photos on {patched} demo listing(s)")
+        logger.info(f"Backfilled empty photos on {patched} demo listing(s)")
 
 
 # ---------------- Helpers ----------------
