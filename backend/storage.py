@@ -38,19 +38,19 @@ def s3_configured() -> bool:
     )
 
 
-_s3_client = None
+_s3_client_instance = None
 
 
-def _s3_client():
-    global _s3_client
-    if _s3_client is not None:
-        return _s3_client
+def get_s3_client():
+    global _s3_client_instance
+    if _s3_client_instance is not None:
+        return _s3_client_instance
     import boto3
     from botocore.config import Config
 
     endpoint = os.environ.get("S3_ENDPOINT_URL", "").strip() or None
     region = os.environ.get("S3_REGION", "auto").strip()
-    _s3_client = boto3.client(
+    _s3_client_instance = boto3.client(
         "s3",
         endpoint_url=endpoint,
         region_name=region,
@@ -58,7 +58,7 @@ def _s3_client():
         aws_secret_access_key=os.environ["S3_SECRET_ACCESS_KEY"],
         config=Config(signature_version="s3v4"),
     )
-    return _s3_client
+    return _s3_client_instance
 
 
 def _bucket() -> str:
@@ -69,7 +69,7 @@ def _bucket() -> str:
 
 
 def _put_s3(path: str, data: bytes, content_type: str) -> None:
-    _s3_client().put_object(
+    get_s3_client().put_object(
         Bucket=_bucket(),
         Key=path,
         Body=data,
@@ -78,7 +78,7 @@ def _put_s3(path: str, data: bytes, content_type: str) -> None:
 
 
 def _read_s3_object(path: str) -> Tuple[bytes, str]:
-    resp = _s3_client().get_object(Bucket=_bucket(), Key=path)
+    resp = get_s3_client().get_object(Bucket=_bucket(), Key=path)
     body = resp["Body"].read()
     ct = resp.get("ContentType") or "application/octet-stream"
     return body, ct
@@ -107,7 +107,7 @@ def check_backup() -> dict:
     ok = False
     bucket = _bucket()
     try:
-        _s3_client().head_bucket(Bucket=bucket)
+        get_s3_client().head_bucket(Bucket=bucket)
         ok = True
     except Exception as exc:
         err = str(exc)
@@ -145,7 +145,7 @@ def init_storage() -> bool:
                 logger.warning("Storage backup: R2 configuré mais inaccessible: %s", b.get("error"))
         return True
     if BACKEND == "s3":
-        _s3_client().head_bucket(Bucket=_bucket())
+        get_s3_client().head_bucket(Bucket=_bucket())
         logger.info("Storage: S3/R2 bucket OK → %s", _bucket())
         return True
     raise RuntimeError(f"STORAGE_BACKEND invalide: {BACKEND} (local | s3)")
