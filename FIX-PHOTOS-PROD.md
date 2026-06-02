@@ -14,10 +14,12 @@ Sur Railway, avec `STORAGE_BACKEND=local`, les images sont enregistrées sur le 
 
 ### Option A — Volume Railway (rapide, ~gratuit avec le plan)
 
-1. Railway → service **zokko** → **Volumes** → **Add Volume**
-2. Mount path : `/app/backend/data/uploads`
-3. Variable : `STORAGE_LOCAL_PATH=/app/backend/data/uploads`
-4. **Redeploy**
+1. Railway → projet **incredible-hope** → vue avec les blocs (canvas), **pas** seulement l’onglet Deployments
+2. **Ctrl+K** (Windows) → tape **Create Volume** ou **Volume** → valide
+   - *Ou* clic droit sur le fond du canvas → menu **Volume**
+3. Choisis le service **zokko** → **Mount path** : `/app/backend/data/uploads`
+4. **Variables** (onglet du service zokko) → `STORAGE_LOCAL_PATH=/app/backend/data/uploads`
+5. **Redeploy** le service zokko
 
 Les **nouvelles** photos survivront aux redeploys. Les anciennes sont perdues : **republier les photos** sur chaque annonce (Modifier).
 

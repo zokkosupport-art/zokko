@@ -27,7 +27,8 @@ api.interceptors.response.use(
 export const fileUrl = (path) => {
   if (!path) return null;
   if (/^https?:\/\//i.test(path)) return path;
-  return `${API}/files/${path}`;
+  const clean = String(path).replace(/^\/?api\/files\//i, "");
+  return `${API}/files/${clean}`;
 };
 
 /** First listing image from API fields (photos, images, image_urls, photo). */

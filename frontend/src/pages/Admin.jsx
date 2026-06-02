@@ -4,7 +4,8 @@ import {
   ImageSquare, Eye, Copy, FacebookLogo, Trash, EyeSlash, ArrowSquareOut,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import api, { formatPrice, fileUrl, getListingThumbnailUrl } from "@/lib/api";
+import api, { formatPrice, fileUrl } from "@/lib/api";
+import AdminPhoto, { AdminPhotoThumb } from "@/components/AdminPhoto";
 import { listingStatusLabel, listingShareUrl, facebookShareUrl } from "@/lib/listingLabels";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -205,8 +206,10 @@ export default function Admin() {
           <div className="bg-white border border-[#E5E0D8] rounded-2xl overflow-hidden divide-y divide-[#E5E0D8]">
             {filteredListings.map((l) => (
               <div key={l.id} className="p-4 flex flex-wrap items-center gap-3" data-testid={`admin-listing-${l.id}`}>
-                {getListingThumbnailUrl(l) && (
-                  <img src={getListingThumbnailUrl(l)} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+                {l.photos?.[0] ? (
+                  <AdminPhotoThumb path={l.photos[0]} title={l.title} />
+                ) : (
+                  <div className="w-14 h-14 rounded-xl bg-[#F0EBE1] flex items-center justify-center text-[10px] text-[#4A5D50] flex-shrink-0">—</div>
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-[#1A2E22] truncate">{l.title}</p>
@@ -301,12 +304,19 @@ export default function Admin() {
                 <StatusBadge status={viewListing.status} />
                 {viewListing.premium && <span className="text-xs font-bold bg-[#FBC02D] text-[#1A2E22] px-2 py-1 rounded-full">Premium</span>}
               </div>
-              {viewListing.photos?.length > 0 && (
+              {viewListing.status === "pending" && (
+                <p className="text-sm text-[#F57F17] bg-[#FFF8E1] border border-[#FBC02D]/40 rounded-xl px-3 py-2">
+                  Si les photos sont jaunes « absente du serveur », le fichier a été effacé par la mise à jour Railway — contactez le vendeur pour qu’il republie via <strong>Mes annonces → Modifier</strong> avant d’approuver.
+                </p>
+              )}
+              {viewListing.photos?.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2">
                   {viewListing.photos.map((p) => (
-                    <img key={p} src={fileUrl(p)} alt="" className="w-full aspect-[4/3] object-cover rounded-xl" />
+                    <AdminPhoto key={p} path={p} title={viewListing.title} />
                   ))}
                 </div>
+              ) : (
+                <p className="text-sm text-[#4A5D50] bg-[#F0EBE1] rounded-xl px-3 py-2">Aucune photo jointe à cette annonce.</p>
               )}
               <p className="text-2xl font-heading font-bold text-[#D84315]">{formatPrice(viewListing.price, viewListing.currency)}</p>
               <p className="text-sm text-[#4A5D50] whitespace-pre-wrap">{viewListing.description}</p>
@@ -316,6 +326,20 @@ export default function Admin() {
                 <Field label="Vendeur" value={viewListing.owner?.name || viewListing.owner_name} />
                 <Field label="Téléphone" value={viewListing.owner?.phone ? `+224 ${viewListing.owner.phone}` : "—"} />
               </div>
+              {viewListing.owner?.phone && (
+                <a
+                  href={`https://wa.me/224${String(viewListing.owner.phone).replace(/\D/g, "")}?text=${encodeURIComponent(
+                    `Bonjour, c'est l'équipe Zokko. Pour valider votre annonce « ${viewListing.title} », merci de rouvrir www.zokko.net → Mes annonces → Modifier et remettre vos photos. Merci !`
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex"
+                >
+                  <Button size="sm" type="button" className="rounded-full bg-[#25D366] hover:bg-[#1DA851] text-white">
+                    WhatsApp vendeur
+                  </Button>
+                </a>
+              )}
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" className="rounded-full" onClick={() => copyShare(viewListing.id)}>
                   <Copy size={16} className="mr-1" /> Copier lien
