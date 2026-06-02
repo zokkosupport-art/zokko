@@ -31,6 +31,7 @@ export default function Admin() {
   const [proofImg, setProofImg] = useState(null);
   const [viewListing, setViewListing] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
+  const [storageHealth, setStorageHealth] = useState(null);
 
   const load = async () => {
     const [s, u, l, p, pp, r] = await Promise.all([

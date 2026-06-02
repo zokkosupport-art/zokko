@@ -659,6 +659,7 @@ async def health_env():
         k for k in os.environ
         if k.startswith(("MONGO_", "DB_", "JWT_", "ADMIN_", "STORAGE_", "OTP_", "CORS_", "FRONTEND_"))
     )
+    vol = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "").strip()
     return {
         "MONGO_URL_set": bool(mongo),
         "MONGO_URL_length": len(mongo),
@@ -667,10 +668,47 @@ async def health_env():
         "ADMIN_PASSWORD_set": bool(os.environ.get("ADMIN_PASSWORD", "").strip()),
         "PORT": os.environ.get("PORT"),
         "RAILWAY_ENVIRONMENT": os.environ.get("RAILWAY_ENVIRONMENT"),
+        "RAILWAY_VOLUME_MOUNT_PATH_set": bool(vol),
+        "STORAGE_BACKEND": os.environ.get("STORAGE_BACKEND", "").strip() or "local",
+        "STORAGE_LOCAL_PATH_set": bool(os.environ.get("STORAGE_LOCAL_PATH", "").strip()),
         "zokko_env_keys_found": zokko_keys,
         "hint": (
             "Si tout est vide : Variables sur le service zokko (pas Shared seul), "
             "bouton + New Variable, puis Redeploy."
+        ),
+    }
+
+
+@app.get("/health/storage")
+async def health_storage():
+    """Public — vérifie Volume Railway + écriture disque (pas besoin d'être admin)."""
+    root = storage.get_local_root()
+    vol = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "").strip()
+    writable = False
+    file_count = 0
+    err = None
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        probe = root / ".zokko_write_probe"
+        probe.write_text("ok", encoding="utf-8")
+        writable = probe.is_file()
+        probe.unlink(missing_ok=True)
+        file_count = sum(1 for p in root.rglob("*") if p.is_file())
+    except Exception as exc:
+        err = str(exc)
+    ok = bool(vol) and writable
+    return {
+        "ok": ok,
+        "volume_detected": bool(vol),
+        "writable": writable,
+        "upload_file_count": file_count,
+        "storage_backend": storage.BACKEND,
+        "error": err,
+        "hint": (
+            "Volume OK — les nouvelles photos survivent aux redeploys."
+            if ok
+            else "PAS DE VOLUME actif sur ce conteneur — photos perdues à chaque redeploy. "
+            "Vérifiez zokko-volume + Deploy, ou passez à Cloudflare R2."
         ),
     }
 
