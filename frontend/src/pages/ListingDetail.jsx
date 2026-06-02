@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Eye, ChatCircleText, WhatsappLogo, ArrowLeft, Star, Lightning, Phone, ShareNetwork, Flag, SealCheck } from "@phosphor-icons/react";
 import FavoriteButton from "@/components/FavoriteButton";
-import api, { BACKEND_URL, fileUrl, getListingCoverPath, getListingThumbnailUrl, formatPrice, formatApiError, CATEGORY_PLACEHOLDER_IMAGES } from "@/lib/api";
+import api, { BACKEND_URL, fileUrl, getListingCoverPath, getListingThumbnailUrl, formatPrice, formatApiError } from "@/lib/api";
 import ListingImage from "@/components/ListingImage";
 import { applyPageSeo, listingSeo } from "@/lib/seo";
 import { logger } from "@/lib/logger";
@@ -125,13 +125,7 @@ export default function ListingDetail() {
       <div className="grid md:grid-cols-[1.4fr_1fr] gap-6">
         <div>
           <div className="aspect-[4/3] bg-[#F0EBE1] rounded-2xl overflow-hidden relative">
-            {photoUrl ? (
-              <img src={photoUrl} alt={listing.title} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="font-heading text-6xl font-bold text-[#D84315]/20">{listing.title.charAt(0).toUpperCase()}</span>
-              </div>
-            )}
+            <ListingImage listing={listing} src={activePhotoUrl} alt={listing.title} />
             <div className="absolute top-3 left-3 flex flex-col gap-2">
               {listing.premium && <span className="bg-[#FBC02D] text-[#1A2E22] text-xs font-bold uppercase px-3 py-1 rounded-full flex items-center gap-1"><Star size={12} weight="fill" /> Premium</span>}
               {listing.boosted_until && new Date(listing.boosted_until) > new Date() && (
@@ -143,7 +137,14 @@ export default function ListingDetail() {
             <div className="flex gap-2 mt-3 overflow-x-auto gm-scroll-x">
               {photos.map((p, i) => (
                 <button key={p} onClick={() => setActivePhoto(i)} className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 ${i === activePhoto ? "border-[#D84315]" : "border-[#E5E0D8]"}`}>
-                  <img src={fileUrl(p)} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={/^https?:\/\//i.test(p) ? p : fileUrl(p)}
+                    alt=""
+                    className="w-full h-full object-cover bg-[#F0EBE1]"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
                 </button>
               ))}
             </div>

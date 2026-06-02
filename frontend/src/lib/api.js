@@ -43,22 +43,10 @@ export const getListingCoverPath = (listing) => {
 
 export const getListingCoverUrl = (listing) => fileUrl(getListingCoverPath(listing));
 
-/** Category fallback when no uploaded photo (demo / legacy listings). */
-export const CATEGORY_PLACEHOLDER_IMAGES = {
-  vehicules: "https://images.unsplash.com/photo-1623869674694-dcd959eca434?auto=format&fit=crop&w=800&q=80",
-  immobilier: "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800",
-  electronique: "https://images.pexels.com/photos/4158/apple-iphone-smartphone-desk.jpg?auto=compress&cs=tinysrgb&w=800",
-  services: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
-  mode: "https://images.pexels.com/photos/29168547/pexels-photo-29168547.jpeg?auto=compress&cs=tinysrgb&w=800",
-  alimentation: "https://images.unsplash.com/photo-1586201375767-2b532b21d645?auto=format&fit=crop&w=800&q=80",
-  emploi: "https://images.pexels.com/photos/4484078/pexels-photo-4484078.jpeg?auto=compress&cs=tinysrgb&w=800",
-};
+/** @deprecated Stock placeholders removed — use ListingImage (honest "Photo indisponible"). */
+export const CATEGORY_PLACEHOLDER_IMAGES = {};
 
-export const getListingThumbnailUrl = (listing) => {
-  const cover = getListingCoverUrl(listing);
-  if (cover) return cover;
-  return CATEGORY_PLACEHOLDER_IMAGES[listing?.category] || null;
-};
+export const getListingThumbnailUrl = (listing) => getListingCoverUrl(listing) || null;
 
 export const formatPrice = (price, currency = "GNF") => {
   if (typeof price !== "number") return "";

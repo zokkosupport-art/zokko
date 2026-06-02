@@ -11,6 +11,45 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 const QUICK_CITIES = ["", "Conakry", "Kankan", "Labé", "Kindia"];
 const QUICK_QUARTIERS = ["", "Ratoma", "Matam", "Dixinn", "Kaloum"];
 
+function ListingsFilterPanel({ category, city, quartier, type, categories, cities, onUpdate, onClose }) {
+  return (
+    <div className="space-y-4">
+      <h3 className="font-heading font-semibold text-[#1A2E22]">Catégories</h3>
+      <div className="space-y-1">
+        <button type="button" onClick={() => onUpdate("category", "")} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${!category ? "bg-[#D84315] text-white" : "text-[#4A5D50]"}`}>Toutes</button>
+        {categories.map((c) => (
+          <button key={c.slug} type="button" onClick={() => onUpdate("category", c.slug)} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${category === c.slug ? "bg-[#D84315] text-white" : "text-[#4A5D50]"}`}>
+            {c.name}
+          </button>
+        ))}
+      </div>
+      <h3 className="font-heading font-semibold text-[#1A2E22]">Type</h3>
+      <div className="flex flex-wrap gap-2">
+        {["", "product", "service"].map((t) => (
+          <button key={t || "all"} type="button" onClick={() => onUpdate("type", t)} className={`px-3 py-1.5 rounded-full text-sm font-semibold ${type === t ? "bg-[#2E7D32] text-white" : "bg-[#FAF8F5] text-[#4A5D50]"}`}>
+            {t === "" ? "Tout" : t === "product" ? "Produits" : "Services"}
+          </button>
+        ))}
+      </div>
+      <h3 className="font-heading font-semibold text-[#1A2E22]">Ville</h3>
+      <select value={city} onChange={(e) => onUpdate("city", e.target.value)} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-3 py-2 text-sm">
+        <option value="">Toutes</option>
+        {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
+      {(city === "Conakry" || !city) && (
+        <>
+          <h3 className="font-heading font-semibold text-[#1A2E22]">Quartier</h3>
+          <select value={quartier} onChange={(e) => onUpdate("quartier", e.target.value)} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-3 py-2 text-sm">
+            <option value="">Tous</option>
+            {CONAKRY_QUARTIERS.filter((x) => x !== "Autre").map((x) => <option key={x} value={x}>{x}</option>)}
+          </select>
+        </>
+      )}
+      <Button type="button" onClick={onClose} className="w-full bg-[#D84315] text-white rounded-full">Appliquer</Button>
+    </div>
+  );
+}
+
 export default function Listings() {
   const [params, setParams] = useSearchParams();
   const [items, setItems] = useState([]);
@@ -18,6 +57,7 @@ export default function Listings() {
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
 
   const category = params.get("category") || "";
   const city = params.get("city") || "";
@@ -27,12 +67,18 @@ export default function Listings() {
   const [search, setSearch] = useState(q);
 
   useEffect(() => {
+    setSearch(q);
+  }, [q]);
+
+  useEffect(() => {
     api.get("/categories").then(({ data }) => setCategories(data));
     api.get("/cities").then(({ data }) => setCities(data));
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
+    setFetchError(false);
     const p = new URLSearchParams();
     if (category) p.append("category", category);
     if (city) p.append("city", city);
@@ -40,9 +86,18 @@ export default function Listings() {
     if (q) p.append("q", q);
     if (type) p.append("type", type);
     p.append("limit", "60");
-    api.get(`/listings?${p.toString()}`)
+    api.get(`/listings?${p.toString()}`, { signal: controller.signal })
       .then(({ data }) => setItems(data.items || []))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (err.name !== "CanceledError" && err.code !== "ERR_CANCELED") {
+          setFetchError(true);
+          setItems([]);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [category, city, quartier, q, type]);
 
   const update = (key, val) => {
@@ -69,43 +124,6 @@ export default function Listings() {
     return parts.length ? parts.join(" · ") : "Toutes les annonces";
   }, [category, city, quartier, q, categories]);
 
-  const FilterPanel = () => (
-    <div className="space-y-4">
-      <h3 className="font-heading font-semibold text-[#1A2E22]">Catégories</h3>
-      <div className="space-y-1">
-        <button type="button" onClick={() => update("category", "")} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${!category ? "bg-[#D84315] text-white" : "text-[#4A5D50]"}`}>Toutes</button>
-        {categories.map((c) => (
-          <button key={c.slug} type="button" onClick={() => update("category", c.slug)} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${category === c.slug ? "bg-[#D84315] text-white" : "text-[#4A5D50]"}`}>
-            {c.name}
-          </button>
-        ))}
-      </div>
-      <h3 className="font-heading font-semibold text-[#1A2E22]">Type</h3>
-      <div className="flex flex-wrap gap-2">
-        {["", "product", "service"].map((t) => (
-          <button key={t || "all"} type="button" onClick={() => update("type", t)} className={`px-3 py-1.5 rounded-full text-sm font-semibold ${type === t ? "bg-[#2E7D32] text-white" : "bg-[#FAF8F5] text-[#4A5D50]"}`}>
-            {t === "" ? "Tout" : t === "product" ? "Produits" : "Services"}
-          </button>
-        ))}
-      </div>
-      <h3 className="font-heading font-semibold text-[#1A2E22]">Ville</h3>
-      <select value={city} onChange={(e) => update("city", e.target.value)} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-3 py-2 text-sm">
-        <option value="">Toutes</option>
-        {cities.map((c) => <option key={c} value={c}>{c}</option>)}
-      </select>
-      {(city === "Conakry" || !city) && (
-        <>
-          <h3 className="font-heading font-semibold text-[#1A2E22]">Quartier</h3>
-          <select value={quartier} onChange={(e) => update("quartier", e.target.value)} className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-3 py-2 text-sm">
-            <option value="">Tous</option>
-            {CONAKRY_QUARTIERS.filter((x) => x !== "Autre").map((x) => <option key={x} value={x}>{x}</option>)}
-          </select>
-        </>
-      )}
-      <Button type="button" onClick={() => setFilterOpen(false)} className="w-full bg-[#D84315] text-white rounded-full">Appliquer</Button>
-    </div>
-  );
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24">
       <h1 className="font-heading font-bold text-2xl sm:text-3xl text-[#1A2E22] mb-4">{pageTitle}</h1>
@@ -124,7 +142,18 @@ export default function Listings() {
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
             <SheetHeader><SheetTitle className="font-heading text-left">Filtres</SheetTitle></SheetHeader>
-            <div className="mt-4 pb-6"><FilterPanel /></div>
+            <div className="mt-4 pb-6">
+              <ListingsFilterPanel
+                category={category}
+                city={city}
+                quartier={quartier}
+                type={type}
+                categories={categories}
+                cities={cities}
+                onUpdate={update}
+                onClose={() => setFilterOpen(false)}
+              />
+            </div>
           </SheetContent>
         </Sheet>
         <Button type="button" variant="outline" onClick={() => setFilterOpen(true)} className="hidden md:flex h-11 rounded-xl border-[#E5E0D8]">
@@ -162,12 +191,26 @@ export default function Listings() {
 
       <div className="grid md:grid-cols-[240px_1fr] gap-6">
         <aside className="hidden md:block bg-white rounded-2xl border border-[#E5E0D8] p-5 h-fit sticky top-20">
-          <FilterPanel />
+          <ListingsFilterPanel
+            category={category}
+            city={city}
+            quartier={quartier}
+            type={type}
+            categories={categories}
+            cities={cities}
+            onUpdate={update}
+            onClose={() => {}}
+          />
         </aside>
         <div>
+          {fetchError && (
+            <div className="bg-[#FFF3E0] border border-[#FFCC80] rounded-2xl p-4 mb-4 text-sm text-[#1A2E22]">
+              Impossible de charger les annonces. Vérifiez votre connexion et réessayez.
+            </div>
+          )}
           {loading ? (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(6)].map((_, i) => <div key={i} className="aspect-[4/3] bg-[#F0EBE1] rounded-2xl" />)}
+              {[...Array(6)].map((_, i) => <div key={i} className="aspect-[4/3] bg-[#F0EBE1] rounded-2xl animate-pulse" />)}
             </div>
           ) : items.length === 0 ? (
             <div className="bg-white rounded-2xl border border-[#E5E0D8] p-12 text-center">
