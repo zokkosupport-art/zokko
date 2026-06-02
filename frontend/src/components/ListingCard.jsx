@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { MapPin, Lightning, Star, SealCheck, Image as ImageIcon, Storefront, Crown } from "@phosphor-icons/react";
-import { getListingThumbnailUrl, formatPrice } from "@/lib/api";
+import { MapPin, Lightning, Star, SealCheck, Storefront, Crown } from "@phosphor-icons/react";
+import { formatPrice } from "@/lib/api";
 import FavoriteButton from "@/components/FavoriteButton";
+import ListingImage from "@/components/ListingImage";
 
 export default function ListingCard({ listing }) {
-  const thumbnail = getListingThumbnailUrl(listing);
   const isBoosted = listing.boosted_until && new Date(listing.boosted_until) > new Date();
   const isPro = listing.owner_is_pro || listing.owner?.is_pro;
   const isBoutique = listing.owner_account_type === "entreprise" && !isPro;
@@ -17,23 +17,7 @@ export default function ListingCard({ listing }) {
       data-testid={`listing-card-${listing.id}`}
     >
       <div className="aspect-[4/3] bg-[#F0EBE1] relative overflow-hidden">
-        {thumbnail ? (
-          <img
-            src={thumbnail}
-            alt={listing.title}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-              e.currentTarget.nextElementSibling?.classList.remove("hidden");
-            }}
-          />
-        ) : null}
-        <div className={`w-full h-full flex flex-col items-center justify-center text-[#4A5D50] text-sm absolute inset-0 ${thumbnail ? "hidden" : ""}`}>
-          <ImageIcon size={28} weight="duotone" className="text-[#D84315]/40 mb-1" aria-hidden />
-          <span className="font-heading text-2xl font-bold text-[#D84315]/30">{listing.title.charAt(0).toUpperCase()}</span>
-        </div>
+        <ListingImage listing={listing} alt={listing.title} />
         <div className="absolute top-2 right-2 z-10">
           <FavoriteButton listingId={listing.id} />
         </div>

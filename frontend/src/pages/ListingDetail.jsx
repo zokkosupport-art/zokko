@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Eye, ChatCircleText, WhatsappLogo, ArrowLeft, Star, Lightning, Phone, ShareNetwork, Flag, SealCheck } from "@phosphor-icons/react";
 import FavoriteButton from "@/components/FavoriteButton";
-import api, { BACKEND_URL, fileUrl, getListingCoverPath, getListingThumbnailUrl, formatPrice, formatApiError } from "@/lib/api";
+import api, { BACKEND_URL, fileUrl, getListingCoverPath, getListingThumbnailUrl, formatPrice, formatApiError, CATEGORY_PLACEHOLDER_IMAGES } from "@/lib/api";
+import ListingImage from "@/components/ListingImage";
 import { applyPageSeo, listingSeo } from "@/lib/seo";
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
@@ -52,7 +53,10 @@ export default function ListingDetail() {
   const photos = listing.photos?.length
     ? listing.photos
     : [getListingCoverPath(listing)].filter(Boolean);
-  const photoUrl = photos[activePhoto] ? fileUrl(photos[activePhoto]) : null;
+  const activePhotoPath = photos[activePhoto];
+  const activePhotoUrl = activePhotoPath
+    ? (/^https?:\/\//i.test(activePhotoPath) ? activePhotoPath : fileUrl(activePhotoPath))
+    : null;
   const isOwner = user?.id === listing.owner_id;
   const whatsappNumber = (listing.whatsapp || listing.owner?.phone || "").replace(/\D/g, "");
   const whatsappLink = `https://wa.me/224${whatsappNumber}?text=${encodeURIComponent(`Bonjour, je suis intéressé par : ${listing.title}`)}`;
