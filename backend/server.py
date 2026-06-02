@@ -699,20 +699,30 @@ async def health_storage():
         file_count = sum(1 for p in root.rglob("*") if p.is_file())
     except Exception as exc:
         err = str(exc)
+    backup = storage.check_backup()
     ok = bool(vol) and writable
+    if backup.get("enabled") and backup.get("ok"):
+        hint = (
+            "Volume OK + secours R2 actif — photos sur disque et copie cloud."
+        )
+    elif ok:
+        hint = "Volume OK — les nouvelles photos survivent aux redeploys."
+    elif backup.get("enabled") and backup.get("ok"):
+        hint = "Pas de volume, mais secours R2 OK — lecture possible depuis le cloud."
+    else:
+        hint = (
+            "PAS DE VOLUME actif sur ce conteneur — photos perdues à chaque redeploy. "
+            "Vérifiez zokko-volume + Deploy, ou activez STORAGE_BACKUP=s3 (Cloudflare R2)."
+        )
     return {
-        "ok": ok,
+        "ok": ok or (backup.get("enabled") and backup.get("ok")),
         "volume_detected": bool(vol),
         "writable": writable,
         "upload_file_count": file_count,
         "storage_backend": storage.BACKEND,
+        "backup": backup,
         "error": err,
-        "hint": (
-            "Volume OK — les nouvelles photos survivent aux redeploys."
-            if ok
-            else "PAS DE VOLUME actif sur ce conteneur — photos perdues à chaque redeploy. "
-            "Vérifiez zokko-volume + Deploy, ou passez à Cloudflare R2."
-        ),
+        "hint": hint,
     }
 
 

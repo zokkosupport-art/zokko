@@ -23,11 +23,28 @@ Sur Railway, avec `STORAGE_BACKEND=local`, les images sont enregistrées sur le 
 
 Les **nouvelles** photos survivront aux redeploys. Les anciennes sont perdues : **republier les photos** sur chaque annonce (Modifier).
 
-### Option B — Cloudflare R2 (recommandé long terme)
+### Option B — Secours R2 (recommandé : volume + cloud)
 
-Voir `MIGRATION.md` section « Photos en production ».
+Gardez le volume Railway **et** ajoutez dans Railway :
 
-`STORAGE_BACKEND=s3` + clés R2 → photos stockées dans le cloud, jamais effacées au redeploy.
+```env
+STORAGE_BACKUP=s3
+S3_ENDPOINT_URL=https://VOTRE_ACCOUNT_ID.r2.cloudflarestorage.com
+S3_BUCKET=zokko
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+S3_REGION=auto
+```
+
+Chaque upload est **copié sur R2**. Si le volume est vide, le site **relit depuis R2**.
+
+Test : https://www.zokko.net/health/storage → `"backup": { "enabled": true, "ok": true }`.
+
+Copie des fichiers déjà sur le volume : `cd backend && python scripts/mirror_volume_to_r2.py`
+
+### Option C — R2 seul (sans volume)
+
+Voir `MIGRATION.md`. `STORAGE_BACKEND=s3` + clés R2 → tout dans le cloud.
 
 ## Reprendre les photos maintenant
 
@@ -45,3 +62,12 @@ URL test (doit être 200, pas 404) :
 `https://www.zokko.net/api/files/zokko/uploads/.../xxx.jpg`
 
 Si **404** → fichier absent sur le serveur (normal après redeploy sans volume/R2).
+
+### Checks complets
+
+| URL | Attendu |
+|-----|---------|
+| https://www.zokko.net/health/storage | `"ok": true`, `"volume_detected": true` |
+| https://www.zokko.net/health/env | `"MONGO_URL_set": true`, `"DB_NAME": "zokko"` |
+
+Projet prod : **incredible-hope** (pas ample-enthusiasm). Voir `RECUPERATION-PHOTOS.md`.
