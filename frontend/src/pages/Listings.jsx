@@ -4,6 +4,8 @@ import { MagnifyingGlass, X, Funnel, SlidersHorizontal } from "@phosphor-icons/r
 import api from "@/lib/api";
 import ListingCard from "@/components/ListingCard";
 import { CONAKRY_QUARTIERS } from "@/lib/quartiers";
+import { citySeoPath, categorySeoPath, CITY_SEO_SLUGS } from "@/lib/listingLabels";
+import { applyPageSeo, listingsFilterSeo, absoluteUrl } from "@/lib/seo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -74,6 +76,21 @@ export default function Listings() {
     api.get("/categories").then(({ data }) => setCategories(data));
     api.get("/cities").then(({ data }) => setCities(data));
   }, []);
+
+  useEffect(() => {
+    const catName = categories.find((c) => c.slug === category)?.name;
+    const cfg = listingsFilterSeo({ category, city, categoryName: catName, cityName: city });
+    let canonical = absoluteUrl("/listings");
+    if (city && category) {
+      const slug = CITY_SEO_SLUGS[city] || city.toLowerCase();
+      canonical = absoluteUrl(`/annonces/${slug}/${category}`);
+    } else if (city) {
+      canonical = absoluteUrl(citySeoPath(city));
+    } else if (category) {
+      canonical = absoluteUrl(categorySeoPath(category));
+    }
+    applyPageSeo({ ...cfg, canonical });
+  }, [category, city, categories]);
 
   useEffect(() => {
     const controller = new AbortController();

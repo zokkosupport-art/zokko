@@ -7,6 +7,19 @@ export const LISTING_STATUS_LABELS = {
   hidden: "Masquée",
 };
 
+export const CITY_SEO_SLUGS = {
+  Conakry: "conakry",
+  Kankan: "kankan",
+  Labé: "labe",
+  Kindia: "kindia",
+  "Nzérékoré": "nzerekore",
+  Boké: "boke",
+  Faranah: "faranah",
+  Mamou: "mamou",
+  Siguiri: "siguiri",
+  Kissidougou: "kissidougou",
+};
+
 export function listingStatusLabel(status) {
   return LISTING_STATUS_LABELS[status] || status;
 }
@@ -26,6 +39,15 @@ export function listingOgShareUrl(listingId) {
   return `${backend.replace(/\/$/, "")}/api/s/${listingId}`;
 }
 
+export function citySeoPath(city) {
+  const slug = CITY_SEO_SLUGS[city] || encodeURIComponent(city);
+  return `/annonces/${slug}`;
+}
+
+export function categorySeoPath(categorySlug) {
+  return `/annonces/categorie/${categorySlug}`;
+}
+
 export function facebookShareUrl(url) {
   return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
 }
@@ -37,7 +59,6 @@ export function listingWhatsappShareUrl(listing) {
 }
 
 export function listingFacebookShareUrl(listingId) {
-  // /api/s/… serves OG meta (photo, titre, prix) for Facebook/WhatsApp crawlers
   return facebookShareUrl(listingOgShareUrl(listingId));
 }
 

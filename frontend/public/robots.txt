@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Allow: /listings
+Allow: /annonces
 Allow: /legal
 Disallow: /admin
 Disallow: /admin-login

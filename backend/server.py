@@ -32,6 +32,7 @@ import sms
 import storage
 from phone_utils import normalize_phone, phone_lookup_keys, format_phone_display
 from rate_limit import enforce_limit
+import seo_pages as seo
 
 logger = logging.getLogger("guinee-market")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -1956,9 +1957,12 @@ async def sitemap_xml(request: Request):
         ("/login", "0.5", "monthly"),
     ]
     for c in CATEGORIES:
-        static_pages.append((f"/listings?category={c['slug']}", "0.8", "daily"))
+        static_pages.append((f"/annonces/categorie/{c['slug']}", "0.85", "daily"))
     for city in GUINEA_CITIES:
-        static_pages.append((f"/listings?city={city}", "0.75", "daily"))
+        slug = seo.city_slug(city)
+        static_pages.append((f"/annonces/{slug}", "0.8", "daily"))
+        for c in CATEGORIES:
+            static_pages.append((f"/annonces/{slug}/{c['slug']}", "0.78", "daily"))
 
     listings = await db.listings.find(
         {"status": "approved"},
@@ -1992,76 +1996,66 @@ async def sitemap_xml_root(request: Request):
 
 
 # ---------------- Open Graph share endpoint (under /api so kubernetes ingress routes correctly) ----------------
-_CRAWLER_UA = re.compile(
-    r"facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|slackbot|telegrambot|discordbot|pinterest|googlebot|bingpreview|embedly",
-    re.I,
-)
-
-
 def _is_social_crawler(request: Request) -> bool:
-    return bool(_CRAWLER_UA.search(request.headers.get("user-agent", "")))
+    return seo.is_crawler(request.headers.get("user-agent", ""))
+
+
+async def _hub_listings(city: Optional[str] = None, category: Optional[str] = None, limit: int = 24):
+    query = {"status": "approved"}
+    if city:
+        query["city"] = city
+    if category:
+        query["category"] = category
+    return await db.listings.find(
+        query,
+        {"_id": 0, "id": 1, "title": 1, "price": 1, "currency": 1, "city": 1, "photos": 1},
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+
+
+@app.get("/annonces/categorie/{category_slug}", response_class=HTMLResponse)
+async def seo_category_hub(category_slug: str, request: Request):
+    cat_name = seo.category_from_slug(category_slug)
+    if not cat_name:
+        raise HTTPException(404)
+    base = seo.request_base(request)
+    listings = await _hub_listings(category=category_slug)
+    return HTMLResponse(seo.render_hub_page(base=base, city=None, category=cat_name, listings=listings))
+
+
+@app.get("/annonces/{city_slug}/{category_slug}", response_class=HTMLResponse)
+async def seo_city_category_hub(city_slug: str, category_slug: str, request: Request):
+    city = seo.city_from_slug(city_slug)
+    cat_name = seo.category_from_slug(category_slug)
+    if not city or not cat_name:
+        raise HTTPException(404)
+    base = seo.request_base(request)
+    listings = await _hub_listings(city=city, category=category_slug)
+    return HTMLResponse(seo.render_hub_page(base=base, city=city, category=cat_name, listings=listings))
+
+
+@app.get("/annonces/{city_slug}", response_class=HTMLResponse)
+async def seo_city_hub(city_slug: str, request: Request):
+    if city_slug == "categorie":
+        raise HTTPException(404)
+    city = seo.city_from_slug(city_slug)
+    if not city:
+        raise HTTPException(404)
+    base = seo.request_base(request)
+    listings = await _hub_listings(city=city)
+    return HTMLResponse(seo.render_hub_page(base=base, city=city, category=None, listings=listings))
 
 
 @app.get("/api/s/{listing_id}", response_class=HTMLResponse)
 async def og_share(listing_id: str, request: Request):
-    """Returns an HTML page with rich OG meta tags for WhatsApp/social previews,
-    then redirects real users to the React listing page."""
+    """Rich OG meta for WhatsApp/Facebook; redirects humans to the React listing page."""
     listing = await db.listings.find_one({"id": listing_id}, {"_id": 0})
     if not listing:
         return HTMLResponse("<h1>Annonce introuvable</h1>", status_code=404)
-    # Prefer public/forwarded host when behind ingress
-    forwarded_proto = request.headers.get("x-forwarded-proto", "https")
-    forwarded_host = request.headers.get("x-forwarded-host") or request.headers.get("host")
-    if forwarded_host:
-        base = f"{forwarded_proto}://{forwarded_host}"
-    else:
-        base = str(request.base_url).rstrip("/")
-    listing_url = f"{base}/listings/{listing_id}"
-    share_url = f"{base}/api/s/{listing_id}"
-    image_url = ""
-    if listing.get("photos"):
-        p0 = listing["photos"][0]
-        image_url = p0 if str(p0).startswith(("http://", "https://")) else f"{base}/api/files/{p0}"
-    title = (listing.get("title") or "Annonce")[:80]
-    price = f"{int(listing.get('price', 0)):,} {listing.get('currency', 'GNF')}".replace(",", " ")
-    city = listing.get("city", "")
-    desc = f"{price} · {city} · Vu sur Zokko"
-    full_desc = (listing.get("description") or desc)[:200]
+    base = seo.request_base(request)
     crawler = _is_social_crawler(request)
-    redirect_meta = "" if crawler else f'<meta http-equiv="refresh" content="0;url={listing_url}"/>'
-    redirect_script = "" if crawler else f"<script>window.location.replace({repr(listing_url)});</script>"
-    og_image_tags = ""
-    if image_url:
-        og_image_tags = (
-            f'<meta property="og:image" content="{image_url}"/>'
-            f'<meta property="og:image:secure_url" content="{image_url}"/>'
-            '<meta property="og:image:width" content="1200"/>'
-            '<meta property="og:image:height" content="900"/>'
-        )
-    html = f"""<!doctype html>
-<html lang="fr"><head>
-<meta charset="utf-8"/>
-<title>{title} - Zokko</title>
-<meta property="og:type" content="product"/>
-<meta property="og:title" content="{title}"/>
-<meta property="og:description" content="{desc} — {full_desc}"/>
-<meta property="og:url" content="{share_url if crawler else listing_url}"/>
-{og_image_tags}
-<meta property="og:site_name" content="Zokko"/>
-<meta property="product:price:amount" content="{listing.get('price', 0)}"/>
-<meta property="product:price:currency" content="{listing.get('currency', 'GNF')}"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="{title}"/>
-<meta name="twitter:description" content="{desc}"/>
-{f'<meta name="twitter:image" content="{image_url}"/>' if image_url else ''}
-{redirect_meta}
-<style>body{{font-family:system-ui;text-align:center;padding:40px;color:#1A2E22;background:#FAF8F5}}</style>
-</head><body>
-<h1>{title}</h1>
-<p>{desc}</p>
-<p><a href="{listing_url}" style="color:#D84315;font-weight:bold">Voir l'annonce sur Zokko →</a></p>
-{redirect_script}
-</body></html>"""
+    html = seo.render_listing_seo_page(
+        base=base, listing=listing, for_crawler=crawler, social_share=True
+    )
     return HTMLResponse(html)
 app.add_middleware(
     CORSMiddleware,
@@ -2075,6 +2069,21 @@ app.add_middleware(
 if FRONTEND_BUILD.is_dir():
     from fastapi.staticfiles import StaticFiles
     from fastapi.responses import FileResponse
+
+    @app.get("/listings/{listing_id}")
+    async def listing_spa_or_seo(listing_id: str, request: Request):
+        """Googlebot gets server HTML; users get the React app."""
+        ua = request.headers.get("user-agent", "")
+        if seo.is_crawler(ua):
+            listing = await db.listings.find_one({"id": listing_id, "status": "approved"}, {"_id": 0})
+            if not listing:
+                raise HTTPException(404)
+            base = seo.request_base(request)
+            return HTMLResponse(seo.render_listing_seo_page(base=base, listing=listing, for_crawler=True))
+        index = FRONTEND_BUILD / "index.html"
+        if index.is_file():
+            return FileResponse(index)
+        raise HTTPException(404)
 
     @app.get("/{full_path:path}")
     async def spa_fallback(full_path: str):

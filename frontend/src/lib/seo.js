@@ -55,6 +55,9 @@ const ROUTES = {
 
 export function seoForPath(pathname) {
   if (ROUTES[pathname]) return { ...ROUTES[pathname] };
+  if (pathname.startsWith("/annonces/")) {
+    return annoncesSeoFromPath(pathname);
+  }
   if (pathname.startsWith("/listings/") && pathname !== "/listings") {
     return {
       title: "Annonce — Zokko Guinée",
@@ -67,6 +70,83 @@ export function seoForPath(pathname) {
     description: ROUTES["/"].description,
     keywords: DEFAULT_KEYWORDS,
   };
+}
+
+const CATEGORY_SEO_NAMES = {
+  immobilier: "Immobilier",
+  vehicules: "Véhicules",
+  electronique: "Électronique",
+  mode: "Mode",
+  services: "Services",
+  emploi: "Emploi",
+  alimentation: "Alimentation",
+};
+
+const CITY_SEO_NAMES = {
+  conakry: "Conakry",
+  kankan: "Kankan",
+  labe: "Labé",
+  kindia: "Kindia",
+  nzerekore: "Nzérékoré",
+  boke: "Boké",
+  faranah: "Faranah",
+  mamou: "Mamou",
+  siguiri: "Siguiri",
+  kissidougou: "Kissidougou",
+};
+
+function annoncesSeoFromPath(pathname) {
+  const parts = pathname.replace(/\/$/, "").split("/").filter(Boolean);
+  if (parts[0] !== "annonces") return ROUTES["/"];
+  if (parts[1] === "categorie" && parts[2]) {
+    const cat = CATEGORY_SEO_NAMES[parts[2]] || parts[2];
+    return {
+      title: `${cat} en Guinée — Annonces Zokko`,
+      description: `Achetez et vendez ${cat.toLowerCase()} partout en Guinée. Annonces gratuites, WhatsApp, prix en GNF.`,
+      keywords: `${cat}, annonces Guinée, Zokko, marketplace`,
+    };
+  }
+  const city = CITY_SEO_NAMES[parts[1]] || parts[1];
+  const cat = parts[2] ? CATEGORY_SEO_NAMES[parts[2]] || parts[2] : null;
+  if (cat) {
+    return {
+      title: `${cat} à ${city} — Annonces Zokko Guinée`,
+      description: `Annonces ${cat.toLowerCase()} à ${city}. Photos, prix GNF, contact WhatsApp sur Zokko.`,
+      keywords: `${cat} ${city}, annonces ${city}, Zokko Guinée`,
+    };
+  }
+  return {
+    title: `Annonces ${city} — Marketplace Zokko Guinée`,
+    description: `Petites annonces à ${city} : véhicules, mode, électronique, immobilier, services. Gratuit sur Zokko.`,
+    keywords: `annonces ${city}, marketplace ${city}, Zokko Guinée`,
+  };
+}
+
+export function listingsFilterSeo({ category, city, categoryName, cityName }) {
+  const cat = categoryName || CATEGORY_SEO_NAMES[category] || category;
+  const cty = cityName || city;
+  if (cty && cat) {
+    return {
+      title: `${cat} à ${cty} — Annonces Zokko`,
+      description: `Parcourez les annonces ${String(cat).toLowerCase()} à ${cty} sur Zokko. Contact WhatsApp, prix en GNF.`,
+      keywords: `${cat} ${cty}, annonces ${cty}, Zokko`,
+    };
+  }
+  if (cty) {
+    return {
+      title: `Annonces ${cty} — Zokko Guinée`,
+      description: `Toutes les annonces à ${cty} sur Zokko marketplace.`,
+      keywords: `annonces ${cty}, Zokko Guinée`,
+    };
+  }
+  if (cat) {
+    return {
+      title: `${cat} en Guinée — Zokko`,
+      description: `Annonces ${String(cat).toLowerCase()} en Guinée.`,
+      keywords: `${cat}, annonces Guinée, Zokko`,
+    };
+  }
+  return seoForPath("/listings");
 }
 
 export function listingSeo(listing, imageUrl) {
