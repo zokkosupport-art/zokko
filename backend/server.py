@@ -1992,6 +1992,16 @@ async def sitemap_xml_root(request: Request):
 
 
 # ---------------- Open Graph share endpoint (under /api so kubernetes ingress routes correctly) ----------------
+_CRAWLER_UA = re.compile(
+    r"facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|slackbot|telegrambot|discordbot|pinterest|googlebot|bingpreview|embedly",
+    re.I,
+)
+
+
+def _is_social_crawler(request: Request) -> bool:
+    return bool(_CRAWLER_UA.search(request.headers.get("user-agent", "")))
+
+
 @app.get("/api/s/{listing_id}", response_class=HTMLResponse)
 async def og_share(listing_id: str, request: Request):
     """Returns an HTML page with rich OG meta tags for WhatsApp/social previews,
@@ -2007,6 +2017,7 @@ async def og_share(listing_id: str, request: Request):
     else:
         base = str(request.base_url).rstrip("/")
     listing_url = f"{base}/listings/{listing_id}"
+    share_url = f"{base}/api/s/{listing_id}"
     image_url = ""
     if listing.get("photos"):
         p0 = listing["photos"][0]
@@ -2016,6 +2027,17 @@ async def og_share(listing_id: str, request: Request):
     city = listing.get("city", "")
     desc = f"{price} · {city} · Vu sur Zokko"
     full_desc = (listing.get("description") or desc)[:200]
+    crawler = _is_social_crawler(request)
+    redirect_meta = "" if crawler else f'<meta http-equiv="refresh" content="0;url={listing_url}"/>'
+    redirect_script = "" if crawler else f"<script>window.location.replace({repr(listing_url)});</script>"
+    og_image_tags = ""
+    if image_url:
+        og_image_tags = (
+            f'<meta property="og:image" content="{image_url}"/>'
+            f'<meta property="og:image:secure_url" content="{image_url}"/>'
+            '<meta property="og:image:width" content="1200"/>'
+            '<meta property="og:image:height" content="900"/>'
+        )
     html = f"""<!doctype html>
 <html lang="fr"><head>
 <meta charset="utf-8"/>
@@ -2023,9 +2045,8 @@ async def og_share(listing_id: str, request: Request):
 <meta property="og:type" content="product"/>
 <meta property="og:title" content="{title}"/>
 <meta property="og:description" content="{desc} — {full_desc}"/>
-<meta property="og:url" content="{listing_url}"/>
-{f'<meta property="og:image" content="{image_url}"/>' if image_url else ''}
-{'<meta property="og:image:width" content="1200"/><meta property="og:image:height" content="900"/>' if image_url else ''}
+<meta property="og:url" content="{share_url if crawler else listing_url}"/>
+{og_image_tags}
 <meta property="og:site_name" content="Zokko"/>
 <meta property="product:price:amount" content="{listing.get('price', 0)}"/>
 <meta property="product:price:currency" content="{listing.get('currency', 'GNF')}"/>
@@ -2033,13 +2054,13 @@ async def og_share(listing_id: str, request: Request):
 <meta name="twitter:title" content="{title}"/>
 <meta name="twitter:description" content="{desc}"/>
 {f'<meta name="twitter:image" content="{image_url}"/>' if image_url else ''}
-<meta http-equiv="refresh" content="0;url={listing_url}"/>
+{redirect_meta}
 <style>body{{font-family:system-ui;text-align:center;padding:40px;color:#1A2E22;background:#FAF8F5}}</style>
 </head><body>
 <h1>{title}</h1>
 <p>{desc}</p>
 <p><a href="{listing_url}" style="color:#D84315;font-weight:bold">Voir l'annonce sur Zokko →</a></p>
-<script>window.location.replace({repr(listing_url)});</script>
+{redirect_script}
 </body></html>"""
     return HTMLResponse(html)
 app.add_middleware(
