@@ -39,7 +39,7 @@ export default function Layout() {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E0D8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2" data-testid="logo-link">
-            <img src="/branding/logo-elephant-officiel.png" alt="Zokko" className="w-9 h-9 rounded-xl object-contain" />
+            <img src="/branding/logo-elephant-officiel.png" alt="" className="w-11 h-11 rounded-2xl object-contain" aria-hidden />
             <span className="font-heading font-bold text-xl text-[#1A2E22]">Zo<span className="text-[#D84315]">kko</span></span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">

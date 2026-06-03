@@ -4,9 +4,9 @@
 **Pas l’objectif (pour l’instant) :** inscription vendeur, « publiez gratuit ».
 
 **Lien partout :** https://www.zokko.net  
-**Logo officiel (icône carrée) :** `logo-icon-officiel.png` — éléphant rouge/jaune/vert sur blanc.  
-**Affiche poster (optionnel) :** `zokko-affiche-facebook.png` — ne pas confondre avec le logo.  
-**Visuel pubs :** captures annonces du site + petit logo éléphant · ou `affiche-trafic-officielle.html` (texte *Parcourez*, pas *Vendez*).
+**Marque = l’éléphant** (`logo-icon-officiel.png`) — grand sur chaque visuel.  
+**Pubs prêtes à capturer :** ouvrir `marketing/pubs/index.html` (5 formats carré + story).  
+**Texte pub :** trafic / parcourir les annonces — pas « publiez gratuit ».
 
 ---
 
@@ -49,7 +49,7 @@ Tout sur Zokko — la marketplace 100% guinéenne.
 Prix en GNF · Contact WhatsApp direct.
 ```
 **CTA :** En savoir plus  
-**Image :** Collage 4 vraies annonces (prix visibles).
+**Image :** `pubs/pub-carre-trafic.html` (éléphant grand + zokko.net) — ou `pub-carre-marche.html`
 
 ---
 
