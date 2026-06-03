@@ -6,7 +6,7 @@ import {
 import { toast } from "sonner";
 import api, { formatPrice, fileUrl } from "@/lib/api";
 import AdminPhoto, { AdminPhotoThumb } from "@/components/AdminPhoto";
-import { listingStatusLabel, listingShareUrl, listingFacebookPostText } from "@/lib/listingLabels";
+import { listingStatusLabel, listingShareUrl, listingOgShareUrl, listingFacebookPostText } from "@/lib/listingLabels";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -106,8 +106,8 @@ export default function Admin() {
   };
 
   const copyShare = (id) => {
-    navigator.clipboard.writeText(listingShareUrl(id));
-    toast.success("Lien copié");
+    navigator.clipboard.writeText(listingOgShareUrl(id));
+    toast.success("Lien copié (Facebook / WhatsApp — avec photo)");
   };
 
   const shareFacebook = async (listing) => {
