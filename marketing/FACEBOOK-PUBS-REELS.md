@@ -2,7 +2,7 @@
 
 **Site :** https://www.zokko.net  
 **Page :** Zokko Guinée  
-**Visuel officiel :** `marketing/logo-officiel.png` (= `zokko-affiche-facebook.png`) — **éléphant tricolore**  
+**Logo (icône seule) :** `marketing/logo-icon-officiel.png` — éléphant uniquement, fond blanc carré  
 + captures d’écran réelles de l’app si besoin
 
 ---

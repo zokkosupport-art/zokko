@@ -24,7 +24,7 @@
 - Format : **carré**, min. **400×400 px** (Facebook affiche en rond).
 - Sur la Page → **Modifier la photo de profil** → importer le logo éléphant.
 
-*Astuce : pour les couleurs Guinée, utilisez plutôt une capture du logo sur `affiche-elephant-guinee.html` (zone logo seule).*
+**Fichier logo :** `marketing/logo-icon-officiel.png` (éléphant seul — ne pas utiliser l’affiche poster).
 
 ---
 

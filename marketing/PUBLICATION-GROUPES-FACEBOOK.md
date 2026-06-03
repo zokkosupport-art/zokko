@@ -1,7 +1,7 @@
 # Publication pour groupes Facebook — Zokko
 
-**Image à joindre :** affiche officielle éléphant tricolore  
-`marketing/zokko-affiche-facebook.png` (ou `logo-officiel.png` — même fichier)
+**Logo :** `marketing/logo-icon-officiel.png` (éléphant seul — photo de profil / petit visuel)  
+**Affiche groupe (optionnel) :** `zokko-affiche-facebook.png` (poster avec texte — pas le logo)
 
 **Lien :** https://www.zokko.net
 
