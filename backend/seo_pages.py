@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import html
 import json
+import os
 import re
 import unicodedata
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 CRAWLER_UA = re.compile(
     r"facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|slackbot|"
@@ -62,7 +64,16 @@ def is_crawler(user_agent: str) -> bool:
     return bool(CRAWLER_UA.search(user_agent or ""))
 
 
+def canonical_site_base() -> str:
+    """Always www in production — avoids mixed zokko.net / www.zokko.net in SEO."""
+    env = os.environ.get("CANONICAL_SITE_URL", "https://www.zokko.net").strip().rstrip("/")
+    return env or "https://www.zokko.net"
+
+
 def request_base(request) -> str:
+    canonical = canonical_site_base()
+    if canonical:
+        return canonical
     forwarded_proto = request.headers.get("x-forwarded-proto", "https")
     forwarded_host = request.headers.get("x-forwarded-host") or request.headers.get("host")
     if forwarded_host:

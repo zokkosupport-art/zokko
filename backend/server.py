@@ -3,6 +3,7 @@ print("ZOKKO_BOOT: importing server.py", flush=True)
 from dotenv import load_dotenv
 from pathlib import Path
 import re
+from urllib.parse import urlparse
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -24,6 +25,8 @@ from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, UploadF
 from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from pymongo.errors import PyMongoError
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import RedirectResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
 
@@ -129,6 +132,23 @@ CATEGORIES = [
 ]
 
 GUINEA_CITIES = ["Conakry", "Kankan", "Labé", "Kindia", "Nzérékoré", "Boké", "Faranah", "Mamou", "Siguiri", "Kissidougou"]
+
+CANONICAL_SITE_URL = os.environ.get("CANONICAL_SITE_URL", "https://www.zokko.net").strip().rstrip("/")
+CANONICAL_HOST = urlparse(CANONICAL_SITE_URL).netloc or "www.zokko.net"
+APEX_HOSTS = {"zokko.net"}
+
+
+class WwwRedirectMiddleware(BaseHTTPMiddleware):
+    """301 zokko.net → www.zokko.net (single canonical domain)."""
+
+    async def dispatch(self, request, call_next):
+        host = (request.headers.get("host") or "").split(":")[0].lower()
+        if host in APEX_HOSTS:
+            target = f"{CANONICAL_SITE_URL}{request.url.path}"
+            if request.url.query:
+                target = f"{target}?{request.url.query}"
+            return RedirectResponse(target, status_code=301)
+        return await call_next(request)
 
 def init_storage():
     return storage.init_storage()
@@ -2070,6 +2090,8 @@ async def og_share(listing_id: str, request: Request):
         base=base, listing=listing, for_crawler=crawler, social_share=True
     )
     return HTMLResponse(html)
+
+app.add_middleware(WwwRedirectMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
