@@ -37,5 +37,6 @@ export function listingWhatsappShareUrl(listing) {
 }
 
 export function listingFacebookShareUrl(listingId) {
-  return facebookShareUrl(listingShareUrl(listingId));
+  // /api/s/… serves OG meta (photo, titre, prix) for Facebook/WhatsApp crawlers
+  return facebookShareUrl(listingOgShareUrl(listingId));
 }

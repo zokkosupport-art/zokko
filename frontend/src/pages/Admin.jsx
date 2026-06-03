@@ -6,7 +6,7 @@ import {
 import { toast } from "sonner";
 import api, { formatPrice, fileUrl } from "@/lib/api";
 import AdminPhoto, { AdminPhotoThumb } from "@/components/AdminPhoto";
-import { listingStatusLabel, listingShareUrl, facebookShareUrl } from "@/lib/listingLabels";
+import { listingStatusLabel, listingShareUrl, listingFacebookShareUrl } from "@/lib/listingLabels";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -111,7 +111,7 @@ export default function Admin() {
   };
 
   const shareFacebook = (id) => {
-    window.open(facebookShareUrl(listingShareUrl(id)), "_blank", "noopener,noreferrer");
+    window.open(listingFacebookShareUrl(id), "_blank", "noopener,noreferrer");
   };
 
   const block = async (id, blocked) => {
