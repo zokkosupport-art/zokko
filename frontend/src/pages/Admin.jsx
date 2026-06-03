@@ -6,7 +6,7 @@ import {
 import { toast } from "sonner";
 import api, { formatPrice, fileUrl } from "@/lib/api";
 import AdminPhoto, { AdminPhotoThumb } from "@/components/AdminPhoto";
-import { listingStatusLabel, listingShareUrl, listingFacebookShareUrl } from "@/lib/listingLabels";
+import { listingStatusLabel, listingShareUrl, listingFacebookPostText } from "@/lib/listingLabels";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -110,8 +110,14 @@ export default function Admin() {
     toast.success("Lien copié");
   };
 
-  const shareFacebook = (id) => {
-    window.open(listingFacebookShareUrl(id), "_blank", "noopener,noreferrer");
+  const shareFacebook = async (listing) => {
+    try {
+      await navigator.clipboard.writeText(listingFacebookPostText(listing));
+      toast.success("Texte copié ! Va sur ta Page → Créer une publication → Ctrl+V → Publier", { duration: 8000 });
+      window.open("https://www.facebook.com/zokkoguinee", "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Impossible de copier — sélectionne et copie le texte manuellement");
+    }
   };
 
   const block = async (id, blocked) => {
@@ -370,7 +376,7 @@ export default function Admin() {
                 <Button size="sm" variant="outline" className="rounded-full" onClick={() => copyShare(viewListing.id)}>
                   <Copy size={16} className="mr-1" /> Copier lien
                 </Button>
-                <Button size="sm" variant="outline" className="rounded-full border-[#1877F2] text-[#1877F2]" onClick={() => shareFacebook(viewListing.id)}>
+                <Button size="sm" variant="outline" className="rounded-full border-[#1877F2] text-[#1877F2]" onClick={() => shareFacebook(viewListing)}>
                   <FacebookLogo size={16} weight="fill" className="mr-1" /> Facebook
                 </Button>
                 <a href={listingShareUrl(viewListing.id)} target="_blank" rel="noreferrer">

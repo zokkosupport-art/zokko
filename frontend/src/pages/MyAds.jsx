@@ -4,7 +4,7 @@ import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
 import ListingCard from "@/components/ListingCard";
-import { listingStatusLabel, listingWhatsappShareUrl, listingFacebookShareUrl } from "@/lib/listingLabels";
+import { listingStatusLabel, listingWhatsappShareUrl, listingFacebookPostText } from "@/lib/listingLabels";
 import { Plus, Star, Eye, WhatsappLogo, ChatCircleText, PencilSimple, Trash, Lightning, Crown, FacebookLogo } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { formatApiError } from "@/lib/api";
@@ -191,7 +191,15 @@ export default function MyAds() {
                     </a>
                     <button
                       type="button"
-                      onClick={() => window.open(listingFacebookShareUrl(l.id), "_blank", "noopener,noreferrer")}
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(listingFacebookPostText(l));
+                          toast.success("Texte copié ! Page Facebook → Coller (Ctrl+V) → Publier", { duration: 8000 });
+                          window.open("https://www.facebook.com/zokkoguinee", "_blank", "noopener,noreferrer");
+                        } catch {
+                          toast.error("Impossible de copier le texte");
+                        }
+                      }}
                       className="flex-1 min-w-[100px] text-xs font-semibold py-2 rounded-full border border-[#1877F2]/40 text-[#1877F2] flex items-center justify-center gap-1"
                     >
                       <FacebookLogo size={14} weight="fill" /> Facebook

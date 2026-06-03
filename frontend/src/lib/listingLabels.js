@@ -40,3 +40,20 @@ export function listingFacebookShareUrl(listingId) {
   // /api/s/… serves OG meta (photo, titre, prix) for Facebook/WhatsApp crawlers
   return facebookShareUrl(listingOgShareUrl(listingId));
 }
+
+/** Texte prêt à coller sur la Page Facebook (évite le share dialog qui bloque souvent). */
+export function listingFacebookPostText(listing) {
+  const link = listingOgShareUrl(listing.id);
+  const price = formatPrice(listing.price, listing.currency);
+  const line = (listing.description || "").split("\n").find((s) => s.trim())?.trim() || "";
+  const extra = line.length > 100 ? `${line.slice(0, 100)}…` : line;
+  return `${listing.title} — ${listing.city}
+
+💰 ${price}
+📍 ${listing.city}${extra ? `\n\n${extra}` : ""}
+
+👉 Voir photos et contacter le vendeur :
+${link}
+
+🇬🇳 Zokko — marketplace Guinée`;
+}
