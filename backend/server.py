@@ -1943,8 +1943,7 @@ async def root():
 app.include_router(api)
 
 # ---------------- SEO: Sitemap XML ----------------
-@app.get("/api/sitemap.xml")
-async def sitemap_xml(request: Request):
+async def _build_sitemap_xml(request: Request) -> bytes:
     """SEO sitemap listing all approved listings + main pages."""
     forwarded_proto = request.headers.get("x-forwarded-proto", "https")
     forwarded_host = request.headers.get("x-forwarded-host") or request.headers.get("host")
@@ -1986,13 +1985,27 @@ async def sitemap_xml(request: Request):
         + "\n".join(urls)
         + "\n</urlset>"
     )
-    return Response(content=xml, media_type="application/xml")
+    return xml.encode("utf-8")
 
 
-@app.get("/sitemap.xml")
+def _sitemap_response(request: Request, body: bytes) -> Response:
+    headers = {"Content-Length": str(len(body))}
+    if request.method == "HEAD":
+        return Response(content=b"", media_type="application/xml", headers=headers)
+    return Response(content=body, media_type="application/xml", headers=headers)
+
+
+@app.api_route("/api/sitemap.xml", methods=["GET", "HEAD"])
+async def sitemap_xml(request: Request):
+    body = await _build_sitemap_xml(request)
+    return _sitemap_response(request, body)
+
+
+@app.api_route("/sitemap.xml", methods=["GET", "HEAD"])
 async def sitemap_xml_root(request: Request):
     """Same sitemap at root for Google Search Console."""
-    return await sitemap_xml(request)
+    body = await _build_sitemap_xml(request)
+    return _sitemap_response(request, body)
 
 
 # ---------------- Open Graph share endpoint (under /api so kubernetes ingress routes correctly) ----------------
