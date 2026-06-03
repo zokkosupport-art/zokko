@@ -1,47 +1,46 @@
-# Affiches Zokko — logo officiel (éléphant tricolore 🇬🇳)
+# Zokko — identité visuelle (à ne pas confondre)
 
-## Logo officiel
+## 1. LOGO OFFICIEL (icône seule)
 
-**Fichier source unique :** `marketing/logo-officiel.png`  
-(Affiche : éléphant rouge / jaune / vert · « Vendez gratuitement sur Zokko » · www.zokko.net)
+**C’est l’éléphant tricolore sur fond blanc carré** — comme sur la Page Facebook « Zokko Guinée ».
 
-**Ne pas utiliser** l’ancien logo orange généré par IA ni l’ancien `icon-guinea.svg` simplifié seul — toujours partir de cette affiche.
+| Fichier | Usage |
+|---------|--------|
+| **`logo-icon-officiel.png`** | **Source unique du logo** |
+| `frontend/public/branding/logo-elephant-officiel.png` | Header du site |
+| `icon-192.png`, `icon-512.png`, favicons | PWA / onglet navigateur |
 
-| Export | Fichier |
-|--------|---------|
-| Facebook / groupes (carré) | `zokko-affiche-facebook.png` (= copie officielle) |
-| Story | `zokko-story-reseaux.png` (= copie officielle) |
-| Icônes site / PWA | `frontend/public/branding/icon-*.png` (générées depuis l’éléphant) |
-
-Regénérer les icônes app après changement d’affiche :
+Regénérer après remplacement du PNG :
 
 ```bash
 python scripts/export_official_branding.py
 ```
 
----
-
-## Affiches HTML (capture écran)
-
-| Fichier | Usage |
-|---------|--------|
-| **`affiche-officielle.html`** | Affiche complète telle quelle (recommandé groupes) |
-| **`affiche-trafic-officielle.html`** | Même éléphant · texte **Parcourez** (phase trafic) |
-| `reel-zokko.html` | Reel 15 s · logo officiel |
-| `facebook-cover.html` | Bannière Page Facebook |
-
-Double-clic dans Chrome → capture PNG.
+**Couleurs :** oreille gauche **rouge** · tête/trompe **jaune** · oreille droite **verte** · fond **blanc**.
 
 ---
 
-## Facebook / trafic
+## 2. AFFICHE marketing (optionnel, pas le logo)
 
-- **Marque :** toujours l’éléphant tricolore (`logo-officiel.png` ou icône recadrée).
-- **Phase trafic :** `FACEBOOK-TRAFIC-ONLY.md` + affiche `affiche-trafic-officielle.html`.
-- **Messages groupes :** `PUBLICATION-GROUPES-FACEBOOK.md` → joindre `zokko-affiche-facebook.png`.
+**Affiche complète** « Vendez gratuitement sur Zokko » + skyline = **`logo-officiel.png`** / `zokko-affiche-facebook.png`
+
+→ Pour **posts groupes** et **stories**, pas pour remplacer l’icône carrée.
+
+| Fichier HTML | Usage |
+|--------------|--------|
+| `affiche-officielle.html` | Affiche poster complète |
+| `affiche-trafic-officielle.html` | Même style · texte *Parcourez* |
+| `reel-zokko.html` | Reel 15 s |
+| `facebook-cover.html` | Bannière page |
 
 ---
 
-## Site (header / favicon)
+## Règle simple
 
-Le header utilise `frontend/public/branding/icon-192.png` (extrait de l’éléphant officiel).
+| Besoin | Fichier |
+|--------|---------|
+| Favicon, app, header, petit rond FB | **`logo-icon-officiel.png`** |
+| Grande pub « Vendez gratuitement » | `logo-officiel.png` (affiche) |
+| Trafic « Parcourez les annonces » | `affiche-trafic-officielle.html` |
+
+Ne pas recadrer l’affiche poster pour faire le logo.

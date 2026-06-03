@@ -1,28 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Zokko éléphant officiel Guinée">
-  <!-- Logo officiel : oreilles rouge/vert, centre jaune, visage blanc -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Zokko — logo officiel éléphant">
   <rect width="192" height="192" rx="36" fill="#FFFFFF"/>
-  <g stroke="#1A2E22" stroke-width="2.5" stroke-linejoin="round">
-    <!-- Oreille gauche -->
-    <path fill="#CE1126" d="M48 72c-18-8-28 8-26 32 2 18 16 28 32 24 6-2 10-8 12-14l-18-42z"/>
-    <!-- Oreille droite -->
-    <path fill="#009460" d="M144 72c18-8 28 8 26 32-2 18-16 28-32 24-6-2-10-8-12-14l18-42z"/>
-    <!-- Front / trompe (jaune) -->
-    <path fill="#FCD116" d="M72 48h48c12 0 22 10 24 22v20c0 14-10 26-24 28H84c-14-2-24-14-24-28V70c2-12 12-22 24-22z"/>
-    <!-- Visage blanc -->
-    <path fill="#FFFFFF" d="M78 62h36c8 0 14 6 14 14v28c0 10-8 18-18 20H82c-10-2-18-10-18-20V76c0-8 6-14 14-14z"/>
-    <!-- Yeux -->
-    <circle cx="88" cy="88" r="5" fill="#1A2E22" stroke="none"/>
-    <circle cx="104" cy="88" r="5" fill="#1A2E22" stroke="none"/>
-    <!-- Trompe -->
-    <path fill="#FCD116" stroke="none" d="M92 108c0 8 4 22 8 32 2 6 6 8 12 8s10-2 12-8c4-10 8-24 8-32h-40z"/>
+  <g stroke="#1A2E22" stroke-width="2.2" stroke-linejoin="round" fill="none">
+    <path fill="#CE1126" stroke="#CE1126" d="M52 78c-16-6-24 10-20 30 3 14 14 22 28 18l-8-48z"/>
+    <path fill="#009460" stroke="#009460" d="M140 78c16-6 24 10 20 30-3 14-14 22-28 18l8-48z"/>
+    <path fill="#FCD116" stroke="#FCD116" d="M70 44h52c10 0 18 8 20 18v32c0 12-10 22-22 24H72c-12-2-22-12-22-24V62c2-10 10-18 20-18z"/>
+    <path fill="#FFFFFF" stroke="#FFFFFF" d="M76 58h40c6 0 10 4 10 10v30c0 8-6 14-14 16H80c-8-2-14-8-14-16V68c0-6 4-10 10-10z"/>
+    <path fill="#FCD116" stroke="#FCD116" d="M88 104v36c0 6 4 10 8 10h0c4 0 8-4 8-10v-36"/>
+    <path fill="#FFFFFF" stroke="#1A2E22" d="M82 118c-4 6-2 14 4 18M110 118c4 6 2 14-4 18"/>
   </g>
-  <!-- Éclats tricolores -->
-  <g stroke-width="4" stroke-linecap="round">
-    <line x1="34" y1="64" x2="22" y2="58" stroke="#CE1126"/>
-    <line x1="32" y1="78" x2="18" y2="78" stroke="#FCD116"/>
-    <line x1="34" y1="92" x2="22" y2="98" stroke="#009460"/>
-    <line x1="158" y1="64" x2="170" y2="58" stroke="#CE1126"/>
-    <line x1="160" y1="78" x2="174" y2="78" stroke="#FCD116"/>
-    <line x1="158" y1="92" x2="170" y2="98" stroke="#009460"/>
+  <circle cx="86" cy="86" r="4.5" fill="#1A2E22"/>
+  <circle cx="106" cy="86" r="4.5" fill="#1A2E22"/>
+  <g stroke-width="3.5" stroke-linecap="round">
+    <line x1="36" y1="70" x2="24" y2="64" stroke="#CE1126"/>
+    <line x1="34" y1="84" x2="20" y2="84" stroke="#FCD116"/>
+    <line x1="36" y1="98" x2="24" y2="104" stroke="#009460"/>
+    <line x1="156" y1="70" x2="168" y2="64" stroke="#CE1126"/>
+    <line x1="158" y1="84" x2="172" y2="84" stroke="#FCD116"/>
+    <line x1="156" y1="98" x2="168" y2="104" stroke="#009460"/>
   </g>
 </svg>

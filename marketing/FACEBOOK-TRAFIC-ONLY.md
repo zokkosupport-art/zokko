@@ -4,7 +4,8 @@
 **Pas l’objectif (pour l’instant) :** inscription vendeur, « publiez gratuit ».
 
 **Lien partout :** https://www.zokko.net  
-**Logo officiel :** éléphant tricolore (`logo-officiel.png` / `zokko-affiche-facebook.png`).  
+**Logo officiel (icône carrée) :** `logo-icon-officiel.png` — éléphant rouge/jaune/vert sur blanc.  
+**Affiche poster (optionnel) :** `zokko-affiche-facebook.png` — ne pas confondre avec le logo.  
 **Visuel pubs :** captures annonces du site + petit logo éléphant · ou `affiche-trafic-officielle.html` (texte *Parcourez*, pas *Vendez*).
 
 ---
