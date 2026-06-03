@@ -3,6 +3,7 @@ import { House, MagnifyingGlass, Plus, ChatCircleText, User, ShieldWarning, What
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import PageSeo from "@/components/PageSeo";
+import NotificationBell from "@/components/NotificationBell";
 
 const TRUST_TIPS = [
   "Rencontrez le vendeur en personne dans un lieu public",
@@ -49,6 +50,7 @@ export default function Layout() {
             {user?.role === "admin" && <Link to="/admin" className={`px-3 py-2 rounded-full text-sm font-medium ${isActive("/admin") ? "text-[#D84315]" : "text-[#1A2E22] hover:text-[#D84315]"}`} data-testid="top-nav-admin">Admin</Link>}
           </nav>
           <div className="flex items-center gap-2">
+            {user && <NotificationBell />}
             {user?.role === "admin" && (
               <Link
                 to="/admin"

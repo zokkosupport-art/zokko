@@ -46,7 +46,13 @@ export default function Admin() {
     setReports(r.data);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    fetch(`${window.location.origin}/health/storage`)
+      .then((r) => r.json())
+      .then(setStorageHealth)
+      .catch(() => setStorageHealth(null));
+  }, []);
 
   const pendingCount = listings.filter((l) => l.status === "pending").length;
 
@@ -139,6 +145,25 @@ export default function Admin() {
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-5">
+          {storageHealth && (
+            <div
+              className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${
+                storageHealth.ok
+                  ? "bg-[#E8F5E9] border-[#2E7D32]/40 text-[#1A2E22]"
+                  : "bg-[#FFF8E1] border-[#FBC02D]/50 text-[#1A2E22]"
+              }`}
+            >
+              <p className="font-semibold">
+                {storageHealth.ok ? "Stockage photos : OK (Volume actif)" : "Stockage photos : RISQUE — pas de Volume sur le serveur"}
+              </p>
+              <p className="text-[#4A5D50] mt-1">{storageHealth.hint}</p>
+              {!storageHealth.ok && (
+                <p className="text-xs mt-2">
+                  Fichiers sur disque : {storageHealth.upload_file_count ?? 0} — sans Volume, redeploy = photos perdues.
+                </p>
+              )}
+            </div>
+          )}
           {stats && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <Stat icon={<Users size={22} weight="duotone" />} label="Utilisateurs" value={stats.users} color="#2E7D32" />

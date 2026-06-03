@@ -499,6 +499,8 @@ async def _initialize_app():
     await db.listings.create_index("category")
     await db.listings.create_index("city")
     await db.messages.create_index("conversation_key")
+    await db.notifications.create_index("user_id")
+    await db.notifications.create_index([("user_id", 1), ("read", 1), ("created_at", -1)])
     await db.payments.create_index("user_id")
     await db.reports.create_index("created_at")
     await db.reviews.create_index([("from_user_id", 1), ("target_user_id", 1)], unique=True)
@@ -1079,6 +1081,15 @@ async def create_listing(body: ListingCreate, user=Depends(get_current_user)):
     }
     await db.listings.insert_one(listing)
     listing.pop("_id", None)
+    if listing["status"] == "approved":
+        await create_notification(
+            user["id"],
+            "listing_approved",
+            "Annonce en ligne",
+            "Votre annonce est maintenant en ligne.",
+            link=f"/listings/{listing['id']}",
+            listing_id=listing["id"],
+        )
     return listing
 
 @api.patch("/listings/{listing_id}")
@@ -1145,6 +1156,61 @@ async def serve_file(path: str):
     content_type = (record or {}).get("content_type") or ct
     return StreamingResponse(io.BytesIO(data), media_type=content_type)
 
+# ---------------- Notifications (in-app only — no storage / photos) ----------------
+async def create_notification(
+    user_id: str,
+    notif_type: str,
+    title: str,
+    body: str,
+    *,
+    link: Optional[str] = None,
+    listing_id: Optional[str] = None,
+):
+    if not user_id:
+        return
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "type": notif_type,
+        "title": title,
+        "body": body,
+        "link": link,
+        "listing_id": listing_id,
+        "read": False,
+        "created_at": now_iso(),
+    }
+    await db.notifications.insert_one(doc)
+
+
+@api.get("/notifications")
+async def list_notifications(user=Depends(get_current_user)):
+    items = await db.notifications.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return {"items": items}
+
+
+@api.get("/notifications/unread-count")
+async def notifications_unread_count(user=Depends(get_current_user)):
+    count = await db.notifications.count_documents({"user_id": user["id"], "read": False})
+    return {"count": count}
+
+
+@api.post("/notifications/read-all")
+async def notifications_read_all(user=Depends(get_current_user)):
+    await db.notifications.update_many({"user_id": user["id"], "read": False}, {"$set": {"read": True}})
+    return {"success": True}
+
+
+@api.post("/notifications/{notification_id}/read")
+async def notification_mark_read(notification_id: str, user=Depends(get_current_user)):
+    res = await db.notifications.update_one(
+        {"id": notification_id, "user_id": user["id"]},
+        {"$set": {"read": True}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(404, "Notification introuvable")
+    return {"success": True}
+
+
 # ---------------- Messaging ----------------
 def conv_key(a: str, b: str, listing_id: Optional[str] = None) -> str:
     parts = sorted([a, b])
@@ -1176,6 +1242,17 @@ async def send_message(body: MessageCreate, user=Depends(get_current_user)):
     }
     await db.messages.insert_one(msg)
     msg.pop("_id", None)
+    msg_link = f"/messages/{user['id']}"
+    if body.listing_id:
+        msg_link = f"{msg_link}?listing={body.listing_id}"
+    await create_notification(
+        body.to_user_id,
+        "new_message",
+        "Nouveau message",
+        "Nouveau message reçu.",
+        link=msg_link,
+        listing_id=body.listing_id,
+    )
     return msg
 
 @api.get("/conversations")
@@ -1686,7 +1763,20 @@ async def admin_listings(_admin=Depends(get_admin_user), status: Optional[str] =
 
 @api.post("/admin/listings/{listing_id}/approve")
 async def admin_approve(listing_id: str, _admin=Depends(get_admin_user)):
-    await db.listings.update_one({"id": listing_id}, {"$set": {"status": "approved"}})
+    listing = await db.listings.find_one({"id": listing_id}, {"_id": 0, "owner_id": 1, "title": 1, "status": 1})
+    if not listing:
+        raise HTTPException(404, "Annonce introuvable")
+    was_approved = listing.get("status") == "approved"
+    await db.listings.update_one({"id": listing_id}, {"$set": {"status": "approved", "updated_at": now_iso()}})
+    if not was_approved and listing.get("owner_id"):
+        await create_notification(
+            listing["owner_id"],
+            "listing_approved",
+            "Annonce en ligne",
+            "Votre annonce est maintenant en ligne.",
+            link=f"/listings/{listing_id}",
+            listing_id=listing_id,
+        )
     return {"success": True}
 
 @api.post("/admin/listings/{listing_id}/reject")
@@ -1705,9 +1795,22 @@ async def admin_hide_listing(listing_id: str, _admin=Depends(get_admin_user)):
 
 @api.post("/admin/listings/{listing_id}/restore")
 async def admin_restore_listing(listing_id: str, _admin=Depends(get_admin_user)):
+    listing = await db.listings.find_one({"id": listing_id}, {"_id": 0, "owner_id": 1, "status": 1})
+    if not listing:
+        raise HTTPException(404, "Annonce introuvable")
+    was_approved = listing.get("status") == "approved"
     res = await db.listings.update_one({"id": listing_id}, {"$set": {"status": "approved", "updated_at": now_iso()}})
     if res.matched_count == 0:
         raise HTTPException(404, "Annonce introuvable")
+    if not was_approved and listing.get("owner_id"):
+        await create_notification(
+            listing["owner_id"],
+            "listing_approved",
+            "Annonce en ligne",
+            "Votre annonce est maintenant en ligne.",
+            link=f"/listings/{listing_id}",
+            listing_id=listing_id,
+        )
     return {"success": True}
 
 

@@ -4,8 +4,8 @@ import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
 import ListingCard from "@/components/ListingCard";
-import { listingStatusLabel } from "@/lib/listingLabels";
-import { Plus, Star, Eye, WhatsappLogo, ChatCircleText, PencilSimple, Trash, Lightning, Crown } from "@phosphor-icons/react";
+import { listingStatusLabel, listingWhatsappShareUrl, listingFacebookShareUrl } from "@/lib/listingLabels";
+import { Plus, Star, Eye, WhatsappLogo, ChatCircleText, PencilSimple, Trash, Lightning, Crown, FacebookLogo } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { formatApiError } from "@/lib/api";
 
@@ -179,6 +179,25 @@ export default function MyAds() {
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
+                {l.status === "approved" && (
+                  <>
+                    <a
+                      href={listingWhatsappShareUrl(l)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 min-w-[100px] text-xs font-semibold py-2 rounded-full border border-[#25D366]/40 text-[#25D366] flex items-center justify-center gap-1"
+                    >
+                      <WhatsappLogo size={14} weight="fill" /> WhatsApp
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => window.open(listingFacebookShareUrl(l.id), "_blank", "noopener,noreferrer")}
+                      className="flex-1 min-w-[100px] text-xs font-semibold py-2 rounded-full border border-[#1877F2]/40 text-[#1877F2] flex items-center justify-center gap-1"
+                    >
+                      <FacebookLogo size={14} weight="fill" /> Facebook
+                    </button>
+                  </>
+                )}
                 <button type="button" onClick={() => nav(`/publish?edit=${l.id}`)} className="flex-1 min-w-[80px] text-xs font-semibold py-2 rounded-full border border-[#E5E0D8] flex items-center justify-center gap-1">
                   <PencilSimple size={14} /> Modifier
                 </button>
