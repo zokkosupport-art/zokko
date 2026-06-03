@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Zokko — Affiche trafic (logo officiel)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    body { background: #222; display: flex; justify-content: center; padding: 20px; font-family: "Segoe UI", system-ui, sans-serif; }
+    .poster {
+      width: 1080px; height: 1080px; position: relative; overflow: hidden;
+      background: #fff;
+    }
+    .top { position: absolute; top: 0; left: 0; right: 0; height: 420px; background: #fff; display: flex; justify-content: center; padding-top: 24px; }
+    .top img { height: 380px; width: auto; object-fit: contain; }
+    .wave {
+      position: absolute; top: 380px; left: 0; right: 0; height: 48px;
+      background: linear-gradient(90deg, #CE1126, #FCD116, #009460);
+    }
+    .body {
+      position: absolute; top: 428px; left: 0; right: 0; bottom: 120px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 32px 48px;
+    }
+    h1 { font-size: 72px; font-weight: 900; color: #1A2E22; line-height: 1.05; }
+    h1 em { font-style: normal; color: #CE1126; }
+    .bar {
+      margin: 20px 0; padding: 14px 36px; border-radius: 12px;
+      background: linear-gradient(90deg, #CE1126, #FCD116, #009460);
+      color: #fff; font-size: 42px; font-weight: 800;
+    }
+    .sub { font-size: 34px; color: #4A5D50; max-width: 900px; line-height: 1.35; }
+    .footer {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 120px;
+      background: linear-gradient(90deg, #CE1126 0%, #009460 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .url {
+      background: #009460; color: #fff; font-size: 40px; font-weight: 800;
+      padding: 18px 48px; border-radius: 999px; display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="poster">
+    <div class="top">
+      <img src="logo-officiel.png" alt="" style="clip-path: inset(0 0 55% 0); margin-top: -40px;" />
+    </div>
+    <div class="wave"></div>
+    <div class="body">
+      <h1>Les annonces<br /><em>Guinée</em> ici</h1>
+      <p class="bar">Parcourez gratuitement</p>
+      <p class="sub">Téléphones · Voitures · Maisons · Mode · Services<br />Prix en GNF · WhatsApp direct</p>
+    </div>
+    <div class="footer">
+      <div class="url">🌐 www.zokko.net</div>
+    </div>
+  </div>
+</body>
+</html>

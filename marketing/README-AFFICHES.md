@@ -1,40 +1,47 @@
-# Affiches & vidéo Zokko (éléphant 🇬🇳)
+# Affiches Zokko — logo officiel (éléphant tricolore 🇬🇳)
 
-## Images prêtes à publier (Facebook, WhatsApp)
+## Logo officiel
 
-| Fichier | Format | Usage |
-|---------|--------|--------|
-| `zokko-affiche-facebook.png` | Carré | Post Facebook, groupes |
-| `zokko-story-reseaux.png` | Vertical | Story Instagram / Facebook / WhatsApp statut |
+**Fichier source unique :** `marketing/logo-officiel.png`  
+(Affiche : éléphant rouge / jaune / vert · « Vendez gratuitement sur Zokko » · www.zokko.net)
 
-Ouvrez les PNG et publiez directement — logo éléphant aux couleurs Guinée.
+**Ne pas utiliser** l’ancien logo orange généré par IA ni l’ancien `icon-guinea.svg` simplifié seul — toujours partir de cette affiche.
 
-## Logo éléphant couleurs Guinée (site + affiches HTML)
+| Export | Fichier |
+|--------|---------|
+| Facebook / groupes (carré) | `zokko-affiche-facebook.png` (= copie officielle) |
+| Story | `zokko-story-reseaux.png` (= copie officielle) |
+| Icônes site / PWA | `frontend/public/branding/icon-*.png` (générées depuis l’éléphant) |
 
-- `../frontend/public/branding/icon-guinea.svg` — version rouge / jaune / vert
-- `logo-elephant-orange.png` — copie de l’original orange (app)
+Regénérer les icônes app après changement d’affiche :
 
-Pour utiliser le logo Guinée dans l’app (header), remplacez `icon-192.png` par une export PNG du SVG ou copiez `icon-guinea.svg` dans le Layout.
+```bash
+python scripts/export_official_branding.py
+```
 
-## Affiches HTML (capture d’écran)
+---
 
-| Fichier | Description |
-|---------|-------------|
-| `affiche-elephant-guinee.html` | **Recommandé** — grand éléphant + bandeau GN |
-| `affiche-gratuit.html` | Annonces gratuites |
-| `affiche-particuliers.html` | Vendeurs particuliers |
-| `affiche-pro.html` | Comptes entreprise |
+## Affiches HTML (capture écran)
 
-Double-clic → capture 1080×1080.
+| Fichier | Usage |
+|---------|--------|
+| **`affiche-officielle.html`** | Affiche complète telle quelle (recommandé groupes) |
+| **`affiche-trafic-officielle.html`** | Même éléphant · texte **Parcourez** (phase trafic) |
+| `reel-zokko.html` | Reel 15 s · logo officiel |
+| `facebook-cover.html` | Bannière Page Facebook |
 
-## « Vidéo » type Reel (15 secondes)
+Double-clic dans Chrome → capture PNG.
 
-1. Ouvrir **`reel-zokko.html`** dans Chrome.
-2. **Win + G** → enregistrer l’écran 15 s (ou téléphone filmer l’écran).
-3. Publier sur Facebook Reels / WhatsApp statut / TikTok.
+---
 
-3 slides automatiques : Zokko Guinée → Gratuit → www.zokko.net
+## Facebook / trafic
 
-## Messages texte
+- **Marque :** toujours l’éléphant tricolore (`logo-officiel.png` ou icône recadrée).
+- **Phase trafic :** `FACEBOOK-TRAFIC-ONLY.md` + affiche `affiche-trafic-officielle.html`.
+- **Messages groupes :** `PUBLICATION-GROUPES-FACEBOOK.md` → joindre `zokko-affiche-facebook.png`.
 
-Voir `MESSAGES-WHATSAPP-FACEBOOK.md`
+---
+
+## Site (header / favicon)
+
+Le header utilise `frontend/public/branding/icon-192.png` (extrait de l’éléphant officiel).
