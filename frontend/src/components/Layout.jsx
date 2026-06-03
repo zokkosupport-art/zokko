@@ -101,7 +101,7 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <img src="/branding/logo-elephant-officiel.png" alt="Zokko" className="w-9 h-9 rounded-xl object-contain bg-white" />
+              <img src="/branding/logo-elephant-officiel.png" alt="" className="w-11 h-11 rounded-2xl object-contain bg-white" aria-hidden />
               <span className="font-heading font-bold text-xl text-white">Zo<span className="text-[#FBC02D]">kko</span></span>
             </div>
             <p className="text-sm">La marketplace simple et rapide de la Guinée 🇬🇳</p>
