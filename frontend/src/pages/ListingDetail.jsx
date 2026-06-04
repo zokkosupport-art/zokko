@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { waMeUrl } from "@/lib/phone";
 import UserAvatar from "@/components/UserAvatar";
 
 export default function ListingDetail() {
@@ -58,8 +59,10 @@ export default function ListingDetail() {
     ? (/^https?:\/\//i.test(activePhotoPath) ? activePhotoPath : fileUrl(activePhotoPath))
     : null;
   const isOwner = user?.id === listing.owner_id;
-  const whatsappNumber = (listing.whatsapp || listing.owner?.phone || "").replace(/\D/g, "");
-  const whatsappLink = `https://wa.me/224${whatsappNumber}?text=${encodeURIComponent(`Bonjour, je suis intéressé par : ${listing.title}`)}`;
+  const whatsappLink = waMeUrl(
+    listing.whatsapp || listing.owner?.phone,
+    `Bonjour, je suis intéressé par : ${listing.title}`
+  );
   // Use backend OG-share URL for rich WhatsApp/social previews
   const shareUrl = `${BACKEND_URL}/api/s/${listing.id}`;
   const shareText = `${listing.title} - ${formatPrice(listing.price, listing.currency)} - ${listing.city}\n\n${shareUrl}\n\nVu sur Zokko 🇬🇳`;

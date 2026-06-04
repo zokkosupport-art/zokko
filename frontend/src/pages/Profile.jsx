@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import QuartierField from "@/components/QuartierField";
-import FavoriteListings from "@/components/FavoriteListings";
+import { Heart } from "@phosphor-icons/react";
 
 export default function Profile() {
   const { user, setUser, logout } = useAuth();
@@ -68,7 +68,7 @@ export default function Profile() {
   };
 
   const shareRef = () => {
-    const text = `Inscris-toi sur Zokko avec mon code parrain ${user?.referral_code} et reçois 1 boost gratuit ! 🇬🇳\n\n${window.location.origin}/login`;
+    const text = `Inscris-toi sur Zokko avec mon code parrain ${user?.referral_code} et reçois 1 boost gratuit ! 🇬🇳\n\n${window.location.origin}/register`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -115,7 +115,7 @@ export default function Profile() {
         data-testid="profile-my-ads-link"
       >
         <div>
-          <p className="font-heading font-bold text-lg flex items-center gap-2"><Package size={22} weight="duotone" /> Mes annonces</p>
+          <p className="font-heading font-bold text-lg flex items-center gap-2"><Package size={22} weight="duotone" /> Ma boutique</p>
           <p className="text-sm opacity-90 mt-1">Gérer, modifier et booster vos publications</p>
         </div>
         <span className="text-2xl opacity-80">→</span>
@@ -174,7 +174,19 @@ export default function Profile() {
         </Button>
       </div>
 
-      <FavoriteListings />
+      <Link
+        to="/favorites"
+        className="flex items-center justify-between bg-white border border-[#E5E0D8] hover:border-[#D84315]/40 rounded-2xl p-5 mb-4 transition-colors"
+        data-testid="profile-favorites-link"
+      >
+        <div>
+          <p className="font-heading font-bold text-lg flex items-center gap-2 text-[#1A2E22]">
+            <Heart size={22} weight="fill" className="text-[#D84315]" /> Mes favoris
+          </p>
+          <p className="text-sm text-[#4A5D50] mt-1">Annonces enregistrées avec le cœur</p>
+        </div>
+        <span className="text-2xl text-[#4A5D50]">→</span>
+      </Link>
 
       {!user?.is_pro && (
         <div className="bg-white border border-[#E5E0D8] rounded-2xl p-5 sm:p-6 mb-4 space-y-3">

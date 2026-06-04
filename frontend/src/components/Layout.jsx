@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { House, MagnifyingGlass, Plus, ChatCircleText, User, ShieldWarning, WhatsappLogo, ShieldCheck, Package } from "@phosphor-icons/react";
+import { House, MagnifyingGlass, Plus, ChatCircleText, User, ShieldWarning, WhatsappLogo, ShieldCheck, Package, Heart } from "@phosphor-icons/react";
+import { AUTH_REDIRECT } from "@/lib/authGuinea";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import PageSeo from "@/components/PageSeo";
@@ -16,20 +17,21 @@ export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const navItems = [
-    { to: "/", icon: House, label: "Accueil", testid: "nav-home" },
-    { to: "/listings", icon: MagnifyingGlass, label: "Chercher", testid: "nav-search" },
-    { to: "/publish", icon: Plus, label: "Publier", testid: "nav-publish", center: true },
-    ...(user
-      ? [
-          { to: "/my-ads", icon: Package, label: "Mes ads", testid: "nav-myads" },
-          { to: "/profile", icon: User, label: "Profil", testid: "nav-profile" },
-        ]
-      : [
-          { to: "/messages", icon: ChatCircleText, label: "Messages", testid: "nav-messages" },
-          { to: "/login", icon: User, label: "Connexion", testid: "nav-profile" },
-        ]),
-  ];
+  const navItems = user
+    ? [
+        { to: AUTH_REDIRECT, icon: MagnifyingGlass, label: "Chercher", testid: "nav-search" },
+        { to: "/favorites", icon: Heart, label: "Favoris", testid: "nav-favorites" },
+        { to: "/publish", icon: Plus, label: "Publier", testid: "nav-publish", center: true },
+        { to: "/my-ads", icon: Package, label: "Boutique", testid: "nav-myads" },
+        { to: "/profile", icon: User, label: "Profil", testid: "nav-profile" },
+      ]
+    : [
+        { to: "/", icon: House, label: "Accueil", testid: "nav-home" },
+        { to: "/listings", icon: MagnifyingGlass, label: "Chercher", testid: "nav-search" },
+        { to: "/publish", icon: Plus, label: "Publier", testid: "nav-publish", center: true },
+        { to: "/messages", icon: ChatCircleText, label: "Messages", testid: "nav-messages" },
+        { to: "/login", icon: User, label: "Connexion", testid: "nav-profile" },
+      ];
 
   const isActive = (to) => location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
 
@@ -39,14 +41,15 @@ export default function Layout() {
       {/* Top bar - desktop */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E0D8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2" data-testid="logo-link">
+          <Link to={user ? AUTH_REDIRECT : "/"} className="flex items-center gap-2" data-testid="logo-link">
             <img src="/branding/logo-elephant-officiel.png" alt="" className="w-11 h-11 rounded-2xl object-contain" aria-hidden />
             <span className="font-heading font-bold text-xl text-[#1A2E22]">Zo<span className="text-[#D84315]">kko</span></span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">
             <Link to="/" className={`px-3 py-2 rounded-full text-sm font-medium ${isActive("/") && location.pathname === "/" ? "text-[#D84315]" : "text-[#1A2E22] hover:text-[#D84315]"}`} data-testid="top-nav-home">Accueil</Link>
             <Link to="/listings" className={`px-3 py-2 rounded-full text-sm font-medium ${isActive("/listings") ? "text-[#D84315]" : "text-[#1A2E22] hover:text-[#D84315]"}`} data-testid="top-nav-listings">Annonces</Link>
-            {user && <Link to="/my-ads" className={`px-3 py-2 rounded-full text-sm font-medium ${isActive("/my-ads") ? "text-[#D84315]" : "text-[#1A2E22] hover:text-[#D84315]"}`} data-testid="top-nav-myads">Mes annonces</Link>}
+            {user && <Link to="/my-ads" className={`px-3 py-2 rounded-full text-sm font-medium ${isActive("/my-ads") ? "text-[#D84315]" : "text-[#1A2E22] hover:text-[#D84315]"}`} data-testid="top-nav-myads">Ma boutique</Link>}
+            {user && <Link to="/favorites" className={`px-3 py-2 rounded-full text-sm font-medium ${isActive("/favorites") ? "text-[#D84315]" : "text-[#1A2E22] hover:text-[#D84315]"}`} data-testid="top-nav-favorites">Favoris</Link>}
             {user?.role === "admin" && <Link to="/admin" className={`px-3 py-2 rounded-full text-sm font-medium ${isActive("/admin") ? "text-[#D84315]" : "text-[#1A2E22] hover:text-[#D84315]"}`} data-testid="top-nav-admin">Admin</Link>}
           </nav>
           <div className="flex items-center gap-2">
@@ -120,6 +123,7 @@ export default function Layout() {
             <p className="font-heading font-semibold text-white mb-3">Compte</p>
             <ul className="space-y-2 text-sm">
               <li><Link to="/login" className="hover:text-white">Connexion</Link></li>
+              <li><Link to="/register" className="hover:text-white">Inscription</Link></li>
               <li><Link to="/profile" className="hover:text-white">Mon profil</Link></li>
               <li><Link to="/payments" className="hover:text-white">Mes paiements</Link></li>
             </ul>

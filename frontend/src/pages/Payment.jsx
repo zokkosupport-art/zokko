@@ -67,6 +67,10 @@ export default function Payment() {
       toast.error("Code de transaction requis");
       return;
     }
+    if (!proofPath) {
+      toast.error("Capture d'écran du paiement obligatoire");
+      return;
+    }
     setSubmitting(true);
     try {
       const { data } = await api.post("/payments/orange-money/submit", {
@@ -151,7 +155,7 @@ export default function Payment() {
             </div>
 
             <div>
-              <Label className="text-[#1A2E22] font-medium mb-1.5 block">Capture d&apos;écran du paiement <span className="text-xs text-[#4A5D50]">(recommandé)</span></Label>
+              <Label className="text-[#1A2E22] font-medium mb-1.5 block">Capture d&apos;écran du paiement <span className="text-[#D84315]">*</span></Label>
               {proofPath ? (
                 <div className="relative aspect-video rounded-xl overflow-hidden bg-[#FAF8F5] border border-[#E5E0D8]">
                   <img src={fileUrl(proofPath)} alt="Preuve" className="w-full h-full object-contain" />
@@ -168,7 +172,7 @@ export default function Payment() {
               )}
             </div>
 
-            <Button onClick={submitManual} disabled={submitting} className="w-full bg-[#FF6600] hover:bg-[#E65C00] text-white rounded-xl h-12 font-bold" data-testid="submit-proof-btn">
+            <Button onClick={submitManual} disabled={submitting || !proofPath} className="w-full bg-[#FF6600] hover:bg-[#E65C00] text-white rounded-xl h-12 font-bold" data-testid="submit-proof-btn">
               {submitting ? "Envoi..." : "Envoyer ma preuve"}
             </Button>
             <p className="text-[10px] text-center text-[#4A5D50] flex items-center justify-center gap-1">

@@ -38,8 +38,18 @@ const ROUTES = {
   },
   "/login": {
     title: "Connexion — Zokko Guinée",
-    description: "Créez votre compte Zokko avec votre numéro +224 et un code à 6 chiffres. Gratuit.",
+    description: "Connectez-vous à Zokko avec votre numéro +224 et votre code à 6 chiffres.",
+    keywords: "connexion Zokko, compte Guinée +224",
+  },
+  "/register": {
+    title: "Inscription — Zokko Guinée",
+    description: "Créez votre compte Zokko : numéro +224, identifiant @ et code à 6 chiffres. Gratuit.",
     keywords: "inscription Zokko, compte Guinée +224",
+  },
+  "/favorites": {
+    title: "Mes favoris — Zokko",
+    description: "Retrouvez vos annonces coup de cœur sur Zokko Guinée.",
+    keywords: "favoris Zokko, annonces sauvegardées",
   },
   "/publish": {
     title: "Publier une annonce gratuite — Zokko",

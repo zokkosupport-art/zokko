@@ -6,7 +6,8 @@ import {
 import { toast } from "sonner";
 import api, { formatPrice, fileUrl } from "@/lib/api";
 import AdminPhoto, { AdminPhotoThumb } from "@/components/AdminPhoto";
-import { listingStatusLabel, listingShareUrl, listingOgShareUrl, listingFacebookPostText } from "@/lib/listingLabels";
+import { listingStatusLabel, listingShareUrl, listingOgShareUrl, listingFacebookPostText, pendingPaymentLabel } from "@/lib/listingLabels";
+import { formatGnPhoneDisplay, waMeUrl } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -205,13 +206,22 @@ export default function Admin() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3 justify-end">
-                  {p.om_proof_image_path && (
+                  {p.om_proof_image_path ? (
                     <Button size="sm" variant="outline" onClick={() => setProofImg(p.om_proof_image_path)} className="border-[#E5E0D8] rounded-full">
                       <ImageSquare size={16} className="mr-1" /> Voir preuve
                     </Button>
+                  ) : (
+                    <span className="text-xs text-[#C62828] font-semibold self-center">Preuve manquante</span>
                   )}
                   <Button size="sm" onClick={() => rejectPayment(p.id)} variant="outline" className="border-[#C62828] text-[#C62828] rounded-full">Refuser</Button>
-                  <Button size="sm" onClick={() => validatePayment(p.id)} className="bg-[#2E7D32] text-white rounded-full font-bold">Valider</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => validatePayment(p.id)}
+                    disabled={!p.om_proof_image_path}
+                    className="bg-[#2E7D32] text-white rounded-full font-bold disabled:opacity-40"
+                  >
+                    Valider
+                  </Button>
                 </div>
               </div>
             ))}
@@ -246,6 +256,9 @@ export default function Admin() {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-[#1A2E22] truncate">{l.title}</p>
                   <p className="text-xs text-[#4A5D50]">{l.owner_name} · {l.city} · {formatPrice(l.price, l.currency)}</p>
+                  {pendingPaymentLabel(l) && (
+                    <p className="text-[10px] font-bold text-[#FF6600] mt-0.5">{pendingPaymentLabel(l)} — paiement en attente</p>
+                  )}
                 </div>
                 <StatusBadge status={l.status} />
                 <Button size="sm" variant="outline" onClick={() => openListing(l.id)} className="rounded-full border-[#E5E0D8]" data-testid={`view-${l.id}`}>
@@ -336,6 +349,12 @@ export default function Admin() {
                 <StatusBadge status={viewListing.status} />
                 {viewListing.premium && <span className="text-xs font-bold bg-[#FBC02D] text-[#1A2E22] px-2 py-1 rounded-full">Premium</span>}
               </div>
+              {pendingPaymentLabel(viewListing) && (
+                <p className="text-sm text-[#E65100] bg-[#FFF3E0] border border-[#FF6600]/40 rounded-xl px-3 py-2">
+                  <strong>{pendingPaymentLabel(viewListing)}</strong> — paiement Orange Money en attente de validation.
+                  Validez d&apos;abord le paiement dans l&apos;onglet <strong>Paiements en attente</strong> avant d&apos;activer ce service.
+                </p>
+              )}
               {viewListing.status === "pending" && (
                 <p className="text-sm text-[#F57F17] bg-[#FFF8E1] border border-[#FBC02D]/40 rounded-xl px-3 py-2">
                   Si les photos sont jaunes « absente du serveur », le fichier a été effacé par la mise à jour Railway — contactez le vendeur pour qu’il republie via <strong>Mes annonces → Modifier</strong> avant d’approuver.
@@ -356,22 +375,22 @@ export default function Admin() {
                 <Field label="Ville" value={viewListing.city} />
                 <Field label="Catégorie" value={viewListing.category} />
                 <Field label="Vendeur" value={viewListing.owner?.name || viewListing.owner_name} />
-                <Field label="Téléphone" value={viewListing.owner?.phone ? `+224 ${viewListing.owner.phone}` : "—"} />
+                <Field label="Téléphone" value={formatGnPhoneDisplay(viewListing.owner?.phone)} />
               </div>
-              {viewListing.owner?.phone && (
-                <a
-                  href={`https://wa.me/224${String(viewListing.owner.phone).replace(/\D/g, "")}?text=${encodeURIComponent(
-                    `Bonjour, c'est l'équipe Zokko. Pour valider votre annonce « ${viewListing.title} », merci de rouvrir www.zokko.net → Mes annonces → Modifier et remettre vos photos. Merci !`
-                  )}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex"
-                >
-                  <Button size="sm" type="button" className="rounded-full bg-[#25D366] hover:bg-[#1DA851] text-white">
-                    WhatsApp vendeur
-                  </Button>
-                </a>
-              )}
+              {viewListing.owner?.phone && (() => {
+                const waHref = waMeUrl(
+                  viewListing.owner.phone,
+                  `Bonjour, c'est l'équipe Zokko. Pour valider votre annonce « ${viewListing.title} », merci de rouvrir www.zokko.net → Ma boutique → Modifier et remettre vos photos. Merci !`
+                );
+                if (!waHref) return null;
+                return (
+                  <a href={waHref} target="_blank" rel="noreferrer" className="inline-flex">
+                    <Button size="sm" type="button" className="rounded-full bg-[#25D366] hover:bg-[#1DA851] text-white">
+                      WhatsApp vendeur
+                    </Button>
+                  </a>
+                );
+              })()}
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" className="rounded-full" onClick={() => copyShare(viewListing.id)}>
                   <Copy size={16} className="mr-1" /> Copier lien

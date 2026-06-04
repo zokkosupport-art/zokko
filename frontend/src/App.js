@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { AUTH_REDIRECT } from "@/lib/authGuinea";
 import { Toaster } from "@/components/ui/sonner";
 import Layout from "@/components/Layout";
 import Home from "@/pages/Home";
@@ -9,7 +10,9 @@ import ListingDetail from "@/pages/ListingDetail";
 import "@/App.css";
 
 const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
 const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
+const Favorites = lazy(() => import("@/pages/Favorites"));
 const Publish = lazy(() => import("@/pages/Publish"));
 const MyAds = lazy(() => import("@/pages/MyAds"));
 const Profile = lazy(() => import("@/pages/Profile"));
@@ -33,8 +36,15 @@ function Protected({ children, admin }) {
   const { user, loading } = useAuth();
   if (loading) return <PageLoader />;
   if (!user) return <Navigate to={admin ? "/admin-login" : "/login"} replace />;
-  if (admin && user.role !== "admin") return <Navigate to="/" replace />;
+  if (admin && user.role !== "admin") return <Navigate to={AUTH_REDIRECT} replace />;
   return children;
+}
+
+function HomeRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (user) return <Navigate to={AUTH_REDIRECT} replace />;
+  return <Home />;
 }
 
 function App() {
@@ -58,9 +68,11 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<HomeRoute />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
               <Route path="/listings" element={<Listings />} />
               <Route path="/listings/:id" element={<ListingDetail />} />
               <Route path="/publish" element={<Protected><Publish /></Protected>} />

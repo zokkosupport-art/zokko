@@ -4,7 +4,7 @@ import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
 import ListingCard from "@/components/ListingCard";
-import { listingStatusLabel, listingWhatsappShareUrl, listingFacebookPostText } from "@/lib/listingLabels";
+import { listingStatusLabel, listingWhatsappShareUrl, listingFacebookPostText, pendingPaymentLabel } from "@/lib/listingLabels";
 import { Plus, Star, Eye, WhatsappLogo, ChatCircleText, PencilSimple, Trash, Lightning, Crown, FacebookLogo } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { formatApiError } from "@/lib/api";
@@ -93,7 +93,7 @@ export default function MyAds() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-24">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="font-heading font-bold text-2xl sm:text-3xl text-[#1A2E22]">Mes annonces</h1>
+        <h1 className="font-heading font-bold text-2xl sm:text-3xl text-[#1A2E22]">Ma boutique</h1>
         <Link to="/publish" className="bg-[#D84315] hover:bg-[#BF360C] text-white rounded-full px-4 py-2.5 font-semibold inline-flex items-center gap-2 text-sm">
           <Plus weight="bold" size={18} /> Nouvelle
         </Link>
@@ -165,6 +165,11 @@ export default function MyAds() {
             <div key={l.id} className="relative space-y-2">
               <div className="relative">
                 <ListingCard listing={l} />
+                {pendingPaymentLabel(l) && (
+                  <span className="absolute top-2 left-2 bg-[#FF6600] text-white text-[10px] font-bold px-2 py-1 rounded-full z-10 max-w-[70%] truncate">
+                    {pendingPaymentLabel(l)} — paiement en attente
+                  </span>
+                )}
                 {l.status !== "approved" && (
                   <span className="absolute top-2 right-12 bg-[#FBC02D] text-[#1A2E22] text-[10px] font-bold uppercase px-2 py-1 rounded-full z-10">
                     {listingStatusLabel(l.status)}

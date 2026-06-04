@@ -807,11 +807,15 @@ async def phone_pin_auth(body: PhonePinAuth):
         if pin != confirm:
             raise HTTPException(400, "Les deux codes doivent être identiques")
         is_business = (body.account_type or "").strip().lower() in ("entreprise", "business", "pro")
-        username = normalize_username(body.username)
-        if username:
-            taken = await db.users.find_one({"username": username}, {"_id": 1})
-            if taken:
-                raise HTTPException(400, "Cet identifiant est déjà pris")
+        try:
+            username = normalize_username(body.username)
+        except HTTPException:
+            raise
+        if not username:
+            raise HTTPException(400, "Identifiant @ requis (3 à 24 caractères)")
+        taken = await db.users.find_one({"username": username}, {"_id": 1})
+        if taken:
+            raise HTTPException(400, "Cet identifiant est déjà pris")
         user = {
             "id": str(uuid.uuid4()),
             "phone": phone,
@@ -1629,6 +1633,8 @@ async def manual_om_submit(body: ManualOMSubmit, user=Depends(get_current_user))
         raise HTTPException(400, "Code de transaction requis")
     if not body.sender_phone.strip():
         raise HTTPException(400, "Numéro émetteur requis")
+    if not (body.proof_image_path or "").strip():
+        raise HTTPException(400, "Capture d'écran du paiement obligatoire")
 
     amount = MANUAL_OM_PRICES_GNF[body.purpose]
     payment = {
@@ -1654,7 +1660,31 @@ async def manual_om_submit(body: ManualOMSubmit, user=Depends(get_current_user))
     }
     await db.payments.insert_one(payment)
     payment.pop("_id", None)
+    if body.listing_id and body.purpose in ("premium", "boost"):
+        await db.listings.update_one(
+            {"id": body.listing_id, "owner_id": user["id"]},
+            {"$set": {
+                "pending_payment_purpose": body.purpose,
+                "pending_payment_id": payment["id"],
+                "pending_payment_status": "pending_admin",
+                "updated_at": now_iso(),
+            }},
+        )
     return payment
+
+
+async def _clear_listing_pending_payment(payment: dict):
+    lid = payment.get("listing_id")
+    pid = payment.get("id")
+    if lid and pid:
+        await db.listings.update_one(
+            {"id": lid, "pending_payment_id": pid},
+            {"$unset": {
+                "pending_payment_purpose": "",
+                "pending_payment_id": "",
+                "pending_payment_status": "",
+            }, "$set": {"updated_at": now_iso()}},
+        )
 
 
 @api.get("/admin/payments/pending")
@@ -1677,6 +1707,8 @@ async def admin_validate_payment(payment_id: str, admin=Depends(get_admin_user))
         return payment
     if payment.get("status") not in ("pending_admin", "pending", "failed"):
         raise HTTPException(400, "Statut non modifiable")
+    if payment.get("provider") == "manual_om" and not payment.get("om_proof_image_path"):
+        raise HTTPException(400, "Preuve de paiement manquante — impossible de valider")
     await db.payments.update_one(
         {"id": payment_id},
         {"$set": {
@@ -1688,6 +1720,7 @@ async def admin_validate_payment(payment_id: str, admin=Depends(get_admin_user))
     )
     # Apply effect (premium/boost/pro)
     await _apply_payment_effect(payment)
+    await _clear_listing_pending_payment(payment)
     return await db.payments.find_one({"id": payment_id}, {"_id": 0})
 
 
@@ -1705,6 +1738,7 @@ async def admin_reject_payment(payment_id: str, admin=Depends(get_admin_user), n
             "admin_note": note or "Preuve invalide",
         }},
     )
+    await _clear_listing_pending_payment(payment)
     return {"success": True}
 
 

@@ -7,6 +7,18 @@ export const LISTING_STATUS_LABELS = {
   hidden: "Masquée",
 };
 
+export const PAYMENT_PURPOSE_LABELS = {
+  premium: "Premium",
+  boost: "Boost 7 jours",
+  pro_subscription: "Abonnement Pro",
+};
+
+export function pendingPaymentLabel(listing) {
+  if (listing?.pending_payment_status !== "pending_admin") return null;
+  const p = listing.pending_payment_purpose;
+  return PAYMENT_PURPOSE_LABELS[p] || p || "Paiement";
+}
+
 export const CITY_SEO_SLUGS = {
   Conakry: "conakry",
   Kankan: "kankan",
