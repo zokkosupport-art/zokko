@@ -11,8 +11,10 @@ export default function ListingCard({ listing }) {
   return (
     <Link
       to={`/listings/${listing.id}`}
-      className={`block bg-white rounded-2xl border overflow-hidden gm-card-hover gm-shadow-soft ${
-        isPro ? "border-[#FBC02D] ring-1 ring-[#FBC02D]/40" : "border-[#E5E0D8]"
+      className={`block rounded-2xl overflow-hidden gm-card-hover ${
+        isPro
+          ? "gm-card-pro border-[3px] border-[#FBC02D] bg-gradient-to-b from-[#FFFDE7] to-white"
+          : "border border-[#E5E0D8] bg-white gm-shadow-soft"
       }`}
       data-testid={`listing-card-${listing.id}`}
     >
@@ -33,8 +35,8 @@ export default function ListingCard({ listing }) {
             </span>
           )}
           {isPro && (
-            <span className="bg-[#1A2E22] text-[#FBC02D] text-[10px] font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1">
-              <Crown size={12} weight="fill" /> Boutique Pro
+            <span className="bg-[#1A2E22] text-[#FBC02D] text-[10px] font-bold uppercase px-2.5 py-1 rounded-full flex items-center gap-1 border-2 border-[#FBC02D] shadow-md shadow-[#FBC02D]/40">
+              <Crown size={13} weight="fill" /> Boutique Pro
             </span>
           )}
           {isBoutique && (
@@ -49,8 +51,11 @@ export default function ListingCard({ listing }) {
           </span>
         )}
       </div>
-      <div className="p-3 sm:p-4 space-y-1.5">
-        <h3 className="font-heading font-semibold text-[#1A2E22] line-clamp-2 leading-tight text-sm sm:text-base">{listing.title}</h3>
+      <div className={`p-3 sm:p-4 space-y-1.5 ${isPro ? "border-t-2 border-[#FBC02D]/50" : ""}`}>
+        <h3 className="font-heading font-semibold text-[#1A2E22] line-clamp-2 leading-tight text-sm sm:text-base">
+          {isPro && <Crown size={14} weight="fill" className="inline-block text-[#FBC02D] mr-1 -mt-0.5" aria-hidden />}
+          {listing.title}
+        </h3>
         <p className="text-[#D84315] font-bold text-base sm:text-lg font-heading">{formatPrice(listing.price, listing.currency)}</p>
         <div className="flex items-center justify-between text-xs text-[#4A5D50]">
           <span className="flex items-center gap-1"><MapPin size={12} weight="regular" />{listing.city}{listing.quartier ? `, ${listing.quartier}` : ""}</span>

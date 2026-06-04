@@ -83,6 +83,20 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   box-shadow: 0 8px 24px rgba(26, 46, 34, 0.1);
 }
 
+/* Cartes Boutique Pro — contour doré visible */
+.gm-card-pro {
+  box-shadow:
+    0 0 0 1px #f9a825,
+    0 4px 20px rgba(251, 192, 45, 0.45),
+    0 2px 8px rgba(26, 46, 34, 0.06);
+}
+.gm-card-pro:hover {
+  box-shadow:
+    0 0 0 2px #f9a825,
+    0 10px 32px rgba(251, 192, 45, 0.55),
+    0 4px 12px rgba(26, 46, 34, 0.08);
+}
+
 .gm-fade-in {
   animation: gmFadeIn 360ms ease both;
 }
