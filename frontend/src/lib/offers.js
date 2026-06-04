@@ -1,4 +1,5 @@
 import { Lightning, Star, CrownSimple } from "@phosphor-icons/react";
+import { ZOKKO_PREMIUM_COLOR } from "@/lib/offerColors";
 
 /** Offres payantes Zokko — alignées backend (MANUAL_OM_PRICES_GNF). */
 export const ZOKKO_OFFERS = {
@@ -27,11 +28,11 @@ export const ZOKKO_OFFERS = {
     price: 20000,
     currency: "GNF",
     period: "à vie sur l'annonce",
-    color: "#2E7D32",
+    color: ZOKKO_PREMIUM_COLOR,
     icon: Star,
     tagline: "Votre meilleure annonce, toujours visible",
     benefits: [
-      "Badge vert Premium sur l'annonce",
+      "Badge violet Premium sur l'annonce",
       "Mise en avant permanente",
       "Vous démarquez des autres vendeurs",
     ],

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { waMeUrl, waMeDigits } from "@/lib/phone";
 import UserAvatar from "@/components/UserAvatar";
+import { premiumBadgeClass, premiumButtonClass } from "@/lib/offerColors";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -131,7 +132,7 @@ export default function ListingDetail() {
           <div className="aspect-[4/3] bg-[#F0EBE1] rounded-2xl overflow-hidden relative">
             <ListingImage listing={listing} src={activePhotoUrl} alt={listing.title} />
             <div className="absolute top-3 left-3 flex flex-col gap-2">
-              {listing.premium && <span className="bg-[#2E7D32] text-white text-xs font-bold uppercase px-3 py-1 rounded-full flex items-center gap-1"><Star size={12} weight="fill" /> Premium</span>}
+              {listing.premium && <span className={`${premiumBadgeClass} text-xs font-bold uppercase px-3 py-1 rounded-full flex items-center gap-1`}><Star size={12} weight="fill" /> Premium</span>}
               {listing.boosted_until && new Date(listing.boosted_until) > new Date() && (
                 <span className="bg-[#D84315] text-white text-xs font-bold uppercase px-3 py-1 rounded-full flex items-center gap-1"><Lightning size={12} weight="fill" /> Boosté</span>
               )}
@@ -255,7 +256,7 @@ export default function ListingDetail() {
 
             {isOwner && (
               <div className="space-y-2 pt-2">
-                <Button onClick={() => nav(`/payment?purpose=premium&listing=${listing.id}`)} className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-xl font-bold" data-testid="premium-btn">
+                <Button onClick={() => nav(`/payment?purpose=premium&listing=${listing.id}`)} className={`w-full rounded-xl font-bold ${premiumButtonClass}`} data-testid="premium-btn">
                   <Star size={18} weight="fill" className="mr-2" /> Passer Premium (20 000 GNF)
                 </Button>
                 <Button onClick={() => nav(`/payment?purpose=boost&listing=${listing.id}`)} className="w-full bg-[#FF6600] hover:bg-[#E65C00] text-white rounded-xl font-bold" data-testid="boost-btn">

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Lightning, Star } from "@phosphor-icons/react";
 import { formatPrice } from "@/lib/api";
 import { ZOKKO_OFFERS, paymentPath, listingOfferStatus } from "@/lib/offers";
+import { premiumStatusClass, premiumButtonClass } from "@/lib/offerColors";
 
 /** Boutons Boost / Premium sous une annonce (style fiche annonce). */
 export default function ListingOfferActions({ listing }) {
@@ -11,7 +12,7 @@ export default function ListingOfferActions({ listing }) {
   if (status) {
     const bg =
       status.type === "premium"
-        ? "bg-[#2E7D32]/15 text-[#2E7D32]"
+        ? premiumStatusClass
         : status.type === "boost"
           ? "bg-[#FF6600]/15 text-[#E65C00]"
           : "bg-[#FFF3E0] text-[#E65100]";
@@ -36,7 +37,7 @@ export default function ListingOfferActions({ listing }) {
       </Link>
       <Link
         to={paymentPath("premium", listing.id)}
-        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm text-white bg-[#2E7D32] hover:bg-[#1B5E20] transition-colors"
+        className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm transition-colors ${premiumButtonClass}`}
       >
         <Star size={16} weight="fill" />
         Premium · {formatPrice(premium.price, premium.currency)}

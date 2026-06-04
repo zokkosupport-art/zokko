@@ -3,6 +3,7 @@ import { MapPin, Lightning, Star, SealCheck, Storefront, Crown } from "@phosphor
 import { formatPrice } from "@/lib/api";
 import FavoriteButton from "@/components/FavoriteButton";
 import ListingImage from "@/components/ListingImage";
+import { premiumBadgeClass } from "@/lib/offerColors";
 
 export default function ListingCard({ listing }) {
   const isBoosted = listing.boosted_until && new Date(listing.boosted_until) > new Date();
@@ -25,7 +26,7 @@ export default function ListingCard({ listing }) {
         </div>
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {listing.premium && (
-            <span className="bg-[#2E7D32] text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1">
+            <span className={`${premiumBadgeClass} text-[10px] font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1`}>
               <Star size={12} weight="fill" /> Premium
             </span>
           )}

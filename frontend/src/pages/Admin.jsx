@@ -347,7 +347,7 @@ export default function Admin() {
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2">
                 <StatusBadge status={viewListing.status} />
-                {viewListing.premium && <span className="text-xs font-bold bg-[#FBC02D] text-[#1A2E22] px-2 py-1 rounded-full">Premium</span>}
+                {viewListing.premium && <span className="text-xs font-bold bg-[#7B1FA2] text-white px-2 py-1 rounded-full">Premium</span>}
               </div>
               {pendingPaymentLabel(viewListing) && (
                 <p className="text-sm text-[#E65100] bg-[#FFF3E0] border border-[#FF6600]/40 rounded-xl px-3 py-2">
