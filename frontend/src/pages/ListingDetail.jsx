@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { waMeUrl, waMeDigits } from "@/lib/phone";
 import UserAvatar from "@/components/UserAvatar";
-import { premiumBadgeClass, premiumButtonClass } from "@/lib/offerColors";
+import ListingPromoBadges from "@/components/ListingPromoBadges";
+import { premiumButtonClass } from "@/lib/offerColors";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -122,26 +123,21 @@ export default function ListingDetail() {
   const ratingCount = listing.owner?.rating_count || 0;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-      <Link to="/listings" className="text-[#4A5D50] flex items-center gap-1 text-sm mb-4 hover:text-[#D84315]" data-testid="back-link">
+    <div className={`max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6 ${!isOwner && whatsappDigits ? "pb-32 md:pb-6" : ""}`}>
+      <Link to="/listings" className="text-[#4A5D50] flex items-center gap-1 text-sm mb-3 min-h-[44px] hover:text-[#D84315] touch-manipulation" data-testid="back-link">
         <ArrowLeft size={16} /> Retour
       </Link>
 
-      <div className="grid md:grid-cols-[1.4fr_1fr] gap-6">
+      <div className="grid md:grid-cols-[1.4fr_1fr] gap-4 md:gap-6">
         <div>
           <div className="aspect-[4/3] bg-[#F0EBE1] rounded-2xl overflow-hidden relative">
             <ListingImage listing={listing} src={activePhotoUrl} alt={listing.title} />
-            <div className="absolute top-3 left-3 flex flex-col gap-2">
-              {listing.premium && <span className={`${premiumBadgeClass} text-xs font-bold uppercase px-3 py-1 rounded-full flex items-center gap-1`}><Star size={12} weight="fill" /> Premium</span>}
-              {listing.boosted_until && new Date(listing.boosted_until) > new Date() && (
-                <span className="bg-[#D84315] text-white text-xs font-bold uppercase px-3 py-1 rounded-full flex items-center gap-1"><Lightning size={12} weight="fill" /> Boosté</span>
-              )}
-            </div>
+            <ListingPromoBadges listing={listing} className="top-3 left-3" />
           </div>
           {photos.length > 1 && (
             <div className="flex gap-2 mt-3 overflow-x-auto gm-scroll-x">
               {photos.map((p, i) => (
-                <button key={p} onClick={() => setActivePhoto(i)} className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 ${i === activePhoto ? "border-[#D84315]" : "border-[#E5E0D8]"}`}>
+                <button type="button" key={p} onClick={() => setActivePhoto(i)} className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 touch-manipulation ${i === activePhoto ? "border-[#D84315]" : "border-[#E5E0D8]"}`}>
                   <img
                     src={/^https?:\/\//i.test(p) ? p : fileUrl(p)}
                     alt=""
@@ -192,11 +188,11 @@ export default function ListingDetail() {
           <div className="bg-white border border-[#E5E0D8] rounded-2xl p-5 space-y-3">
             <div className="text-xs uppercase font-bold tracking-wide text-[#2E7D32]">{listing.type === "service" ? "Service" : "Produit"} · {listing.category}</div>
             <div className="flex items-start justify-between gap-2">
-              <h1 className="font-heading font-bold text-2xl text-[#1A2E22] leading-tight flex-1">{listing.title}</h1>
+              <h1 className="font-heading font-bold text-xl sm:text-2xl text-[#1A2E22] leading-tight flex-1">{listing.title}</h1>
               <FavoriteButton listingId={listing.id} className="flex-shrink-0" />
             </div>
-            <div className="font-heading font-bold text-3xl text-[#D84315]">{formatPrice(listing.price, listing.currency)}</div>
-            <div className="flex items-center gap-4 text-sm text-[#4A5D50] pt-2 border-t border-[#E5E0D8]">
+            <div className="font-heading font-bold text-2xl sm:text-3xl text-[#D84315]">{formatPrice(listing.price, listing.currency)}</div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-[#4A5D50] pt-2 border-t border-[#E5E0D8]">
               <span className="flex items-center gap-1"><MapPin size={16} />{listing.city}{listing.quartier && `, ${listing.quartier}`}</span>
               <span className="flex items-center gap-1"><Eye size={16} />{listing.views || 0} vues</span>
               {(listing.whatsapp_clicks || 0) > 0 && (
@@ -233,7 +229,7 @@ export default function ListingDetail() {
             </div>
 
             {!isOwner && (
-              <div className="space-y-2 pt-2">
+              <div className="hidden md:block space-y-2 pt-2">
                 {whatsappDigits && (
                   <>
                     <a href={whatsappLink} target="_blank" rel="noreferrer" onClick={trackWhatsApp} className="block">
@@ -248,7 +244,7 @@ export default function ListingDetail() {
                     </a>
                   </>
                 )}
-                <Button onClick={openChat} variant="outline" className="w-full border-2 border-[#E5E0D8] hover:border-[#D84315] hover:text-[#D84315] rounded-full" data-testid="chat-btn">
+                <Button onClick={openChat} variant="outline" className="w-full border-2 border-[#E5E0D8] hover:border-[#D84315] hover:text-[#D84315] rounded-full h-12" data-testid="chat-btn">
                   <ChatCircleText size={18} className="mr-2" /> Message interne
                 </Button>
               </div>
@@ -344,6 +340,43 @@ export default function ListingDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {!isOwner && whatsappDigits && (
+        <div
+          className="md:hidden fixed left-0 right-0 z-30 px-3 pt-2 pb-2 bg-white/95 backdrop-blur-md border-t border-[#E5E0D8] shadow-[0_-4px_20px_rgba(26,46,34,0.08)]"
+          style={{ bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
+        >
+          <div className="flex gap-2 max-w-lg mx-auto">
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noreferrer"
+              onClick={trackWhatsApp}
+              className="flex-1 min-w-0"
+            >
+              <Button className="w-full h-12 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full font-semibold touch-manipulation" data-testid="whatsapp-btn-mobile">
+                <WhatsappLogo size={20} weight="fill" className="mr-2 shrink-0" />
+                WhatsApp
+              </Button>
+            </a>
+            <a href={`tel:+${whatsappDigits}`} className="shrink-0" data-testid="call-btn-mobile">
+              <Button variant="outline" aria-label="Appeler" className="h-12 w-12 rounded-full border-2 border-[#25D366]/40 p-0 touch-manipulation">
+                <Phone size={22} />
+              </Button>
+            </a>
+            <Button
+              type="button"
+              onClick={openChat}
+              variant="outline"
+              aria-label="Message interne"
+              className="h-12 w-12 rounded-full border-2 border-[#E5E0D8] p-0 shrink-0 touch-manipulation"
+              data-testid="chat-btn-mobile"
+            >
+              <ChatCircleText size={22} />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -32,7 +32,7 @@ export default function Favorites() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
       <h1 className="font-heading font-bold text-2xl sm:text-3xl text-[#1A2E22] mb-2 flex items-center gap-2">
         <Heart size={28} weight="fill" className="text-[#D84315]" /> Mes favoris
       </h1>
@@ -49,7 +49,7 @@ export default function Favorites() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
           {items.map((l) => (
             <ListingCard key={l.id} listing={l} />
           ))}

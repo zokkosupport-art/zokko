@@ -89,7 +89,7 @@ export default function Layout() {
                 </Button>
                 <Button
                   onClick={() => navigate("/register")}
-                  className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-full px-4 font-bold"
+                  className="hidden sm:inline-flex bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-full px-4 font-bold"
                   data-testid="header-register-btn"
                 >
                   Créer un compte
@@ -100,7 +100,7 @@ export default function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 pb-20 md:pb-0 min-w-0 overflow-x-hidden">
+      <main className="flex-1 min-w-0 overflow-x-hidden gm-page-mobile md:pb-0">
         <RouteErrorBoundary>
           <Outlet />
         </RouteErrorBoundary>
@@ -161,8 +161,8 @@ export default function Layout() {
       </footer>
 
       {/* Bottom nav - mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E5E0D8]" data-testid="bottom-nav">
-        <div className="grid grid-cols-5 h-16">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E5E0D8] gm-safe-bottom" data-testid="bottom-nav">
+        <div className="grid grid-cols-5 h-16 max-w-lg mx-auto">
           {navItems.map((it) => {
             const Icon = it.icon;
             const active = isActive(it.to);
@@ -170,7 +170,7 @@ export default function Layout() {
               <Link
                 key={it.to}
                 to={it.to}
-                className={`flex flex-col items-center justify-center gap-1 ${active ? "text-[#D84315]" : "text-[#4A5D50]"}`}
+                className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] touch-manipulation ${active ? "text-[#D84315]" : "text-[#4A5D50]"}`}
                 data-testid={it.testid}
               >
                 {it.center ? (

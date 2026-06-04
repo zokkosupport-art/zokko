@@ -15,9 +15,9 @@ function ListingsFilterPanel({ category, city, quartier, type, categories, citie
     <div className="space-y-4">
       <h3 className="font-heading font-semibold text-[#1A2E22]">Catégories</h3>
       <div className="space-y-1">
-        <button type="button" onClick={() => onUpdate("category", "")} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${!category ? "bg-[#D84315] text-white" : "text-[#4A5D50]"}`}>Toutes</button>
+        <button type="button" onClick={() => onUpdate("category", "")} className={`w-full text-left px-3 py-3 rounded-lg text-sm min-h-[44px] ${!category ? "bg-[#D84315] text-white" : "text-[#4A5D50]"}`}>Toutes</button>
         {categories.map((c) => (
-          <button key={c.slug} type="button" onClick={() => onUpdate("category", c.slug)} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${category === c.slug ? "bg-[#D84315] text-white" : "text-[#4A5D50]"}`}>
+          <button key={c.slug} type="button" onClick={() => onUpdate("category", c.slug)} className={`w-full text-left px-3 py-3 rounded-lg text-sm min-h-[44px] ${category === c.slug ? "bg-[#D84315] text-white" : "text-[#4A5D50]"}`}>
             {c.name}
           </button>
         ))}
@@ -129,6 +129,16 @@ export default function Listings() {
 
   const clearAll = () => setParams({});
 
+  const activeFilterCount = useMemo(() => {
+    let n = 0;
+    if (category) n += 1;
+    if (city) n += 1;
+    if (quartier) n += 1;
+    if (type) n += 1;
+    if (q) n += 1;
+    return n;
+  }, [category, city, quartier, type, q]);
+
   const pageTitle = useMemo(() => {
     const parts = [];
     if (category) parts.push(categories.find((c) => c.slug === category)?.name || category);
@@ -139,19 +149,24 @@ export default function Listings() {
   }, [category, city, quartier, q, categories]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24">
-      <h1 className="font-heading font-bold text-2xl sm:text-3xl text-[#1A2E22] mb-4">{pageTitle}</h1>
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <h1 className="font-heading font-bold text-xl sm:text-3xl text-[#1A2E22] mb-3 sm:mb-4 line-clamp-2">{pageTitle}</h1>
 
       <form onSubmit={onSearch} className="flex gap-2 mb-3">
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-w-0">
           <MagnifyingGlass size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A5D50]" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher…" className="pl-10 h-11 bg-white border-[#E5E0D8] rounded-xl" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher…" className="pl-10 h-12 text-base bg-white border-[#E5E0D8] rounded-xl" />
         </div>
-        <Button type="submit" className="bg-[#D84315] text-white rounded-xl px-4 h-11">OK</Button>
+        <Button type="submit" className="bg-[#D84315] text-white rounded-xl px-4 h-12 min-w-[48px] shrink-0 touch-manipulation">OK</Button>
         <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
           <SheetTrigger asChild>
-            <Button type="button" variant="outline" className="h-11 rounded-xl border-[#E5E0D8] md:hidden" data-testid="toggle-filters-btn">
-              <SlidersHorizontal size={20} />
+            <Button type="button" variant="outline" className="relative h-12 w-12 rounded-xl border-[#E5E0D8] md:hidden shrink-0 touch-manipulation" data-testid="toggle-filters-btn" aria-label="Filtres">
+              <SlidersHorizontal size={22} />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-[#D84315] text-white text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
             </Button>
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
@@ -176,9 +191,9 @@ export default function Listings() {
       </form>
 
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide -mx-1 px-1" data-testid="category-chips">
-        <button type="button" onClick={() => update("category", "")} className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold ${!category ? "bg-[#D84315] text-white" : "bg-white border border-[#E5E0D8] text-[#4A5D50]"}`}>Tout</button>
+        <button type="button" onClick={() => update("category", "")} className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold touch-manipulation ${!category ? "bg-[#D84315] text-white" : "bg-white border border-[#E5E0D8] text-[#4A5D50]"}`}>Tout</button>
         {categories.map((c) => (
-          <button key={c.slug} type="button" onClick={() => update("category", c.slug)} className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap ${category === c.slug ? "bg-[#D84315] text-white" : "bg-white border border-[#E5E0D8] text-[#4A5D50]"}`}>
+          <button key={c.slug} type="button" onClick={() => update("category", c.slug)} className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap touch-manipulation ${category === c.slug ? "bg-[#D84315] text-white" : "bg-white border border-[#E5E0D8] text-[#4A5D50]"}`}>
             {c.name}
           </button>
         ))}
@@ -210,7 +225,7 @@ export default function Listings() {
             </div>
           )}
           {loading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
               {[...Array(6)].map((_, i) => <div key={i} className="aspect-[4/3] bg-[#F0EBE1] rounded-2xl animate-pulse" />)}
             </div>
           ) : items.length === 0 ? (
@@ -221,7 +236,7 @@ export default function Listings() {
           ) : (
             <>
               <p className="text-sm text-[#4A5D50] mb-3">{items.length} annonce{items.length > 1 ? "s" : ""}</p>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
                 {items.map((l) => <ListingCard key={l.id} listing={l} />)}
               </div>
             </>

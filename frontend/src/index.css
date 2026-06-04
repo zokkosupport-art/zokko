@@ -18,6 +18,11 @@
   --whatsapp: #25D366;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 html, body {
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -25,6 +30,20 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* Espace sous la barre du bas (iPhone encoche / barre home) */
+.gm-page-mobile {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .gm-page-mobile {
+    padding-bottom: 0;
+  }
+}
+
+.gm-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 h1, h2, h3, h4, h5, h6, .font-heading {
@@ -78,9 +97,17 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .gm-card-hover {
   transition: transform 200ms ease, box-shadow 200ms ease;
 }
-.gm-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(26, 46, 34, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  .gm-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(26, 46, 34, 0.1);
+  }
+  .gm-card-pro:hover {
+    box-shadow:
+      0 0 0 2px #f9a825,
+      0 10px 32px rgba(251, 192, 45, 0.55),
+      0 4px 12px rgba(26, 46, 34, 0.08);
+  }
 }
 
 /* Cartes Boutique Pro — contour doré visible */
@@ -90,13 +117,6 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     0 4px 20px rgba(251, 192, 45, 0.45),
     0 2px 8px rgba(26, 46, 34, 0.06);
 }
-.gm-card-pro:hover {
-  box-shadow:
-    0 0 0 2px #f9a825,
-    0 10px 32px rgba(251, 192, 45, 0.55),
-    0 4px 12px rgba(26, 46, 34, 0.08);
-}
-
 .gm-fade-in {
   animation: gmFadeIn 360ms ease both;
 }

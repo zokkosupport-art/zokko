@@ -21,7 +21,7 @@ export default function FavoriteButton({ listingId, className = "", size = 22 })
         e.stopPropagation();
         setSaved(toggleFavorite(listingId));
       }}
-      className={`rounded-full p-2 transition-colors ${saved ? "text-[#D84315] bg-[#D84315]/10" : "text-[#4A5D50] bg-white/90 hover:text-[#D84315]"} ${className}`}
+      className={`rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation transition-colors ${saved ? "text-[#D84315] bg-[#D84315]/10" : "text-[#4A5D50] bg-white/90 hover:text-[#D84315]"} ${className}`}
       data-testid={`favorite-btn-${listingId}`}
     >
       <Heart size={size} weight={saved ? "fill" : "regular"} />

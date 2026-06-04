@@ -29,7 +29,7 @@ export default function SellFaster() {
   const { user } = useAuth();
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-24">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
       <div className="text-center max-w-2xl mx-auto mb-8">
         <h1 className="font-heading font-bold text-3xl sm:text-4xl text-[#1A2E22]">Vendre plus vite</h1>
         <p className="text-[#4A5D50] mt-3 text-sm sm:text-base leading-relaxed">

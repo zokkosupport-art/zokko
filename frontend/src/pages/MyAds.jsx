@@ -98,7 +98,7 @@ export default function MyAds() {
     : null;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-24">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="font-heading font-bold text-2xl sm:text-3xl text-[#1A2E22]">Ma boutique</h1>
         <Link to="/publish" className="bg-[#D84315] hover:bg-[#BF360C] text-white rounded-full px-4 py-2.5 font-semibold inline-flex items-center gap-2 text-sm">
@@ -163,7 +163,7 @@ export default function MyAds() {
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold ${
+            className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold touch-manipulation ${
               tab === t.key ? "bg-[#D84315] text-white" : "bg-white border border-[#E5E0D8] text-[#4A5D50]"
             }`}
           >
@@ -180,7 +180,7 @@ export default function MyAds() {
           <Link to="/publish" className="bg-[#D84315] text-white rounded-full px-6 py-2.5 font-semibold inline-block">Publier</Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
           {filtered.map((l) => (
             <div key={l.id} className="relative space-y-2">
               <div className="relative">
