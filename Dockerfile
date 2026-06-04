@@ -8,6 +8,8 @@ COPY frontend/ .
 # Ne pas hardcoder l'URL Railway ici — laisser vide en prod Docker/Railway.
 ARG REACT_APP_BACKEND_URL=
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
+ARG REACT_APP_GA_MEASUREMENT_ID=
+ENV REACT_APP_GA_MEASUREMENT_ID=$REACT_APP_GA_MEASUREMENT_ID
 ENV CI=false
 RUN npm run build
 
