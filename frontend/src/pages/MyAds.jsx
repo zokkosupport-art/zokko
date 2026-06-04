@@ -154,7 +154,7 @@ export default function MyAds() {
         <StatCard label="Total" value={counts.total} color="#1A2E22" />
         <StatCard label="En attente" value={counts.pending} color="#FBC02D" />
         <StatCard label="Publiées" value={counts.approved} color="#2E7D32" />
-        <StatCard label="Premium" value={counts.premium} color="#D84315" icon={<Star size={18} weight="fill" />} />
+        <StatCard label="Premium" value={counts.premium} color="#2E7D32" icon={<Star size={18} weight="fill" />} />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">

@@ -27,11 +27,11 @@ export const ZOKKO_OFFERS = {
     price: 20000,
     currency: "GNF",
     period: "à vie sur l'annonce",
-    color: "#FBC02D",
+    color: "#2E7D32",
     icon: Star,
     tagline: "Votre meilleure annonce, toujours visible",
     benefits: [
-      "Badge doré Premium sur l'annonce",
+      "Badge vert Premium sur l'annonce",
       "Mise en avant permanente",
       "Vous démarquez des autres vendeurs",
     ],
@@ -45,7 +45,7 @@ export const ZOKKO_OFFERS = {
     price: 50000,
     currency: "GNF",
     period: "par mois",
-    color: "#2E7D32",
+    color: "#FBC02D",
     icon: CrownSimple,
     tagline: "Pour les vendeurs et boutiques actifs",
     benefits: [

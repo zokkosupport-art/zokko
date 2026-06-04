@@ -11,7 +11,7 @@ export default function ListingOfferActions({ listing }) {
   if (status) {
     const bg =
       status.type === "premium"
-        ? "bg-[#FBC02D]/20 text-[#1A2E22]"
+        ? "bg-[#2E7D32]/15 text-[#2E7D32]"
         : status.type === "boost"
           ? "bg-[#FF6600]/15 text-[#E65C00]"
           : "bg-[#FFF3E0] text-[#E65100]";
@@ -36,7 +36,7 @@ export default function ListingOfferActions({ listing }) {
       </Link>
       <Link
         to={paymentPath("premium", listing.id)}
-        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm text-[#1A2E22] bg-[#FBC02D] hover:bg-[#F9A825] transition-colors"
+        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm text-white bg-[#2E7D32] hover:bg-[#1B5E20] transition-colors"
       >
         <Star size={16} weight="fill" />
         Premium · {formatPrice(premium.price, premium.currency)}
