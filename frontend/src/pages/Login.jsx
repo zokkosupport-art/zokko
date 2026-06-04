@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import AuthModeSwitch from "@/components/AuthModeSwitch";
 import { toast } from "sonner";
 import { Phone, ShieldCheck, ArrowLeft, Key } from "@phosphor-icons/react";
 import api, { formatApiError } from "@/lib/api";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function Login() {
+  const [params] = useSearchParams();
   const [step, setStep] = useState("phone");
   const [phone, setPhone] = useState("");
   const [pin, setPin] = useState("");
@@ -18,6 +20,11 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const nav = useNavigate();
+
+  useEffect(() => {
+    const p = params.get("phone")?.replace(/\D/g, "");
+    if (p && p.length >= GUINEA.minDigits) setPhone(p);
+  }, [params]);
 
   const continueWithPhone = async () => {
     if (phone.length < GUINEA.minDigits) {
@@ -83,6 +90,8 @@ export default function Login() {
             <ArrowLeft size={16} /> Retour
           </button>
         )}
+        <AuthModeSwitch active="login" className="mb-6" />
+
         <div className="text-center mb-6">
           <div className="w-14 h-14 mx-auto rounded-2xl bg-[#D84315]/10 text-[#D84315] flex items-center justify-center mb-3">
             {step === "phone" ? <Phone size={28} weight="duotone" /> : needsPinSetup ? <Key size={28} weight="duotone" /> : <ShieldCheck size={28} weight="duotone" />}
@@ -92,10 +101,10 @@ export default function Login() {
           </h1>
           <p className="text-sm text-[#4A5D50] mt-2">
             {step === "phone"
-              ? "Numéro guinéen (+224) et mot de passe à 6 chiffres"
+              ? "Entrez votre numéro +224, puis votre code à 6 chiffres"
               : needsPinSetup
                 ? "Choisissez un code à 6 chiffres pour ce numéro"
-                : `Mot de passe pour +224 ${phone}`}
+                : `Code secret pour +224 ${phone}`}
           </p>
         </div>
 
@@ -116,14 +125,11 @@ export default function Login() {
               </div>
               <p className="text-xs text-[#4A5D50] mt-1.5">{GUINEA.hint}</p>
             </div>
-            <Button onClick={continueWithPhone} disabled={loading} className="w-full bg-[#D84315] hover:bg-[#BF360C] text-white rounded-full h-12 font-semibold" data-testid="continue-btn">
-              {loading ? "Vérification..." : "Se connecter"}
+            <Button onClick={continueWithPhone} disabled={loading} className="w-full bg-[#D84315] hover:bg-[#BF360C] text-white rounded-full h-14 text-base font-bold" data-testid="continue-btn">
+              {loading ? "Vérification..." : "Continuer — connexion"}
             </Button>
-            <p className="text-center text-sm text-[#4A5D50]">
-              Pas encore de compte ?{" "}
-              <Link to="/register" className="text-[#D84315] font-semibold hover:underline" data-testid="go-register-link">
-                Créer un compte →
-              </Link>
+            <p className="text-center text-xs text-[#4A5D50] bg-[#FAF8F5] rounded-xl px-3 py-2">
+              Première fois sur Zokko ? Cliquez <strong>Créer un compte</strong> en haut.
             </p>
             <p className="text-center text-xs text-[#4A5D50]">
               Administrateur ?{" "}

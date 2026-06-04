@@ -43,7 +43,7 @@ const AUDIENCES = [
     color: "#D84315",
     points: ["Acheter & vendre près de chez vous", "Code secret à 6 chiffres (pas de SMS)", "WhatsApp en 1 clic", "Gratuit pour publier"],
     cta: "Créer mon compte",
-    to: "/login",
+    to: "/register",
   },
   {
     icon: Buildings,
@@ -51,7 +51,7 @@ const AUDIENCES = [
     color: "#2E7D32",
     points: ["Compte Boutique gratuit", "Boutique Pro : stats & mise en avant", "Boost & Premium Orange Money", "Visible dans toute la Guinée"],
     cta: "Ouvrir ma boutique",
-    to: "/login",
+    to: "/register",
   },
 ];
 
@@ -122,11 +122,22 @@ export default function Home() {
               <p className="text-base sm:text-lg text-[#4A5D50] max-w-md">
                 La marketplace simple et rapide de la Guinée. Connexion par téléphone + code à 6 chiffres, paiement Orange Money, partage WhatsApp.
               </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <Link to={user ? "/listings" : "/login"} className="inline-flex items-center gap-2 bg-[#D84315] hover:bg-[#BF360C] text-white px-6 py-3 rounded-full font-semibold transition-colors" data-testid="hero-cta-primary">
-                  {user ? "Explorer les annonces" : "Commencer gratuitement"} <ArrowRight size={18} weight="bold" />
-                </Link>
-                <Link to="/publish" className="inline-flex items-center gap-2 bg-white border-2 border-[#E5E0D8] hover:border-[#D84315] hover:text-[#D84315] text-[#1A2E22] px-6 py-3 rounded-full font-semibold transition-colors" data-testid="hero-cta-secondary">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-2">
+                {user ? (
+                  <Link to="/listings" className="inline-flex items-center justify-center gap-2 bg-[#D84315] hover:bg-[#BF360C] text-white px-6 py-3.5 rounded-full font-bold transition-colors" data-testid="hero-cta-primary">
+                    Explorer les annonces <ArrowRight size={18} weight="bold" />
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/register" className="inline-flex items-center justify-center gap-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white px-6 py-3.5 rounded-full font-bold transition-colors" data-testid="hero-cta-register">
+                      Créer mon compte — gratuit <ArrowRight size={18} weight="bold" />
+                    </Link>
+                    <Link to="/login" className="inline-flex items-center justify-center gap-2 bg-[#D84315] hover:bg-[#BF360C] text-white px-6 py-3.5 rounded-full font-bold transition-colors" data-testid="hero-cta-login">
+                      J&apos;ai déjà un compte
+                    </Link>
+                  </>
+                )}
+                <Link to={user ? "/publish" : "/register"} className="inline-flex items-center justify-center gap-2 bg-white border-2 border-[#E5E0D8] hover:border-[#D84315] hover:text-[#D84315] text-[#1A2E22] px-6 py-3.5 rounded-full font-semibold transition-colors" data-testid="hero-cta-secondary">
                   Publier une annonce
                 </Link>
               </div>
@@ -429,9 +440,20 @@ export default function Home() {
           <h2 className="font-heading font-bold text-3xl sm:text-5xl leading-tight">Prêt à vendre en Guinée ?</h2>
           <p className="text-white/80 max-w-xl mx-auto">Inscrivez-vous gratuitement, publiez votre première annonce et faites partie des premiers vendeurs sur Zokko.</p>
           <div className="flex flex-wrap gap-3 justify-center pt-2">
-            <Link to={user ? "/publish" : "/login"} className="inline-flex items-center gap-2 bg-white text-[#D84315] hover:bg-[#FBC02D] hover:text-[#1A2E22] px-7 py-3.5 rounded-full font-bold transition-colors text-lg" data-testid="final-cta">
-              {user ? "Publier ma première annonce" : "Créer mon compte gratuit"} <ArrowRight size={20} weight="bold" />
-            </Link>
+            {user ? (
+              <Link to="/publish" className="inline-flex items-center gap-2 bg-white text-[#D84315] hover:bg-[#FBC02D] hover:text-[#1A2E22] px-7 py-3.5 rounded-full font-bold transition-colors text-lg" data-testid="final-cta">
+                Publier ma première annonce <ArrowRight size={20} weight="bold" />
+              </Link>
+            ) : (
+              <>
+                <Link to="/register" className="inline-flex items-center gap-2 bg-white text-[#2E7D32] hover:bg-[#FBC02D] px-7 py-3.5 rounded-full font-bold transition-colors text-lg" data-testid="final-cta-register">
+                  Créer mon compte — gratuit <ArrowRight size={20} weight="bold" />
+                </Link>
+                <Link to="/login" className="inline-flex items-center gap-2 bg-white/15 border-2 border-white text-white hover:bg-white hover:text-[#D84315] px-7 py-3.5 rounded-full font-bold transition-colors text-lg" data-testid="final-cta-login">
+                  J&apos;ai déjà un compte
+                </Link>
+              </>
+            )}
             <Link to="/listings" className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border-2 border-white/30 hover:bg-white/20 text-white px-7 py-3.5 rounded-full font-bold transition-colors text-lg">
               Voir les annonces
             </Link>

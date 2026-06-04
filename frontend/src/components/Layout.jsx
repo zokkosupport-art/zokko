@@ -30,7 +30,7 @@ export default function Layout() {
         { to: "/listings", icon: MagnifyingGlass, label: "Chercher", testid: "nav-search" },
         { to: "/publish", icon: Plus, label: "Publier", testid: "nav-publish", center: true },
         { to: "/messages", icon: ChatCircleText, label: "Messages", testid: "nav-messages" },
-        { to: "/login", icon: User, label: "Connexion", testid: "nav-profile" },
+        { to: "/login", icon: User, label: "Compte", testid: "nav-profile" },
       ];
 
   const isActive = (to) => location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
@@ -77,9 +77,23 @@ export default function Layout() {
                 Déconnexion
               </Button>
             ) : (
-              <Button variant="ghost" onClick={() => navigate("/login")} className="text-[#1A2E22]" data-testid="header-login-btn">
-                Connexion
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/login")}
+                  className="rounded-full border-2 border-[#E5E0D8] font-semibold text-[#1A2E22]"
+                  data-testid="header-login-btn"
+                >
+                  Connexion
+                </Button>
+                <Button
+                  onClick={() => navigate("/register")}
+                  className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-full px-4 font-bold"
+                  data-testid="header-register-btn"
+                >
+                  Créer un compte
+                </Button>
+              </div>
             )}
           </div>
         </div>

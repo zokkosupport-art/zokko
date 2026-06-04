@@ -9,6 +9,7 @@ import { GUINEA, AUTH_REDIRECT } from "@/lib/authGuinea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import AuthModeSwitch from "@/components/AuthModeSwitch";
 
 export default function Register() {
   const [params] = useSearchParams();
@@ -120,12 +121,14 @@ export default function Register() {
             <ArrowLeft size={16} /> Retour
           </button>
         )}
+        <AuthModeSwitch active="register" className="mb-6" />
+
         <div className="text-center mb-6">
           <div className="w-14 h-14 mx-auto rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-3">
             {step === "phone" ? <Phone size={28} weight="duotone" /> : <Key size={28} weight="duotone" />}
           </div>
-          <h1 className="font-heading font-bold text-2xl text-[#1A2E22]">Inscription</h1>
-          <p className="text-sm text-[#4A5D50] mt-2">Créez votre compte Zokko en Guinée</p>
+          <h1 className="font-heading font-bold text-2xl text-[#1A2E22]">Créer un compte</h1>
+          <p className="text-sm text-[#4A5D50] mt-2">Gratuit · numéro +224 · code à 6 chiffres</p>
         </div>
 
         {step === "phone" ? (
@@ -144,14 +147,11 @@ export default function Register() {
                 />
               </div>
             </div>
-            <Button onClick={continueWithPhone} disabled={loading} className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-full h-12 font-semibold">
-              {loading ? "Vérification..." : "Continuer"}
+            <Button onClick={continueWithPhone} disabled={loading} className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-full h-14 text-base font-bold">
+              {loading ? "Vérification..." : "Continuer — inscription"}
             </Button>
-            <p className="text-center text-sm text-[#4A5D50]">
-              Déjà inscrit ?{" "}
-              <Link to="/login" className="text-[#D84315] font-semibold hover:underline">
-                Se connecter →
-              </Link>
+            <p className="text-center text-xs text-[#4A5D50] bg-[#FAF8F5] rounded-xl px-3 py-2">
+              Vous avez déjà un compte ? Cliquez <strong>J&apos;ai un compte</strong> en haut.
             </p>
           </div>
         ) : (
@@ -222,12 +222,9 @@ export default function Register() {
               <Label className="text-[#1A2E22] font-medium mb-1.5 block">Code parrain (optionnel)</Label>
               <Input value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} placeholder="ZOK-XXXXX" className="bg-[#FAF8F5] border-[#E5E0D8] rounded-xl h-12 font-mono" />
             </div>
-            <Button onClick={submitRegister} disabled={loading} className="w-full bg-[#D84315] hover:bg-[#BF360C] text-white rounded-full h-12 font-semibold" data-testid="register-submit-btn">
-              {loading ? "Création..." : "Créer mon compte"}
+            <Button onClick={submitRegister} disabled={loading} className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-full h-14 text-base font-bold" data-testid="register-submit-btn">
+              {loading ? "Création..." : "Créer mon compte — gratuit"}
             </Button>
-            <p className="text-center text-sm text-[#4A5D50]">
-              <Link to="/login" className="text-[#D84315] font-semibold hover:underline">Déjà un compte ? Connexion</Link>
-            </p>
           </div>
         )}
       </div>
