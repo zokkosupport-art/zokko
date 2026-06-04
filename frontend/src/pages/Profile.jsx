@@ -188,15 +188,21 @@ export default function Profile() {
         <span className="text-2xl text-[#4A5D50]">→</span>
       </Link>
 
-      {!user?.is_pro && (
-        <div className="bg-white border border-[#E5E0D8] rounded-2xl p-5 sm:p-6 mb-4 space-y-3">
-          <h2 className="font-heading font-semibold text-lg text-[#1A2E22]">Boutique Pro</h2>
-          <p className="text-sm text-[#4A5D50]">Stats vues & WhatsApp, mise en avant dorée sur le site. 50 000 GNF / mois.</p>
-          <Button onClick={() => nav("/payment?purpose=pro_subscription")} className="bg-[#FBC02D] hover:bg-[#F9A825] text-[#1A2E22] rounded-xl font-bold" data-testid="profile-pro-btn">
-            <CrownSimple size={18} weight="fill" className="mr-2" /> Passer Boutique Pro
-          </Button>
+      <Link
+        to="/vendre-plus-vite"
+        className="flex items-center justify-between bg-gradient-to-br from-[#FBC02D]/25 to-[#2E7D32]/10 border-2 border-[#FBC02D]/50 rounded-2xl p-5 mb-4 transition-colors hover:border-[#2E7D32]"
+        data-testid="profile-sell-faster-link"
+      >
+        <div>
+          <p className="font-heading font-bold text-lg text-[#1A2E22] flex items-center gap-2">
+            <CrownSimple size={22} weight="fill" className="text-[#FBC02D]" /> Vendre plus vite
+          </p>
+          <p className="text-sm text-[#4A5D50] mt-1">
+            Boost, Premium et Boutique Pro — comparer les offres
+          </p>
         </div>
-      )}
+        <span className="text-2xl text-[#D84315]">→</span>
+      </Link>
       {user?.is_pro && user?.pro_until && (
         <p className="text-sm text-[#4A5D50] mb-4">Abonnement actif jusqu&apos;au {new Date(user.pro_until).toLocaleDateString("fr-FR")}.</p>
       )}

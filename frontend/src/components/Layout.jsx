@@ -133,6 +133,7 @@ export default function Layout() {
             <ul className="space-y-2 text-sm">
               <li><Link to="/listings" className="hover:text-white">Annonces</Link></li>
               <li><Link to="/publish" className="hover:text-white">Publier</Link></li>
+              <li><Link to="/vendre-plus-vite" className="hover:text-white">Vendre plus vite</Link></li>
               <li><Link to="/listings?category=immobilier" className="hover:text-white">Immobilier</Link></li>
             </ul>
           </div>

@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Star, Lightning, CrownSimple, ArrowLeft, Copy, Camera, X, UploadSimple, ShieldCheck, CheckCircle, Clock } from "@phosphor-icons/react";
+import { ArrowLeft, Copy, Camera, X, UploadSimple, ShieldCheck, CheckCircle, Clock } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import api, { fileUrl, formatApiError, formatPrice } from "@/lib/api";
 import { compressImage } from "@/lib/imageCompress";
+import { ZOKKO_OFFERS } from "@/lib/offers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const META = {
-  premium: { label: "Annonce Premium", desc: "Mise en avant permanente + badge doré", icon: Star, color: "#FBC02D" },
-  boost: { label: "Boost 7 jours", desc: "Annonce en tête des résultats pendant 7 jours", icon: Lightning, color: "#D84315" },
-  pro_subscription: { label: "Abonnement Pro (1 mois)", desc: "Annonces illimitées + statistiques détaillées", icon: CrownSimple, color: "#2E7D32" },
-};
+const META = Object.fromEntries(
+  Object.entries(ZOKKO_OFFERS).map(([k, o]) => [
+    k,
+    { label: o.label, desc: o.benefits[0], icon: o.icon, color: o.color },
+  ])
+);
 
 export default function Payment() {
   const [params] = useSearchParams();

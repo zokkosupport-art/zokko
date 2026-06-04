@@ -51,6 +51,11 @@ const ROUTES = {
     description: "Retrouvez vos annonces coup de cœur sur Zokko Guinée.",
     keywords: "favoris Zokko, annonces sauvegardées",
   },
+  "/vendre-plus-vite": {
+    title: "Vendre plus vite — Boost & Boutique Pro | Zokko",
+    description: "Boost 10 000 GNF, Premium 20 000 GNF, Boutique Pro 50 000 GNF/mois. Plus de visibilité pour vos annonces en Guinée.",
+    keywords: "boost annonce Guinée, premium Zokko, boutique pro Conakry, Orange Money",
+  },
   "/publish": {
     title: "Publier une annonce gratuite — Zokko",
     description: "Déposez votre annonce en Guinée : photos, prix en GNF, ville et quartier. Gratuit sur Zokko.",

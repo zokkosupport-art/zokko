@@ -23,6 +23,7 @@ const PaymentReturn = lazy(() => import("@/pages/PaymentReturn"));
 const PaymentsHistory = lazy(() => import("@/pages/PaymentsHistory"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const Legal = lazy(() => import("@/pages/Legal"));
+const SellFaster = lazy(() => import("@/pages/SellFaster"));
 
 function PageLoader() {
   return (
@@ -85,6 +86,7 @@ function App() {
               <Route path="/payments" element={<Protected><PaymentsHistory /></Protected>} />
               <Route path="/admin" element={<Protected admin><Admin /></Protected>} />
               <Route path="/legal" element={<Legal />} />
+              <Route path="/vendre-plus-vite" element={<SellFaster />} />
             </Route>
           </Routes>
         </Suspense>

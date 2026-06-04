@@ -5,7 +5,9 @@ import { logger } from "@/lib/logger";
 import { useAuth } from "@/lib/auth";
 import ListingCard from "@/components/ListingCard";
 import { listingStatusLabel, listingWhatsappShareUrl, listingFacebookPostText, pendingPaymentLabel } from "@/lib/listingLabels";
-import { Plus, Star, Eye, WhatsappLogo, ChatCircleText, PencilSimple, Trash, Lightning, Crown, FacebookLogo } from "@phosphor-icons/react";
+import { Plus, Star, Eye, WhatsappLogo, ChatCircleText, PencilSimple, Trash, Crown, FacebookLogo, Lightning } from "@phosphor-icons/react";
+import SellFasterOffers from "@/components/SellFasterOffers";
+import ListingOfferActions from "@/components/ListingOfferActions";
 import { toast } from "sonner";
 import { formatApiError } from "@/lib/api";
 
@@ -75,6 +77,11 @@ export default function MyAds() {
     premium: items.filter((i) => i.premium).length,
   };
 
+  const firstApprovedId = items.find((i) => i.status === "approved")?.id;
+  const hasApprovedWithoutPromo = items.some(
+    (i) => i.status === "approved" && !i.premium && !(i.boosted_until && new Date(i.boosted_until) > new Date())
+  );
+
   const deleteAd = async (id) => {
     if (!window.confirm("Supprimer cette annonce ?")) return;
     try {
@@ -123,10 +130,23 @@ export default function MyAds() {
         </div>
       )}
 
-      {user?.account_type === "entreprise" && !user?.is_pro && (
-        <div className="bg-[#2E7D32]/10 border border-[#2E7D32]/30 rounded-2xl p-4 mb-4 text-sm text-[#1A2E22]">
-          Compte <strong>Boutique</strong> — passez à <strong>Boutique Pro</strong> (50 000 GNF/mois) pour les stats et la mise en avant.
-          <Link to="/payment?purpose=pro_subscription" className="block mt-2 font-bold text-[#D84315]">Devenir Boutique Pro →</Link>
+      {!user?.is_pro && (
+        <SellFasterOffers
+          listingId={firstApprovedId}
+          variant="compact"
+          showCompareLink
+          title="Vendre plus vite"
+          subtitle="Boost, Premium ou Boutique Pro — Orange Money"
+          className="mb-5"
+        />
+      )}
+
+      {!user?.is_pro && hasApprovedWithoutPromo && counts.approved > 0 && (
+        <div className="bg-[#FF6600]/10 border border-[#FF6600]/35 rounded-2xl px-4 py-3 mb-4 flex items-start gap-3 text-sm text-[#1A2E22]">
+          <Lightning size={22} weight="fill" className="text-[#FF6600] flex-shrink-0 mt-0.5" />
+          <p>
+            <strong>Peu de contacts ?</strong> Mettez une annonce en avant avec Boost (10 000 GNF) ou Premium (20 000 GNF) — boutons sous chaque annonce publiée.
+          </p>
         </div>
       )}
 
@@ -214,26 +234,23 @@ export default function MyAds() {
                 <button type="button" onClick={() => nav(`/publish?edit=${l.id}`)} className="flex-1 min-w-[80px] text-xs font-semibold py-2 rounded-full border border-[#E5E0D8] flex items-center justify-center gap-1">
                   <PencilSimple size={14} /> Modifier
                 </button>
-                <button type="button" onClick={() => nav(`/payment?purpose=boost&listing=${l.id}`)} className="text-xs font-semibold py-2 px-3 rounded-full bg-[#FF6600]/10 text-[#FF6600]">
-                  <Lightning size={14} className="inline" /> Boost
-                </button>
                 <button type="button" onClick={() => deleteAd(l.id)} className="text-xs font-semibold py-2 px-3 rounded-full border border-[#C62828]/30 text-[#C62828]">
                   <Trash size={14} className="inline" />
                 </button>
               </div>
+              <ListingOfferActions listing={l} />
             </div>
           ))}
         </div>
       )}
 
-      {!user?.is_pro && items.length > 0 && (
-        <div className="mt-6 bg-gradient-to-br from-[#FBC02D]/20 to-[#FBC02D]/5 border border-[#FBC02D]/40 rounded-2xl p-5 text-center">
-          <p className="font-heading font-semibold text-[#1A2E22] mb-2">Débloquez Boutique Pro</p>
-          <p className="text-sm text-[#4A5D50] mb-3">Stats détaillées + mise en avant sur tout le site.</p>
-          <Link to="/payment?purpose=pro_subscription" className="bg-[#FBC02D] text-[#1A2E22] rounded-full px-6 py-2.5 font-bold inline-block">
-            50 000 GNF / mois
-          </Link>
-        </div>
+      {user?.is_pro && (
+        <Link
+          to="/vendre-plus-vite"
+          className="mt-6 block text-center text-sm font-semibold text-[#D84315] hover:underline"
+        >
+          Voir toutes les options de visibilité →
+        </Link>
       )}
     </div>
   );
