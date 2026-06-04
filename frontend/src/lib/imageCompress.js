@@ -1,9 +1,9 @@
 /**
  * Compress an image file client-side using canvas.
- * Resizes to max width 1200px and re-encodes as JPEG 0.75 quality.
+ * Resizes to max width 800px and re-encodes as JPEG 0.72 quality (3G-friendly).
  * Returns a new File object suitable for FormData upload.
  */
-export async function compressImage(file, { maxWidth = 1200, quality = 0.75 } = {}) {
+export async function compressImage(file, { maxWidth = 800, quality = 0.72 } = {}) {
   // Skip compression for tiny files or non-images
   if (!file.type.startsWith("image/") || file.size < 200 * 1024) {
     return file;

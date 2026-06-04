@@ -25,6 +25,7 @@ from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, UploadF
 from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from pymongo.errors import PyMongoError
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import RedirectResponse
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -1175,7 +1176,11 @@ async def serve_file(path: str):
         logger.error("Get object failed for %s: %s", path, e)
         raise HTTPException(404, "Fichier introuvable")
     content_type = (record or {}).get("content_type") or ct
-    return StreamingResponse(io.BytesIO(data), media_type=content_type)
+    return StreamingResponse(
+        io.BytesIO(data),
+        media_type=content_type,
+        headers={"Cache-Control": "public, max-age=604800, stale-while-revalidate=86400"},
+    )
 
 # ---------------- Notifications (in-app only — no storage / photos) ----------------
 async def create_notification(
@@ -2092,6 +2097,7 @@ async def og_share(listing_id: str, request: Request):
     return HTMLResponse(html)
 
 app.add_middleware(WwwRedirectMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -2100,9 +2106,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---------------- Static cache helpers ----------------
+CACHE_IMMUTABLE = "public, max-age=31536000, immutable"
+CACHE_HTML = "public, max-age=0, must-revalidate"
+CACHE_BRANDING = "public, max-age=2592000"
+
+
+def _cached_file_response(path: Path, *, spa_shell: bool = False):
+    from fastapi.responses import FileResponse
+
+    headers = {"Cache-Control": CACHE_HTML if spa_shell else CACHE_BRANDING}
+    rel = path.as_posix()
+    if "/static/" in rel or re.search(r"\.[a-f0-9]{6,}\.(js|css)$", path.name):
+        headers["Cache-Control"] = CACHE_IMMUTABLE
+    return FileResponse(path, headers=headers)
+
+
 # Frontend React (build) — une seule URL en prod
 if FRONTEND_BUILD.is_dir():
-    from fastapi.staticfiles import StaticFiles
     from fastapi.responses import FileResponse
 
     @app.get("/listings/{listing_id}")
@@ -2117,19 +2138,19 @@ if FRONTEND_BUILD.is_dir():
             return HTMLResponse(seo.render_listing_seo_page(base=base, listing=listing, for_crawler=True))
         index = FRONTEND_BUILD / "index.html"
         if index.is_file():
-            return FileResponse(index)
+            return _cached_file_response(index, spa_shell=True)
         raise HTTPException(404)
 
-    @app.get("/{full_path:path}")
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     async def spa_fallback(full_path: str):
         if full_path.startswith("api"):
             raise HTTPException(404)
         target = FRONTEND_BUILD / full_path
         if full_path and target.is_file():
-            return FileResponse(target)
+            return _cached_file_response(target)
         index = FRONTEND_BUILD / "index.html"
         if index.is_file():
-            return FileResponse(index)
+            return _cached_file_response(index, spa_shell=True)
         raise HTTPException(404)
 
     logger.info("Serving frontend from %s", FRONTEND_BUILD.resolve())
