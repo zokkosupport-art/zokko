@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import PageSeo from "@/components/PageSeo";
 import NotificationBell from "@/components/NotificationBell";
+import RouteErrorBoundary from "@/components/RouteErrorBoundary";
 
 const TRUST_TIPS = [
   "Rencontrez le vendeur en personne dans un lieu public",
@@ -99,8 +100,10 @@ export default function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 pb-20 md:pb-0">
-        <Outlet />
+      <main className="flex-1 pb-20 md:pb-0 min-w-0 overflow-x-hidden">
+        <RouteErrorBoundary>
+          <Outlet />
+        </RouteErrorBoundary>
       </main>
 
       {/* Trust band */}

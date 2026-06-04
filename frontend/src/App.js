@@ -7,12 +7,12 @@ import Layout from "@/components/Layout";
 import Home from "@/pages/Home";
 import Listings from "@/pages/Listings";
 import ListingDetail from "@/pages/ListingDetail";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Favorites from "@/pages/Favorites";
 import "@/App.css";
 
-const Login = lazy(() => import("@/pages/Login"));
-const Register = lazy(() => import("@/pages/Register"));
 const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
-const Favorites = lazy(() => import("@/pages/Favorites"));
 const Publish = lazy(() => import("@/pages/Publish"));
 const MyAds = lazy(() => import("@/pages/MyAds"));
 const Profile = lazy(() => import("@/pages/Profile"));

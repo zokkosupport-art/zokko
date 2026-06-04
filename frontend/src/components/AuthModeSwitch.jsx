@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { SignIn, UserPlus } from "@phosphor-icons/react";
+import { Key, UserCircle } from "@phosphor-icons/react";
 
 /**
  * Deux choix égaux : connexion vs inscription (public Guinée, peu habitué aux apps).
@@ -26,7 +26,7 @@ export default function AuthModeSwitch({ active, className = "" }) {
         }`}
         data-testid="auth-switch-login"
       >
-        <SignIn size={22} weight={active === "login" ? "bold" : "regular"} aria-hidden />
+        <Key size={22} weight={active === "login" ? "bold" : "regular"} aria-hidden />
         <span>J&apos;ai un compte</span>
       </Link>
       <Link
@@ -40,7 +40,7 @@ export default function AuthModeSwitch({ active, className = "" }) {
         }`}
         data-testid="auth-switch-register"
       >
-        <UserPlus size={22} weight={active === "register" ? "bold" : "regular"} aria-hidden />
+        <UserCircle size={22} weight={active === "register" ? "bold" : "regular"} aria-hidden />
         <span>Créer un compte</span>
       </Link>
     </div>
