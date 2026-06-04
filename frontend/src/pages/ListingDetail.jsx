@@ -123,7 +123,7 @@ export default function ListingDetail() {
   const ratingCount = listing.owner?.rating_count || 0;
 
   return (
-    <div className={`max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6 ${!isOwner && whatsappDigits ? "pb-32 md:pb-6" : ""}`}>
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
       <Link to="/listings" className="text-[#4A5D50] flex items-center gap-1 text-sm mb-3 min-h-[44px] hover:text-[#D84315] touch-manipulation" data-testid="back-link">
         <ArrowLeft size={16} /> Retour
       </Link>
@@ -229,7 +229,7 @@ export default function ListingDetail() {
             </div>
 
             {!isOwner && (
-              <div className="hidden md:block space-y-2 pt-2">
+              <div className="space-y-2 pt-2">
                 {whatsappDigits && (
                   <>
                     <a href={whatsappLink} target="_blank" rel="noreferrer" onClick={trackWhatsApp} className="block">
@@ -340,43 +340,6 @@ export default function ListingDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {!isOwner && whatsappDigits && (
-        <div
-          className="md:hidden fixed left-0 right-0 z-30 px-3 pt-2 pb-2 bg-white/95 backdrop-blur-md border-t border-[#E5E0D8] shadow-[0_-4px_20px_rgba(26,46,34,0.08)]"
-          style={{ bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
-        >
-          <div className="flex gap-2 max-w-lg mx-auto">
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noreferrer"
-              onClick={trackWhatsApp}
-              className="flex-1 min-w-0"
-            >
-              <Button className="w-full h-12 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full font-semibold touch-manipulation" data-testid="whatsapp-btn-mobile">
-                <WhatsappLogo size={20} weight="fill" className="mr-2 shrink-0" />
-                WhatsApp
-              </Button>
-            </a>
-            <a href={`tel:+${whatsappDigits}`} className="shrink-0" data-testid="call-btn-mobile">
-              <Button variant="outline" aria-label="Appeler" className="h-12 w-12 rounded-full border-2 border-[#25D366]/40 p-0 touch-manipulation">
-                <Phone size={22} />
-              </Button>
-            </a>
-            <Button
-              type="button"
-              onClick={openChat}
-              variant="outline"
-              aria-label="Message interne"
-              className="h-12 w-12 rounded-full border-2 border-[#E5E0D8] p-0 shrink-0 touch-manipulation"
-              data-testid="chat-btn-mobile"
-            >
-              <ChatCircleText size={22} />
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

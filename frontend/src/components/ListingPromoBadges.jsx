@@ -1,4 +1,4 @@
-import { Lightning, Star, Storefront, Crown, Wrench } from "@phosphor-icons/react";
+import { Lightning, Star, Storefront, Crown } from "@phosphor-icons/react";
 import { premiumBadgeClass } from "@/lib/offerColors";
 
 /** Pastille sur photo : icône seule sur mobile, texte dès sm. */
@@ -49,12 +49,9 @@ export default function ListingPromoBadges({ listing, className = "" }) {
         )}
       </div>
       {listing.type === "service" && (
-        <ListingPhotoBadge
-          className="absolute bottom-2 left-2 bg-[#2E7D32] text-white"
-          label="Service"
-        >
-          <Wrench size={14} weight="fill" />
-        </ListingPhotoBadge>
+        <span className="absolute bottom-2 left-2 bg-[#2E7D32] text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full z-10">
+          Service
+        </span>
       )}
     </>
   );
