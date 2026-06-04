@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { MapPin, Eye, ChatCircleText, WhatsappLogo, ArrowLeft, Star, Lightning, Phone, ShareNetwork, Flag, SealCheck } from "@phosphor-icons/react";
+import { MapPin, Eye, ChatCircleText, WhatsappLogo, ArrowLeft, Star, Lightning, Phone, ShareNetwork, Flag, SealCheck, Crown } from "@phosphor-icons/react";
 import FavoriteButton from "@/components/FavoriteButton";
 import api, { BACKEND_URL, fileUrl, getListingCoverPath, getListingThumbnailUrl, formatPrice, formatApiError } from "@/lib/api";
 import ListingImage from "@/components/ListingImage";
@@ -224,7 +224,7 @@ export default function ListingDetail() {
                       <Star size={12} weight="fill" /> {ratingAvg.toFixed(1)} <span className="text-[#4A5D50]">({ratingCount})</span>
                     </span>
                   )}
-                  {listing.owner?.is_pro && <span className="text-[#FBC02D] font-semibold flex items-center gap-1"><Star size={14} weight="fill" className="text-[#FBC02D]" /> Boutique Pro</span>}
+                  {listing.owner?.is_pro && <span className="text-[#FBC02D] font-semibold flex items-center gap-1"><Crown size={14} weight="fill" /> Boutique Pro</span>}
                   {listing.owner?.account_type === "entreprise" && !listing.owner?.is_pro && (
                     <span className="text-[#2E7D32] font-semibold">Boutique</span>
                   )}

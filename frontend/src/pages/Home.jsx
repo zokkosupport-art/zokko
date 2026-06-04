@@ -292,7 +292,7 @@ export default function Home() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
           <div className="flex items-end justify-between mb-5">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-[#1A2E22] flex items-center gap-2">
-              <Lightning size={26} weight="fill" className="text-[#FBC02D]" /> Annonces boostées
+              <Lightning size={26} weight="fill" className="text-[#FF6600]" /> Annonces boostées
             </h2>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

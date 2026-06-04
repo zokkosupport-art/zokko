@@ -8,6 +8,7 @@ import api, { formatPrice, fileUrl } from "@/lib/api";
 import AdminPhoto, { AdminPhotoThumb } from "@/components/AdminPhoto";
 import { listingStatusLabel, listingShareUrl, listingOgShareUrl, listingFacebookPostText, pendingPaymentLabel } from "@/lib/listingLabels";
 import { formatGnPhoneDisplay, waMeUrl } from "@/lib/phone";
+import { purposeBadgeClass, purposeLabel } from "@/lib/offerColors";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -190,7 +191,9 @@ export default function Admin() {
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-heading font-bold text-[#1A2E22]">{p.user_name}</p>
-                      <span className="text-xs bg-[#FBC02D]/20 text-[#1A2E22] px-2 py-0.5 rounded-full font-semibold">{p.purpose}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${purposeBadgeClass(p.purpose)}`}>
+                        {purposeLabel(p.purpose)}
+                      </span>
                     </div>
                     {p.listing && <p className="text-sm text-[#4A5D50] truncate">📌 {p.listing.title}</p>}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mt-2">

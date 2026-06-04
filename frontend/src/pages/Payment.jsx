@@ -130,7 +130,12 @@ export default function Payment() {
               Important : envoyez exactement <strong>{formatPrice(amount, "GNF")}</strong> au numéro Orange Money ci-dessus, puis envoyez votre preuve (code + capture) pour validation admin.
             </div>
 
-            <Button onClick={() => setStep("form")} className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-xl h-12 font-bold" data-testid="proceed-form-btn">
+            <Button
+              onClick={() => setStep("form")}
+              className="w-full text-white rounded-xl h-12 font-bold hover:opacity-90"
+              style={{ backgroundColor: meta.color }}
+              data-testid="proceed-form-btn"
+            >
               J&apos;ai payé, envoyer ma preuve
             </Button>
           </div>

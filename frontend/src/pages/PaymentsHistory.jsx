@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, Clock, XCircle, Receipt } from "@phosphor-icons/react";
 import api, { formatPrice } from "@/lib/api";
+import { purposeBadgeClass, purposeLabel } from "@/lib/offerColors";
 
-const LABELS = { premium: "Premium", boost: "Boost 7j", pro_subscription: "Abo. Pro" };
+const LABELS = { premium: "Premium", boost: "Boost 7j", pro_subscription: "Boutique Pro" };
 const COLORS = { completed: "#2E7D32", pending: "#FBC02D", failed: "#C62828" };
 const ICONS = { completed: CheckCircle, pending: Clock, failed: XCircle };
 
@@ -32,7 +33,12 @@ export default function PaymentsHistory() {
                   {p.provider === "cinetpay" ? "CP" : "OM"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-[#1A2E22]">{LABELS[p.purpose] || p.purpose}{p.mock && <span className="ml-1 text-[10px] bg-[#FBC02D]/20 text-[#1A2E22] px-1.5 py-0.5 rounded">démo</span>}</p>
+                  <p className="font-semibold text-sm text-[#1A2E22] flex items-center gap-2 flex-wrap">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${purposeBadgeClass(p.purpose)}`}>
+                      {LABELS[p.purpose] || purposeLabel(p.purpose)}
+                    </span>
+                    {p.mock && <span className="text-[10px] bg-[#FBC02D]/20 text-[#1A2E22] px-1.5 py-0.5 rounded">démo</span>}
+                  </p>
                   <p className="text-xs text-[#4A5D50] truncate font-mono">{p.transaction_ref}</p>
                 </div>
                 <div className="text-right">
