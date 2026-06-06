@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { House, MagnifyingGlass, Plus, ChatCircleText, User, ShieldWarning, WhatsappLogo, ShieldCheck, Package, Heart } from "@phosphor-icons/react";
 import { AUTH_REDIRECT } from "@/lib/authGuinea";
@@ -6,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import PageSeo from "@/components/PageSeo";
 import NotificationBell from "@/components/NotificationBell";
 import RouteErrorBoundary from "@/components/RouteErrorBoundary";
+import NavigationProgress from "@/components/NavigationProgress";
+import { useUnlockBodyOnNavigate } from "@/lib/useResetOnNavigate";
+import { prefetchHandlersFor } from "@/lib/prefetchRoute";
 
 const TRUST_TIPS = [
   "Rencontrez le vendeur en personne dans un lieu public",
@@ -30,14 +34,23 @@ export default function Layout() {
         { to: "/", icon: House, label: "Accueil", testid: "nav-home" },
         { to: "/listings", icon: MagnifyingGlass, label: "Chercher", testid: "nav-search" },
         { to: "/publish", icon: Plus, label: "Publier", testid: "nav-publish", center: true },
-        { to: "/messages", icon: ChatCircleText, label: "Messages", testid: "nav-messages" },
+        { to: "/messages", icon: ChatCircleText, label: "Messages", testid: "nav-messages", prefetch: true },
         { to: "/login", icon: User, label: "Compte", testid: "nav-profile" },
       ];
 
   const isActive = (to) => location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
 
+  useUnlockBodyOnNavigate();
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col">
+      <NavigationProgress />
       <PageSeo />
       {/* Top bar - desktop */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E0D8]">
@@ -101,8 +114,10 @@ export default function Layout() {
       </header>
 
       <main className="flex-1 min-w-0 overflow-x-hidden gm-page-mobile md:pb-0">
-        <RouteErrorBoundary>
-          <Outlet />
+        <RouteErrorBoundary resetKey={location.pathname}>
+          <div key={location.pathname} className="gm-route-enter">
+            <Outlet />
+          </div>
         </RouteErrorBoundary>
       </main>
 
@@ -133,7 +148,7 @@ export default function Layout() {
             <ul className="space-y-2 text-sm">
               <li><Link to="/listings" className="hover:text-white">Annonces</Link></li>
               <li><Link to="/publish" className="hover:text-white">Publier</Link></li>
-              <li><Link to="/vendre-plus-vite" className="hover:text-white">Vendre plus vite</Link></li>
+              <li><Link to="/vendre-plus-vite" className="hover:text-white" {...prefetchHandlersFor("/vendre-plus-vite")}>Vendre plus vite</Link></li>
               <li><Link to="/listings?category=immobilier" className="hover:text-white">Immobilier</Link></li>
             </ul>
           </div>
@@ -149,7 +164,7 @@ export default function Layout() {
           <div>
             <p className="font-heading font-semibold text-white mb-3">Légal &amp; contact</p>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/legal" className="hover:text-white">Conditions d&apos;utilisation</Link></li>
+              <li><Link to="/legal" className="hover:text-white" {...prefetchHandlersFor("/legal")}>Conditions d&apos;utilisation</Link></li>
               <li className="flex items-center gap-2"><WhatsappLogo size={16} weight="fill" className="text-[#25D366]" /> +224 612 51 64 88</li>
               <li><a href="mailto:support@zokko.net" className="hover:text-white">support@zokko.net</a></li>
             </ul>
@@ -172,6 +187,7 @@ export default function Layout() {
                 to={it.to}
                 className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] touch-manipulation ${active ? "text-[#D84315]" : "text-[#4A5D50]"}`}
                 data-testid={it.testid}
+                {...(it.prefetch ? prefetchHandlersFor(it.to) : {})}
               >
                 {it.center ? (
                   <div className="w-11 h-11 rounded-full bg-[#D84315] text-white flex items-center justify-center -mt-6 shadow-lg">

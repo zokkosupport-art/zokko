@@ -51,6 +51,16 @@ export function listingOgShareUrl(listingId) {
   return `${backend.replace(/\/$/, "")}/api/s/${listingId}`;
 }
 
+export function cityFromSeoSlug(slug) {
+  if (!slug) return null;
+  const s = slug.toLowerCase();
+  for (const [city, citySlug] of Object.entries(CITY_SEO_SLUGS)) {
+    if (citySlug === s) return city;
+  }
+  return null;
+}
+
+/** SEO canonical URLs (Google / partages) */
 export function citySeoPath(city) {
   const slug = CITY_SEO_SLUGS[city] || encodeURIComponent(city);
   return `/annonces/${slug}`;
@@ -58,6 +68,18 @@ export function citySeoPath(city) {
 
 export function categorySeoPath(categorySlug) {
   return `/annonces/categorie/${categorySlug}`;
+}
+
+/** Navigation SPA — évite rechargement page HTML /annonces */
+export function cityListingsPath(city) {
+  const p = new URLSearchParams();
+  if (city) p.set("city", city);
+  const q = p.toString();
+  return q ? `/listings?${q}` : "/listings";
+}
+
+export function categoryListingsPath(categorySlug) {
+  return `/listings?category=${encodeURIComponent(categorySlug)}`;
 }
 
 export function facebookShareUrl(url) {

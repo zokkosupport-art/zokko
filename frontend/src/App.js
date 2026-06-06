@@ -1,50 +1,53 @@
 import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { AUTH_REDIRECT } from "@/lib/authGuinea";
 import { Toaster } from "@/components/ui/sonner";
 import Layout from "@/components/Layout";
+import PageLoader from "@/components/PageLoader";
 import Home from "@/pages/Home";
 import Listings from "@/pages/Listings";
 import ListingDetail from "@/pages/ListingDetail";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Favorites from "@/pages/Favorites";
+import PaymentsHistory from "@/pages/PaymentsHistory";
+import AnnoncesRedirect from "@/pages/AnnoncesRedirect";
+import Admin from "@/pages/Admin";
+import MyAds from "@/pages/MyAds";
+import Profile from "@/pages/Profile";
+import Publish from "@/pages/Publish";
+import Payment from "@/pages/Payment";
 import "@/App.css";
 
 const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
-const Publish = lazy(() => import("@/pages/Publish"));
-const MyAds = lazy(() => import("@/pages/MyAds"));
-const Profile = lazy(() => import("@/pages/Profile"));
 const Conversations = lazy(() => import("@/pages/Conversations"));
 const ChatRoom = lazy(() => import("@/pages/ChatRoom"));
-const Payment = lazy(() => import("@/pages/Payment"));
 const PaymentReturn = lazy(() => import("@/pages/PaymentReturn"));
-const PaymentsHistory = lazy(() => import("@/pages/PaymentsHistory"));
-const Admin = lazy(() => import("@/pages/Admin"));
 const Legal = lazy(() => import("@/pages/Legal"));
 const SellFaster = lazy(() => import("@/pages/SellFaster"));
 
-function PageLoader() {
-  return (
-    <div className="flex items-center justify-center min-h-[40vh] text-[#4A5D50]">
-      Chargement…
-    </div>
-  );
+function hasStoredSession() {
+  return !!localStorage.getItem("gm_token");
 }
 
 function Protected({ children, admin }) {
   const { user, loading } = useAuth();
-  if (loading) return <PageLoader />;
-  if (!user) return <Navigate to={admin ? "/admin-login" : "/login"} replace />;
+  const location = useLocation();
+  if (!user) {
+    if (loading && hasStoredSession()) return <PageLoader />;
+    const next = encodeURIComponent(location.pathname + location.search);
+    const loginPath = admin ? "/admin-login" : "/login";
+    return <Navigate to={`${loginPath}?next=${next}`} replace />;
+  }
   if (admin && user.role !== "admin") return <Navigate to={AUTH_REDIRECT} replace />;
   return children;
 }
 
 function HomeRoute() {
   const { user, loading } = useAuth();
-  if (loading) return <PageLoader />;
   if (user) return <Navigate to={AUTH_REDIRECT} replace />;
+  if (loading && hasStoredSession()) return <PageLoader />;
   return <Home />;
 }
 
@@ -74,6 +77,9 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
+              <Route path="/annonces/categorie/:categorySlug" element={<AnnoncesRedirect />} />
+              <Route path="/annonces/:citySlug/:categorySlug" element={<AnnoncesRedirect />} />
+              <Route path="/annonces/:citySlug" element={<AnnoncesRedirect />} />
               <Route path="/listings" element={<Listings />} />
               <Route path="/listings/:id" element={<ListingDetail />} />
               <Route path="/publish" element={<Protected><Publish /></Protected>} />

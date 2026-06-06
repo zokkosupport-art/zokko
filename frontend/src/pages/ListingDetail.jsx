@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
+import { useResetOnNavigate } from "@/lib/useResetOnNavigate";
 import { MapPin, Eye, ChatCircleText, WhatsappLogo, ArrowLeft, Star, Lightning, Phone, ShareNetwork, Flag, SealCheck, Crown } from "@phosphor-icons/react";
 import FavoriteButton from "@/components/FavoriteButton";
 import api, { BACKEND_URL, fileUrl, getListingCoverPath, getListingThumbnailUrl, formatPrice, formatApiError } from "@/lib/api";
@@ -17,6 +18,7 @@ import { waMeUrl, waMeDigits } from "@/lib/phone";
 import UserAvatar from "@/components/UserAvatar";
 import ListingPromoBadges from "@/components/ListingPromoBadges";
 import { premiumButtonClass } from "@/lib/offerColors";
+import PageLoader from "@/components/PageLoader";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -32,15 +34,40 @@ export default function ListingDetail() {
   const [reviewComment, setReviewComment] = useState("");
   const { user } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
+
+  const goLogin = () => {
+    const next = encodeURIComponent(location.pathname + location.search);
+    nav(`/login?next=${next}`);
+  };
+
+  useResetOnNavigate(() => {
+    setReportOpen(false);
+    setReviewOpen(false);
+  });
 
   useEffect(() => {
-    api.get(`/listings/${id}`).then(async ({ data }) => {
-      setListing(data);
-      if (data.owner_id) {
-        const r = await api.get(`/users/${data.owner_id}/reviews`);
-        setReviews(r.data);
-      }
-    }).finally(() => setLoading(false));
+    const controller = new AbortController();
+    setLoading(true);
+    setListing(null);
+    setReviews([]);
+    api.get(`/listings/${id}`, { signal: controller.signal })
+      .then(async ({ data }) => {
+        setListing(data);
+        if (data.owner_id) {
+          const r = await api.get(`/users/${data.owner_id}/reviews`, { signal: controller.signal });
+          setReviews(r.data);
+        }
+      })
+      .catch((err) => {
+        if (err.name !== "CanceledError" && err.code !== "ERR_CANCELED") {
+          setListing(null);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [id]);
 
   useEffect(() => {
@@ -50,7 +77,7 @@ export default function ListingDetail() {
     applyPageSeo(listingSeo(listing, image));
   }, [listing]);
 
-  if (loading) return <div className="max-w-5xl mx-auto p-8 text-[#4A5D50]">Chargement…</div>;
+  if (loading) return <PageLoader variant="detail" />;
   if (!listing) return <div className="max-w-5xl mx-auto p-8">Annonce introuvable.</div>;
 
   const photos = listing.photos?.length
@@ -76,13 +103,13 @@ export default function ListingDetail() {
   };
 
   const openChat = () => {
-    if (!user) { nav("/login"); return; }
+    if (!user) { goLogin(); return; }
     if (isOwner) { toast.info("C'est votre annonce"); return; }
     nav(`/messages/${listing.owner_id}?listing=${listing.id}`);
   };
 
   const submitReport = async () => {
-    if (!user) { nav("/login"); return; }
+    if (!user) { goLogin(); return; }
     try {
       await api.post("/reports", {
         listing_id: listing.id,
@@ -99,7 +126,7 @@ export default function ListingDetail() {
   };
 
   const submitReview = async () => {
-    if (!user) { nav("/login"); return; }
+    if (!user) { goLogin(); return; }
     try {
       await api.post("/reviews", {
         target_user_id: listing.owner_id,
