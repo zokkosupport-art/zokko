@@ -997,18 +997,21 @@ async def update_me(body: UserUpdate, user=Depends(get_current_user)):
 
 # ---------------- Categories ----------------
 @api.get("/categories")
-async def list_categories():
+async def list_categories(response: Response):
+    _set_api_cache(response, max_age=86400)
     return CATEGORIES
 
 @api.get("/public/stats")
-async def public_stats():
+async def public_stats(response: Response):
     """Honest public counters for the landing page."""
+    _set_api_cache(response, max_age=120)
     users = await db.users.count_documents({})
     listings = await db.listings.count_documents({"status": "approved"})
     return {"users": users, "listings": listings}
 
 @api.get("/cities")
-async def list_cities():
+async def list_cities(response: Response):
+    _set_api_cache(response, max_age=86400)
     return GUINEA_CITIES
 
 # ---------------- Listings ----------------
@@ -1023,6 +1026,7 @@ async def list_listings(
     status: Optional[str] = "approved",
     skip: int = 0,
     limit: int = 50,
+    response: Response,
 ):
     query = {}
     if status and status != "all":
@@ -1049,6 +1053,8 @@ async def list_listings(
         items = await enrich_listings(items)
     items = items[:limit]
     total = await db.listings.count_documents(query)
+    if not owner_id and status in (None, "approved", ""):
+        _set_api_cache(response, max_age=45)
     return {"items": items, "total": total}
 
 @api.get("/listings/{listing_id}")
@@ -1142,8 +1148,8 @@ async def delete_listing(listing_id: str, user=Depends(get_current_user)):
     return {"success": True}
 
 # ---------------- Upload ----------------
-def _optimize_upload_image(data: bytes, content_type: str, *, max_width: int = 1200) -> tuple[bytes, str]:
-    """Resize and re-encode uploads as JPEG to cut listing payload size on mobile."""
+def _optimize_upload_image(data: bytes, content_type: str, *, max_width: int = 960) -> tuple[bytes, str]:
+    """Resize and re-encode uploads as WebP to cut listing payload size on mobile."""
     from PIL import Image
 
     try:
@@ -1154,8 +1160,8 @@ def _optimize_upload_image(data: bytes, content_type: str, *, max_width: int = 1
             ratio = max_width / w
             img = img.resize((max_width, int(h * ratio)), Image.LANCZOS)
         out = io.BytesIO()
-        img.save(out, format="JPEG", quality=82, optimize=True)
-        return out.getvalue(), "image/jpeg"
+        img.save(out, format="WEBP", quality=80, method=4)
+        return out.getvalue(), "image/webp"
     except Exception as e:
         logger.warning("Upload optimize skipped: %s", e)
         return data, content_type
@@ -1169,7 +1175,7 @@ async def upload_image(file: UploadFile = File(...), user=Depends(get_current_us
     if len(data) > 5 * 1024 * 1024:
         raise HTTPException(400, "Image trop volumineuse (max 5MB)")
     data, content_type = _optimize_upload_image(data, file.content_type or "image/jpeg")
-    ext = "jpg"
+    ext = "webp" if content_type == "image/webp" else "jpg"
     path = f"{APP_NAME}/uploads/{user['id']}/{uuid.uuid4()}.{ext}"
     try:
         result = put_object(path, data, content_type)
@@ -2161,13 +2167,16 @@ app.add_middleware(
 )
 
 # ---------------- Static cache helpers ----------------
-# CDN: activer le proxy Cloudflare sur zokko.net (DNS orange cloud) pour cache edge + Brotli.
-# Railway envoie déjà Cache-Control correct ; Cloudflare respecte immutable/max-age.
 CACHE_IMMUTABLE = "public, max-age=31536000, immutable"
 CACHE_HTML = "public, max-age=0, must-revalidate"
 CACHE_STATIC = "public, max-age=2592000, stale-while-revalidate=86400"
 CACHE_BRANDING = CACHE_STATIC
 _STATIC_EXT = frozenset({".webp", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2", ".mp4"})
+
+
+def _set_api_cache(response: Response, *, max_age: int, stale: Optional[int] = None) -> None:
+    swr = stale if stale is not None else max_age * 2
+    response.headers["Cache-Control"] = f"public, max-age={max_age}, stale-while-revalidate={swr}"
 
 
 def _cache_control_for(path: Path, *, spa_shell: bool = False) -> str:

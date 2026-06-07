@@ -3,7 +3,7 @@
  * Resizes to max width 800px and re-encodes as JPEG 0.72 quality (3G-friendly).
  * Returns a new File object suitable for FormData upload.
  */
-export async function compressImage(file, { maxWidth = 800, quality = 0.72 } = {}) {
+export async function compressImage(file, { maxWidth = 960, quality = 0.68 } = {}) {
   // Skip compression for tiny files or non-images
   if (!file.type.startsWith("image/") || file.size < 200 * 1024) {
     return file;
