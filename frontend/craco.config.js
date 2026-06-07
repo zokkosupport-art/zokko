@@ -55,11 +55,6 @@ let webpackConfig = {
       if (config.enableHealthCheck && healthPluginInstance) {
         webpackConfig.plugins.push(healthPluginInstance);
       }
-      // Disable source maps in production (smaller deploy, faster downloads)
-      if (process.env.NODE_ENV === "production") {
-        webpackConfig.devtool = false;
-      }
-
       return webpackConfig;
     },
   },

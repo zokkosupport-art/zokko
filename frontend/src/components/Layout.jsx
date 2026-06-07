@@ -56,7 +56,7 @@ export default function Layout() {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E0D8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to={user ? AUTH_REDIRECT : "/"} className="flex items-center gap-2" data-testid="logo-link">
-            <img src="/branding/logo-elephant-88.webp" alt="" width={44} height={44} className="w-11 h-11 rounded-2xl object-contain" aria-hidden decoding="async" />
+            <img src="/branding/logo-elephant-officiel.png" alt="" className="w-11 h-11 rounded-2xl object-contain" aria-hidden />
             <span className="font-heading font-bold text-xl text-[#1A2E22]">Zo<span className="text-[#D84315]">kko</span></span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">
@@ -138,7 +138,7 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <img src="/branding/logo-elephant-88.webp" alt="" width={44} height={44} className="w-11 h-11 rounded-2xl object-contain bg-white" aria-hidden loading="lazy" decoding="async" />
+              <img src="/branding/logo-elephant-officiel.png" alt="" className="w-11 h-11 rounded-2xl object-contain bg-white" aria-hidden />
               <span className="font-heading font-bold text-xl text-white">Zo<span className="text-[#FBC02D]">kko</span></span>
             </div>
             <p className="text-sm">La marketplace simple et rapide de la Guinée 🇬🇳</p>

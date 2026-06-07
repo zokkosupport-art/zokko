@@ -1142,25 +1142,6 @@ async def delete_listing(listing_id: str, user=Depends(get_current_user)):
     return {"success": True}
 
 # ---------------- Upload ----------------
-def _optimize_upload_image(data: bytes, content_type: str, *, max_width: int = 1200) -> tuple[bytes, str]:
-    """Resize and re-encode uploads as JPEG to cut listing payload size on mobile."""
-    from PIL import Image
-
-    try:
-        img = Image.open(io.BytesIO(data))
-        img = img.convert("RGB")
-        w, h = img.size
-        if w > max_width:
-            ratio = max_width / w
-            img = img.resize((max_width, int(h * ratio)), Image.LANCZOS)
-        out = io.BytesIO()
-        img.save(out, format="JPEG", quality=82, optimize=True)
-        return out.getvalue(), "image/jpeg"
-    except Exception as e:
-        logger.warning("Upload optimize skipped: %s", e)
-        return data, content_type
-
-
 @api.post("/upload")
 async def upload_image(file: UploadFile = File(...), user=Depends(get_current_user)):
     if file.content_type not in ["image/jpeg", "image/png", "image/webp", "image/jpg"]:
@@ -1168,11 +1149,10 @@ async def upload_image(file: UploadFile = File(...), user=Depends(get_current_us
     data = await file.read()
     if len(data) > 5 * 1024 * 1024:
         raise HTTPException(400, "Image trop volumineuse (max 5MB)")
-    data, content_type = _optimize_upload_image(data, file.content_type or "image/jpeg")
-    ext = "jpg"
+    ext = file.filename.split(".")[-1].lower() if "." in file.filename else "jpg"
     path = f"{APP_NAME}/uploads/{user['id']}/{uuid.uuid4()}.{ext}"
     try:
-        result = put_object(path, data, content_type)
+        result = put_object(path, data, file.content_type)
     except Exception as e:
         logger.error(f"Upload failed: {e}")
         raise HTTPException(500, "Échec du téléversement")
@@ -1180,7 +1160,7 @@ async def upload_image(file: UploadFile = File(...), user=Depends(get_current_us
         "id": str(uuid.uuid4()),
         "storage_path": result["path"],
         "owner_id": user["id"],
-        "content_type": content_type,
+        "content_type": file.content_type,
         "size": result.get("size", len(data)),
         "is_deleted": False,
         "created_at": now_iso(),
@@ -1203,7 +1183,7 @@ async def serve_file(path: str):
     return StreamingResponse(
         io.BytesIO(data),
         media_type=content_type,
-        headers={"Cache-Control": "public, max-age=2592000, stale-while-revalidate=86400"},
+        headers={"Cache-Control": "public, max-age=604800, stale-while-revalidate=86400"},
     )
 
 # ---------------- Notifications (in-app only — no storage / photos) ----------------
@@ -2161,30 +2141,18 @@ app.add_middleware(
 )
 
 # ---------------- Static cache helpers ----------------
-# CDN: activer le proxy Cloudflare sur zokko.net (DNS orange cloud) pour cache edge + Brotli.
-# Railway envoie déjà Cache-Control correct ; Cloudflare respecte immutable/max-age.
 CACHE_IMMUTABLE = "public, max-age=31536000, immutable"
 CACHE_HTML = "public, max-age=0, must-revalidate"
-CACHE_STATIC = "public, max-age=2592000, stale-while-revalidate=86400"
-CACHE_BRANDING = CACHE_STATIC
-_STATIC_EXT = frozenset({".webp", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2", ".mp4"})
-
-
-def _cache_control_for(path: Path, *, spa_shell: bool = False) -> str:
-    if spa_shell:
-        return CACHE_HTML
-    rel = path.as_posix()
-    if "/static/" in rel or re.search(r"\.[a-f0-9]{8,}\.(js|css)$", path.name):
-        return CACHE_IMMUTABLE
-    if path.suffix.lower() in _STATIC_EXT or path.name.startswith("hero-market"):
-        return CACHE_STATIC
-    return CACHE_BRANDING
+CACHE_BRANDING = "public, max-age=2592000"
 
 
 def _cached_file_response(path: Path, *, spa_shell: bool = False):
     from fastapi.responses import FileResponse
 
-    headers = {"Cache-Control": _cache_control_for(path, spa_shell=spa_shell)}
+    headers = {"Cache-Control": CACHE_HTML if spa_shell else CACHE_BRANDING}
+    rel = path.as_posix()
+    if "/static/" in rel or re.search(r"\.[a-f0-9]{6,}\.(js|css)$", path.name):
+        headers["Cache-Control"] = CACHE_IMMUTABLE
     return FileResponse(path, headers=headers)
 
 

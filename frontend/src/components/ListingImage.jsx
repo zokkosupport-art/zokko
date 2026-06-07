@@ -5,14 +5,7 @@ import { getListingCoverUrl } from "@/lib/api";
 /**
  * Listing photo — no stock placeholders; show honest message when upload is missing (404).
  */
-export default function ListingImage({
-  listing,
-  src: srcOverride,
-  className = "w-full h-full object-cover",
-  alt,
-  sizes = "(max-width: 768px) 50vw, 280px",
-  priority = false,
-}) {
+export default function ListingImage({ listing, src: srcOverride, className = "w-full h-full object-cover", alt }) {
   const primary = srcOverride || getListingCoverUrl(listing);
   const [src, setSrc] = useState(primary);
   const [failed, setFailed] = useState(false);
@@ -40,10 +33,8 @@ export default function ListingImage({
     <img
       src={src}
       alt={alt || listing?.title || "Annonce"}
-      loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : undefined}
+      loading="lazy"
       decoding="async"
-      sizes={sizes}
       className={className}
       onError={onError}
     />
