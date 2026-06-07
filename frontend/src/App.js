@@ -55,22 +55,15 @@ function App() {
   useEffect(() => {
     const gaId = process.env.REACT_APP_GA_MEASUREMENT_ID;
     if (!gaId || typeof window === "undefined") return;
-    const loadGa = () => {
-      const s = document.createElement("script");
-      s.async = true;
-      s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-      document.head.appendChild(s);
-      window.dataLayer = window.dataLayer || [];
-      function gtag() { window.dataLayer.push(arguments); }
-      window.gtag = gtag;
-      gtag("js", new Date());
-      gtag("config", gaId);
-    };
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(loadGa, { timeout: 4000 });
-    } else {
-      window.addEventListener("load", loadGa, { once: true });
-    }
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { window.dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag("js", new Date());
+    gtag("config", gaId);
   }, []);
 
   return (

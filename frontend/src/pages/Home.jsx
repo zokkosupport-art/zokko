@@ -75,18 +75,6 @@ export default function Home() {
   const [openFaq, setOpenFaq] = useState(0);
 
   useEffect(() => {
-    const mobile = window.matchMedia("(max-width: 767px)").matches;
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "image";
-    link.href = mobile ? "/hero-market-mobile.webp" : "/hero-market.webp";
-    link.type = "image/webp";
-    link.fetchPriority = "high";
-    document.head.appendChild(link);
-    return () => link.remove();
-  }, []);
-
-  useEffect(() => {
     (async () => {
       try {
         const [cats, listings, statsRes] = await Promise.all([
