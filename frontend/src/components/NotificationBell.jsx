@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useResetOnNavigate } from "@/lib/useResetOnNavigate";
 import { Bell } from "@phosphor-icons/react";
 import api from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -14,8 +13,6 @@ export default function NotificationBell() {
   const [items, setItems] = useState([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(false);
-
-  useResetOnNavigate(() => setOpen(false));
 
   const loadCount = useCallback(async () => {
     if (!user) return;

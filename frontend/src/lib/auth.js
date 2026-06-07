@@ -29,19 +29,6 @@ export function AuthProvider({ children }) {
     refresh();
   }, [refresh]);
 
-  useEffect(() => {
-    const onExpired = () => {
-      setUser(null);
-      const path = window.location.pathname;
-      if (!path.startsWith("/login") && !path.startsWith("/register") && !path.startsWith("/admin-login")) {
-        const next = encodeURIComponent(path + window.location.search);
-        window.location.assign(`/login?next=${next}`);
-      }
-    };
-    window.addEventListener("gm-auth-expired", onExpired);
-    return () => window.removeEventListener("gm-auth-expired", onExpired);
-  }, []);
-
   const login = (token, userData) => {
     localStorage.setItem("gm_token", token);
     setUser(userData);

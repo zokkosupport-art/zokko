@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import ListingCard from "@/components/ListingCard";
-import { cityListingsPath, categoryListingsPath } from "@/lib/listingLabels";
+import { citySeoPath, categorySeoPath } from "@/lib/listingLabels";
 import { useAuth } from "@/lib/auth";
 import {
   House, Car, DeviceMobile, TShirt, Wrench, Briefcase, ForkKnife,
@@ -252,9 +252,9 @@ export default function Home() {
           {categories.map((c) => {
             const Icon = ICONS[c.icon] || House;
             return (
-              <Link
+              <a
                 key={c.slug}
-                to={categoryListingsPath(c.slug)}
+                href={categorySeoPath(c.slug)}
                 className="bg-white rounded-2xl border border-[#E5E0D8] p-4 flex flex-col items-center justify-center gap-2 text-center hover:border-[#D84315] transition-colors gm-card-hover"
                 data-testid={`category-${c.slug}`}
               >
@@ -262,7 +262,7 @@ export default function Home() {
                   <Icon size={26} weight="duotone" />
                 </div>
                 <span className="text-xs sm:text-sm font-semibold text-[#1A2E22]">{c.name}</span>
-              </Link>
+              </a>
             );
           })}
         </div>
@@ -423,13 +423,13 @@ export default function Home() {
         </p>
         <div className="flex flex-wrap gap-2">
           {["Conakry", "Kankan", "Labé", "Kindia", "Nzérékoré", "Boké", "Faranah", "Mamou", "Siguiri", "Kissidougou"].map((city) => (
-            <Link
+            <a
               key={city}
-              to={cityListingsPath(city)}
+              href={citySeoPath(city)}
               className="text-sm px-3 py-1.5 rounded-full bg-white border border-[#E5E0D8] text-[#1A2E22] hover:border-[#D84315] hover:text-[#D84315] transition-colors"
             >
               Annonces {city}
-            </Link>
+            </a>
           ))}
         </div>
       </section>

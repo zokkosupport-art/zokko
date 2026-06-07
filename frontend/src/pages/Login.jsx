@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Phone, ShieldCheck, ArrowLeft, Key } from "@phosphor-icons/react";
 import api, { formatApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { GUINEA, AUTH_REDIRECT, safeNextPath } from "@/lib/authGuinea";
+import { GUINEA, AUTH_REDIRECT } from "@/lib/authGuinea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,7 +74,7 @@ export default function Login() {
       });
       login(data.access_token, data.user);
       toast.success(`Bienvenue ${data.user.name} !`);
-      nav(safeNextPath(params.get("next")) || AUTH_REDIRECT, { replace: true });
+      nav(AUTH_REDIRECT);
     } catch (e) {
       toast.error(formatApiError(e));
     } finally {

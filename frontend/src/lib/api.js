@@ -19,9 +19,6 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem("gm_token");
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("gm-auth-expired"));
-      }
     }
     return Promise.reject(err);
   }

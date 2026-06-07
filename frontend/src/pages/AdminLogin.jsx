@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ShieldWarning, User, Lock, ArrowLeft } from "@phosphor-icons/react";
 import api, { formatApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { safeNextPath } from "@/lib/authGuinea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function AdminLogin() {
-  const [params] = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,7 +26,7 @@ export default function AdminLogin() {
       const { data } = await api.post("/auth/admin-login", { username: username.trim(), password });
       login(data.access_token, data.user);
       toast.success(`Bienvenue ${data.user.name}`);
-      nav(safeNextPath(params.get("next")) || "/admin", { replace: true });
+      nav("/admin");
     } catch (err) {
       toast.error(formatApiError(err));
     } finally {

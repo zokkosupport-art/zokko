@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useResetOnNavigate } from "@/lib/useResetOnNavigate";
+import { useEffect, useMemo, useState } from "react";
 import {
   Users, Package, CurrencyEur, ShieldWarning, CheckCircle, Prohibit, Flag, Receipt,
   ImageSquare, Eye, Copy, FacebookLogo, Trash, EyeSlash, ArrowSquareOut,
@@ -34,49 +33,27 @@ export default function Admin() {
   const [proofImg, setProofImg] = useState(null);
   const [viewListing, setViewListing] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
-  const [listingDialogOpen, setListingDialogOpen] = useState(false);
   const [storageHealth, setStorageHealth] = useState(null);
-  const mounted = useRef(true);
-
-  const closeListingDialog = useCallback(() => {
-    setListingDialogOpen(false);
-    setViewListing(null);
-    setViewLoading(false);
-  }, []);
-
-  const closeAllOverlays = useCallback(() => {
-    setProofImg(null);
-    closeListingDialog();
-  }, [closeListingDialog]);
-
-  useResetOnNavigate(closeAllOverlays);
 
   const load = async () => {
-    try {
-      const [s, u, l, p, pp, r] = await Promise.all([
-        api.get("/admin/stats"), api.get("/admin/users"), api.get("/admin/listings"),
-        api.get("/admin/payments"), api.get("/admin/payments/pending"), api.get("/admin/reports"),
-      ]);
-      if (!mounted.current) return;
-      setStats(s.data);
-      setUsers(u.data);
-      setListings(l.data);
-      setPayments(p.data);
-      setPendingPayments(pp.data);
-      setReports(r.data);
-    } catch {
-      if (mounted.current) toast.error("Erreur chargement admin — réessayez");
-    }
+    const [s, u, l, p, pp, r] = await Promise.all([
+      api.get("/admin/stats"), api.get("/admin/users"), api.get("/admin/listings"),
+      api.get("/admin/payments"), api.get("/admin/payments/pending"), api.get("/admin/reports"),
+    ]);
+    setStats(s.data);
+    setUsers(u.data);
+    setListings(l.data);
+    setPayments(p.data);
+    setPendingPayments(pp.data);
+    setReports(r.data);
   };
 
   useEffect(() => {
-    mounted.current = true;
     load();
     fetch(`${window.location.origin}/health/storage`)
       .then((r) => r.json())
-      .then((data) => { if (mounted.current) setStorageHealth(data); })
-      .catch(() => { if (mounted.current) setStorageHealth(null); });
-    return () => { mounted.current = false; };
+      .then(setStorageHealth)
+      .catch(() => setStorageHealth(null));
   }, []);
 
   const pendingCount = listings.filter((l) => l.status === "pending").length;
@@ -87,17 +64,14 @@ export default function Admin() {
   }, [listings, listingFilter]);
 
   const openListing = async (id) => {
-    setListingDialogOpen(true);
     setViewLoading(true);
-    setViewListing(null);
     try {
       const { data } = await api.get(`/listings/${id}`);
-      if (mounted.current) setViewListing(data);
+      setViewListing(data);
     } catch {
       toast.error("Impossible de charger l'annonce");
-      closeListingDialog();
     } finally {
-      if (mounted.current) setViewLoading(false);
+      setViewLoading(false);
     }
   };
 
@@ -359,14 +333,14 @@ export default function Admin() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={!!proofImg} onOpenChange={(o) => { if (!o) setProofImg(null); }}>
+      <Dialog open={!!proofImg} onOpenChange={(o) => !o && setProofImg(null)}>
         <DialogContent className="bg-white max-w-2xl">
           <DialogHeader><DialogTitle className="font-heading">Preuve de paiement</DialogTitle></DialogHeader>
           {proofImg && <img src={fileUrl(proofImg)} alt="Preuve" className="w-full max-h-[70vh] object-contain rounded-xl" />}
         </DialogContent>
       </Dialog>
 
-      <Dialog open={listingDialogOpen} onOpenChange={(o) => { if (!o) closeListingDialog(); }}>
+      <Dialog open={!!viewListing || viewLoading} onOpenChange={(o) => !o && !viewLoading && setViewListing(null)}>
         <DialogContent className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-heading pr-8">{viewListing?.title || "Chargement…"}</DialogTitle>
