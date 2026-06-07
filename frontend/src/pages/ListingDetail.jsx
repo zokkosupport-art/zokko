@@ -158,7 +158,7 @@ export default function ListingDetail() {
       <div className="grid md:grid-cols-[1.4fr_1fr] gap-4 md:gap-6">
         <div>
           <div className="aspect-[4/3] bg-[#F0EBE1] rounded-2xl overflow-hidden relative">
-            <ListingImage listing={listing} src={activePhotoUrl} alt={listing.title} />
+            <ListingImage listing={listing} src={activePhotoUrl} alt={listing.title} priority sizes="(max-width: 768px) 100vw, 560px" />
             <ListingPromoBadges listing={listing} className="top-3 left-3" />
           </div>
           {photos.length > 1 && (
@@ -168,6 +168,11 @@ export default function ListingDetail() {
                   <img
                     src={/^https?:\/\//i.test(p) ? p : fileUrl(p)}
                     alt=""
+                    loading="lazy"
+                    decoding="async"
+                    width={80}
+                    height={80}
+                    sizes="80px"
                     className="w-full h-full object-cover bg-[#F0EBE1]"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";

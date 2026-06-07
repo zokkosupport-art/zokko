@@ -162,7 +162,7 @@ export default function Home() {
                   decoding="async"
                   fetchPriority="high"
                   width={800}
-                  height={600}
+                  height={533}
                 />
               </picture>
             </div>
