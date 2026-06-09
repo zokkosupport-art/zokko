@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import QuartierField from "@/components/QuartierField";
+import PushNotificationToggle from "@/components/PushNotificationToggle";
 import { Heart } from "@phosphor-icons/react";
 
 export default function Profile() {
@@ -137,6 +138,8 @@ export default function Profile() {
           </button>
         </div>
       </div>
+
+      <PushNotificationToggle />
 
       <div className="bg-white border border-[#E5E0D8] rounded-2xl p-5 sm:p-6 mb-4 space-y-4">
         <h2 className="font-heading font-semibold text-lg text-[#1A2E22]">Mes informations</h2>

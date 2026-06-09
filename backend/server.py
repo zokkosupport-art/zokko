@@ -37,6 +37,7 @@ import storage
 from phone_utils import normalize_phone, phone_lookup_keys, format_phone_display
 from rate_limit import enforce_limit
 import seo_pages as seo
+import push_notifications
 
 logger = logging.getLogger("guinee-market")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -523,6 +524,8 @@ async def _initialize_app():
     await db.messages.create_index("conversation_key")
     await db.notifications.create_index("user_id")
     await db.notifications.create_index([("user_id", 1), ("read", 1), ("created_at", -1)])
+    await db.push_subscriptions.create_index("user_id")
+    await db.push_subscriptions.create_index("endpoint", unique=True)
     await db.payments.create_index("user_id")
     await db.reports.create_index("created_at")
     await db.reviews.create_index([("from_user_id", 1), ("target_user_id", 1)], unique=True)
@@ -1190,7 +1193,22 @@ async def serve_file(path: str):
         headers={"Cache-Control": "public, max-age=604800, stale-while-revalidate=86400"},
     )
 
-# ---------------- Notifications (in-app only — no storage / photos) ----------------
+class PushKeys(BaseModel):
+    p256dh: str
+    auth: str
+
+
+class PushSubscribeBody(BaseModel):
+    endpoint: str
+    keys: PushKeys
+    expirationTime: Optional[int] = None
+
+
+class PushUnsubscribeBody(BaseModel):
+    endpoint: str
+
+
+# ---------------- Notifications (in-app + optional Web Push) ----------------
 async def create_notification(
     user_id: str,
     notif_type: str,
@@ -1214,6 +1232,43 @@ async def create_notification(
         "created_at": now_iso(),
     }
     await db.notifications.insert_one(doc)
+    await push_notifications.send_push_to_user(db, user_id, title, body, link=link)
+
+
+@api.get("/notifications/push/vapid-public-key")
+async def push_vapid_public_key():
+    key = push_notifications.get_vapid_public_key()
+    if not key:
+        raise HTTPException(503, "Notifications push non configurées")
+    return {"publicKey": key}
+
+
+@api.post("/notifications/push/subscribe")
+async def push_subscribe(body: PushSubscribeBody, request: Request, user=Depends(get_current_user)):
+    if not push_notifications.is_push_configured():
+        raise HTTPException(503, "Notifications push non configurées")
+    doc = {
+        "user_id": user["id"],
+        "endpoint": body.endpoint,
+        "p256dh": body.keys.p256dh,
+        "auth": body.keys.auth,
+        "expiration_time": body.expirationTime,
+        "user_agent": request.headers.get("user-agent"),
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+    }
+    await db.push_subscriptions.update_one(
+        {"endpoint": body.endpoint},
+        {"$set": doc},
+        upsert=True,
+    )
+    return {"success": True}
+
+
+@api.delete("/notifications/push/unsubscribe")
+async def push_unsubscribe(body: PushUnsubscribeBody, user=Depends(get_current_user)):
+    await db.push_subscriptions.delete_one({"user_id": user["id"], "endpoint": body.endpoint})
+    return {"success": True}
 
 
 @api.get("/notifications")
