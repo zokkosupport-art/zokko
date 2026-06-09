@@ -1042,13 +1042,17 @@ async def list_listings(
             {"title": {"$regex": q, "$options": "i"}},
             {"description": {"$regex": q, "$options": "i"}},
         ]
-    fetch_limit = min(limit * 3, 200) if status in (None, "approved", "") else limit
-    cursor = db.listings.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(fetch_limit)
-    items = await cursor.to_list(length=fetch_limit)
-    if status in (None, "approved") and not owner_id:
-        items = await enrich_listings(items)
-    items = items[:limit]
     total = await db.listings.count_documents(query)
+    if status in (None, "approved", "") and not owner_id:
+        # Tri premium/boost/pro puis pagination (ordre cohérent entre pages)
+        browse_cap = min(total, 1000)
+        cursor = db.listings.find(query, {"_id": 0}).sort("created_at", -1).limit(browse_cap)
+        all_items = await cursor.to_list(browse_cap)
+        all_items = await enrich_listings(all_items)
+        items = all_items[skip : skip + limit]
+    else:
+        cursor = db.listings.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit)
+        items = await cursor.to_list(limit)
     return {"items": items, "total": total}
 
 @api.get("/listings/{listing_id}")
@@ -1750,6 +1754,11 @@ async def my_payments(user=Depends(get_current_user)):
 # ---------------- Admin ----------------
 @api.get("/admin/stats")
 async def admin_stats(_admin=Depends(get_admin_user)):
+    rev_rows = await db.payments.aggregate([
+        {"$match": {"status": "completed"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
+    ]).to_list(1)
+    revenue = rev_rows[0]["total"] if rev_rows else 0
     return {
         "users": await db.users.count_documents({}),
         "listings_total": await db.listings.count_documents({}),
@@ -1758,7 +1767,7 @@ async def admin_stats(_admin=Depends(get_admin_user)):
         "listings_hidden": await db.listings.count_documents({"status": "hidden"}),
         "payments_total": await db.payments.count_documents({}),
         "payments_completed": await db.payments.count_documents({"status": "completed"}),
-        "revenue": sum([p["amount"] async for p in db.payments.find({"status": "completed"}, {"amount": 1, "_id": 0})]),
+        "revenue": revenue,
     }
 
 
@@ -1814,12 +1823,18 @@ async def admin_unblock_user(user_id: str, _admin=Depends(get_admin_user)):
     return {"success": True}
 
 @api.get("/admin/listings")
-async def admin_listings(_admin=Depends(get_admin_user), status: Optional[str] = None):
+async def admin_listings(
+    _admin=Depends(get_admin_user),
+    status: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50,
+):
     q = {}
-    if status:
+    if status and status != "all":
         q["status"] = status
-    items = await db.listings.find(q, {"_id": 0}).sort("created_at", -1).to_list(500)
-    return items
+    total = await db.listings.count_documents(q)
+    items = await db.listings.find(q, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    return {"items": items, "total": total}
 
 @api.post("/admin/listings/{listing_id}/approve")
 async def admin_approve(listing_id: str, _admin=Depends(get_admin_user)):

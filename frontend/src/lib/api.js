@@ -19,6 +19,15 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem("gm_token");
+      const path = window.location.pathname;
+      if (path.startsWith("/admin") && path !== "/admin-login") {
+        window.location.assign("/admin-login");
+      } else if (path !== "/login" && path !== "/register" && path !== "/admin-login") {
+        const protectedPrefixes = ["/my-ads", "/profile", "/messages", "/payment", "/favorites", "/publish", "/payments"];
+        if (protectedPrefixes.some((p) => path.startsWith(p))) {
+          window.location.assign(`/login?next=${encodeURIComponent(path + window.location.search)}`);
+        }
+      }
     }
     return Promise.reject(err);
   }

@@ -1,6 +1,7 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { MagnifyingGlass, X, Funnel, SlidersHorizontal } from "@phosphor-icons/react";
+import { useResetOnNavigate } from "@/lib/useResetOnNavigate";
+import { MagnifyingGlass, X, Funnel, SlidersHorizontal, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import api from "@/lib/api";
 import ListingCard from "@/components/ListingCard";
 import { CONAKRY_QUARTIERS } from "@/lib/quartiers";
@@ -9,6 +10,8 @@ import { applyPageSeo, listingsFilterSeo, absoluteUrl } from "@/lib/seo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
+const PAGE_SIZE = 24;
 
 function ListingsFilterPanel({ category, city, quartier, type, categories, cities, onUpdate, onClose }) {
   return (
@@ -52,17 +55,23 @@ function ListingsFilterPanel({ category, city, quartier, type, categories, citie
 export default function Listings() {
   const [params, setParams] = useSearchParams();
   const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [softLoading, setSoftLoading] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [fetchError, setFetchError] = useState(false);
+  const hadItems = useRef(false);
+
+  useResetOnNavigate(() => setFilterOpen(false));
 
   const category = params.get("category") || "";
   const city = params.get("city") || "";
   const quartier = params.get("quartier") || "";
   const q = params.get("q") || "";
   const type = params.get("type") || "";
+  const page = Math.max(1, parseInt(params.get("page") || "1", 10) || 1);
   const [search, setSearch] = useState(q);
 
   useEffect(() => {
@@ -91,43 +100,80 @@ export default function Listings() {
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
+    const isSoft = hadItems.current;
+    if (isSoft) setSoftLoading(true);
+    else setLoading(true);
     setFetchError(false);
+
     const p = new URLSearchParams();
     if (category) p.append("category", category);
     if (city) p.append("city", city);
     if (quartier) p.append("quartier", quartier);
     if (q) p.append("q", q);
     if (type) p.append("type", type);
-    p.append("limit", "60");
+    p.append("limit", String(PAGE_SIZE));
+    p.append("skip", String((page - 1) * PAGE_SIZE));
+
     api.get(`/listings?${p.toString()}`, { signal: controller.signal })
-      .then(({ data }) => setItems(data.items || []))
+      .then(({ data }) => {
+        const list = data.items || [];
+        setItems(list);
+        setTotal(typeof data.total === "number" ? data.total : list.length);
+        if (list.length > 0) hadItems.current = true;
+      })
       .catch((err) => {
         if (err.name !== "CanceledError" && err.code !== "ERR_CANCELED") {
           setFetchError(true);
           setItems([]);
+          setTotal(0);
         }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          setSoftLoading(false);
+        }
       });
     return () => controller.abort();
-  }, [category, city, quartier, q, type]);
+  }, [category, city, quartier, q, type, page]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  useEffect(() => {
+    if (page > totalPages && total > 0) {
+      const np = new URLSearchParams(params);
+      np.delete("page");
+      setParams(np, { replace: true });
+    }
+  }, [page, totalPages, total, params, setParams]);
 
   const update = (key, val) => {
     const np = new URLSearchParams(params);
     if (val) np.set(key, val);
     else np.delete(key);
     if (key === "city" && val !== "Conakry") np.delete("quartier");
+    np.delete("page");
     setParams(np);
+  };
+
+  const goToPage = (nextPage) => {
+    const p = Math.min(Math.max(1, nextPage), totalPages);
+    const np = new URLSearchParams(params);
+    if (p <= 1) np.delete("page");
+    else np.set("page", String(p));
+    setParams(np);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const onSearch = (e) => {
     e.preventDefault();
-    update("q", search);
+    update("q", search.trim());
   };
 
-  const clearAll = () => setParams({});
+  const clearAll = () => {
+    hadItems.current = false;
+    setParams({});
+  };
 
   const activeFilterCount = useMemo(() => {
     let n = 0;
@@ -147,6 +193,16 @@ export default function Listings() {
     if (q) parts.push(`« ${q} »`);
     return parts.length ? parts.join(" · ") : "Toutes les annonces";
   }, [category, city, quartier, q, categories]);
+
+  const pageNumbers = useMemo(() => {
+    const pages = [];
+    const max = 5;
+    let start = Math.max(1, page - 2);
+    let end = Math.min(totalPages, start + max - 1);
+    start = Math.max(1, end - max + 1);
+    for (let i = start; i <= end; i += 1) pages.push(i);
+    return pages;
+  }, [page, totalPages]);
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -218,13 +274,13 @@ export default function Listings() {
             onClose={() => {}}
           />
         </aside>
-        <div>
+        <div className={softLoading ? "opacity-60 pointer-events-none transition-opacity" : "transition-opacity"}>
           {fetchError && (
             <div className="bg-[#FFF3E0] border border-[#FFCC80] rounded-2xl p-4 mb-4 text-sm text-[#1A2E22]">
               Impossible de charger les annonces. Vérifiez votre connexion et réessayez.
             </div>
           )}
-          {loading ? (
+          {loading && items.length === 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
               {[...Array(6)].map((_, i) => <div key={i} className="aspect-[4/3] bg-[#F0EBE1] rounded-2xl animate-pulse" />)}
             </div>
@@ -235,10 +291,49 @@ export default function Listings() {
             </div>
           ) : (
             <>
-              <p className="text-sm text-[#4A5D50] mb-3">{items.length} annonce{items.length > 1 ? "s" : ""}</p>
+              <p className="text-sm text-[#4A5D50] mb-3">
+                {total} annonce{total > 1 ? "s" : ""}
+                {totalPages > 1 && (
+                  <span> · page {page} / {totalPages}</span>
+                )}
+              </p>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
                 {items.map((l) => <ListingCard key={l.id} listing={l} />)}
               </div>
+              {totalPages > 1 && (
+                <nav className="flex items-center justify-center gap-2 mt-8 flex-wrap" aria-label="Pagination" data-testid="listings-pagination">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={page <= 1 || softLoading}
+                    onClick={() => goToPage(page - 1)}
+                    className="rounded-full border-[#E5E0D8] gap-1"
+                  >
+                    <CaretLeft size={18} /> Précédent
+                  </Button>
+                  {pageNumbers.map((n) => (
+                    <Button
+                      key={n}
+                      type="button"
+                      variant={n === page ? "default" : "outline"}
+                      onClick={() => goToPage(n)}
+                      disabled={softLoading}
+                      className={`min-w-[40px] rounded-full ${n === page ? "bg-[#D84315] text-white" : "border-[#E5E0D8]"}`}
+                    >
+                      {n}
+                    </Button>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={page >= totalPages || softLoading}
+                    onClick={() => goToPage(page + 1)}
+                    className="rounded-full border-[#E5E0D8] gap-1"
+                  >
+                    Suivant <CaretRight size={18} />
+                  </Button>
+                </nav>
+              )}
             </>
           )}
         </div>

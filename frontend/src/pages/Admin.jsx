@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useResetOnNavigate } from "@/lib/useResetOnNavigate";
 import {
-  Users, Package, CurrencyEur, ShieldWarning, CheckCircle, Prohibit, Flag, Receipt,
+  Users, Package, CurrencyEur, ShieldWarning, CheckCircle, Flag, Receipt,
   ImageSquare, Eye, Copy, FacebookLogo, Trash, EyeSlash, ArrowSquareOut,
+  CaretLeft, CaretRight,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import api, { formatPrice, fileUrl } from "@/lib/api";
@@ -21,90 +23,183 @@ const LISTING_FILTERS = [
   { key: "all", label: "Toutes" },
 ];
 
+const ADMIN_LISTING_PAGE_SIZE = 50;
+
 export default function Admin() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [listings, setListings] = useState([]);
+  const [listingsTotal, setListingsTotal] = useState(0);
+  const [listingPage, setListingPage] = useState(1);
   const [payments, setPayments] = useState([]);
   const [pendingPayments, setPendingPayments] = useState([]);
   const [reports, setReports] = useState([]);
-  const [tab, setTab] = useState("listings");
+  const [tab, setTab] = useState("dashboard");
   const [listingFilter, setListingFilter] = useState("pending");
   const [proofImg, setProofImg] = useState(null);
   const [viewListing, setViewListing] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
+  const [listingDialogOpen, setListingDialogOpen] = useState(false);
   const [storageHealth, setStorageHealth] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [listingsLoading, setListingsLoading] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const mounted = useRef(true);
 
-  const load = async () => {
-    const [s, u, l, p, pp, r] = await Promise.all([
-      api.get("/admin/stats"), api.get("/admin/users"), api.get("/admin/listings"),
-      api.get("/admin/payments"), api.get("/admin/payments/pending"), api.get("/admin/reports"),
-    ]);
-    setStats(s.data);
-    setUsers(u.data);
-    setListings(l.data);
-    setPayments(p.data);
-    setPendingPayments(pp.data);
-    setReports(r.data);
+  const closeListingDialog = useCallback(() => {
+    setListingDialogOpen(false);
+    setViewListing(null);
+    setViewLoading(false);
+  }, []);
+
+  const closeAllOverlays = useCallback(() => {
+    setProofImg(null);
+    closeListingDialog();
+  }, [closeListingDialog]);
+
+  useResetOnNavigate(closeAllOverlays);
+
+  const refreshStats = async () => {
+    const { data } = await api.get("/admin/stats");
+    if (mounted.current) setStats(data);
+  };
+
+  const refreshPending = async () => {
+    const { data } = await api.get("/admin/payments/pending");
+    if (mounted.current) setPendingPayments(data);
+  };
+
+  const refreshReports = async () => {
+    const { data } = await api.get("/admin/reports");
+    if (mounted.current) setReports(data);
+  };
+
+  const loadListings = async (filter = listingFilter, page = listingPage) => {
+    setListingsLoading(true);
+    try {
+      const skip = (page - 1) * ADMIN_LISTING_PAGE_SIZE;
+      const { data } = await api.get("/admin/listings", {
+        params: { status: filter, skip, limit: ADMIN_LISTING_PAGE_SIZE },
+      });
+      if (!mounted.current) return;
+      setListings(data.items || []);
+      setListingsTotal(typeof data.total === "number" ? data.total : (data.items || []).length);
+    } catch {
+      if (mounted.current) toast.error("Erreur chargement annonces");
+    } finally {
+      if (mounted.current) setListingsLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const { data } = await api.get("/admin/users");
+      if (mounted.current) setUsers(data);
+    } catch {
+      if (mounted.current) toast.error("Erreur chargement utilisateurs");
+    } finally {
+      if (mounted.current) setUsersLoading(false);
+    }
+  };
+
+  const loadPayments = async () => {
+    setPaymentsLoading(true);
+    try {
+      const { data } = await api.get("/admin/payments");
+      if (mounted.current) setPayments(data);
+    } catch {
+      if (mounted.current) toast.error("Erreur chargement paiements");
+    } finally {
+      if (mounted.current) setPaymentsLoading(false);
+    }
+  };
+
+  const loadInitial = async () => {
+    setInitialLoading(true);
+    try {
+      await Promise.all([refreshStats(), refreshPending(), refreshReports()]);
+    } catch {
+      if (mounted.current) toast.error("Erreur chargement admin — réessayez");
+    } finally {
+      if (mounted.current) setInitialLoading(false);
+    }
   };
 
   useEffect(() => {
-    load();
+    mounted.current = true;
+    loadInitial();
     fetch(`${window.location.origin}/health/storage`)
       .then((r) => r.json())
-      .then(setStorageHealth)
-      .catch(() => setStorageHealth(null));
+      .then((data) => { if (mounted.current) setStorageHealth(data); })
+      .catch(() => { if (mounted.current) setStorageHealth(null); });
+    return () => { mounted.current = false; };
   }, []);
 
-  const pendingCount = listings.filter((l) => l.status === "pending").length;
+  useEffect(() => {
+    if (tab === "users" && users.length === 0 && !usersLoading) loadUsers();
+    if (tab === "payments" && payments.length === 0 && !paymentsLoading) loadPayments();
+  }, [tab]);
 
-  const filteredListings = useMemo(() => {
-    if (listingFilter === "all") return listings;
-    return listings.filter((l) => l.status === listingFilter);
-  }, [listings, listingFilter]);
+  useEffect(() => {
+    loadListings(listingFilter, listingPage);
+  }, [listingFilter, listingPage]);
+
+  const pendingCount = stats?.listings_pending ?? listings.filter((l) => l.status === "pending").length;
+
+  const listingTotalPages = Math.max(1, Math.ceil(listingsTotal / ADMIN_LISTING_PAGE_SIZE));
+
+  const filteredListings = listings;
 
   const openListing = async (id) => {
+    setListingDialogOpen(true);
     setViewLoading(true);
     try {
       const { data } = await api.get(`/listings/${id}`);
       setViewListing(data);
     } catch {
       toast.error("Impossible de charger l'annonce");
+      closeListingDialog();
     } finally {
       setViewLoading(false);
     }
+  };
+
+  const afterListingChange = async () => {
+    await Promise.all([refreshStats(), loadListings(listingFilter, listingPage)]);
   };
 
   const approve = async (id) => {
     await api.post(`/admin/listings/${id}/approve`);
     toast.success("Annonce approuvée");
     setViewListing((v) => (v?.id === id ? { ...v, status: "approved" } : v));
-    load();
+    afterListingChange();
   };
   const rejectListing = async (id) => {
     await api.post(`/admin/listings/${id}/reject`);
     toast.success("Annonce rejetée");
     setViewListing((v) => (v?.id === id ? { ...v, status: "rejected" } : v));
-    load();
+    afterListingChange();
   };
   const hideListing = async (id) => {
     await api.post(`/admin/listings/${id}/hide`);
     toast.success("Annonce masquée");
     setViewListing((v) => (v?.id === id ? { ...v, status: "hidden" } : v));
-    load();
+    afterListingChange();
   };
   const restoreListing = async (id) => {
     await api.post(`/admin/listings/${id}/restore`);
     toast.success("Annonce réactivée");
     setViewListing((v) => (v?.id === id ? { ...v, status: "approved" } : v));
-    load();
+    afterListingChange();
   };
   const deleteListing = async (id) => {
     if (!window.confirm("Supprimer définitivement cette annonce ?")) return;
     await api.delete(`/admin/listings/${id}`);
     toast.success("Annonce supprimée");
-    if (viewListing?.id === id) setViewListing(null);
-    load();
+    if (viewListing?.id === id) closeListingDialog();
+    afterListingChange();
   };
 
   const copyShare = (id) => {
@@ -125,17 +220,31 @@ export default function Admin() {
   const block = async (id, blocked) => {
     if (blocked) { await api.post(`/admin/users/${id}/unblock`); toast.success("Utilisateur débloqué"); }
     else { await api.post(`/admin/users/${id}/block`); toast.success("Utilisateur bloqué"); }
-    load();
+    loadUsers();
   };
-  const resolveReport = async (id) => { await api.post(`/admin/reports/${id}/resolve`); toast.success("Signalement résolu"); load(); };
-  const validatePayment = async (id) => { await api.post(`/admin/payments/${id}/validate`); toast.success("Paiement validé"); load(); };
-  const rejectPayment = async (id) => { await api.post(`/admin/payments/${id}/reject`); toast.success("Paiement refusé"); load(); };
+  const resolveReport = async (id) => { await api.post(`/admin/reports/${id}/resolve`); toast.success("Signalement résolu"); refreshReports(); };
+  const validatePayment = async (id) => {
+    await api.post(`/admin/payments/${id}/validate`);
+    toast.success("Paiement validé");
+    await Promise.all([refreshStats(), refreshPending(), loadListings(listingFilter, listingPage)]);
+  };
+  const rejectPayment = async (id) => {
+    await api.post(`/admin/payments/${id}/reject`);
+    toast.success("Paiement refusé");
+    refreshPending();
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       <h1 className="font-heading font-bold text-3xl text-[#1A2E22] mb-5 flex items-center gap-2">
         <ShieldWarning size={28} className="text-[#D84315]" /> Administration
       </h1>
+
+      {initialLoading && !stats && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-[#F0EBE1] rounded-2xl animate-pulse" />)}
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="bg-white border border-[#E5E0D8] p-1 rounded-xl flex-wrap h-auto">
@@ -238,7 +347,7 @@ export default function Admin() {
               <button
                 key={f.key}
                 type="button"
-                onClick={() => setListingFilter(f.key)}
+                onClick={() => { setListingFilter(f.key); setListingPage(1); }}
                 className={`text-sm font-semibold px-4 py-2 rounded-full transition-colors ${
                   listingFilter === f.key ? "bg-[#D84315] text-white" : "bg-white border border-[#E5E0D8] text-[#4A5D50]"
                 }`}
@@ -248,7 +357,11 @@ export default function Admin() {
               </button>
             ))}
           </div>
-          <div className="bg-white border border-[#E5E0D8] rounded-2xl overflow-hidden divide-y divide-[#E5E0D8]">
+          <p className="text-sm text-[#4A5D50]">
+            {listingsTotal} annonce{listingsTotal > 1 ? "s" : ""}
+            {listingTotalPages > 1 && ` · page ${listingPage} / ${listingTotalPages}`}
+          </p>
+          <div className={`bg-white border border-[#E5E0D8] rounded-2xl overflow-hidden divide-y divide-[#E5E0D8] ${listingsLoading ? "opacity-60" : ""}`}>
             {filteredListings.map((l) => (
               <div key={l.id} className="p-4 flex flex-wrap items-center gap-3" data-testid={`admin-listing-${l.id}`}>
                 {l.photos?.[0] ? (
@@ -269,8 +382,21 @@ export default function Admin() {
                 </Button>
               </div>
             ))}
-            {filteredListings.length === 0 && <p className="p-6 text-center text-[#4A5D50]">Aucune annonce dans cette catégorie</p>}
+            {filteredListings.length === 0 && !listingsLoading && (
+              <p className="p-6 text-center text-[#4A5D50]">Aucune annonce dans cette catégorie</p>
+            )}
           </div>
+          {listingTotalPages > 1 && (
+            <nav className="flex items-center justify-center gap-2 flex-wrap" aria-label="Pagination admin">
+              <Button type="button" variant="outline" disabled={listingPage <= 1 || listingsLoading} onClick={() => setListingPage((p) => p - 1)} className="rounded-full border-[#E5E0D8] gap-1">
+                <CaretLeft size={18} /> Précédent
+              </Button>
+              <span className="text-sm text-[#4A5D50] px-2">{listingPage} / {listingTotalPages}</span>
+              <Button type="button" variant="outline" disabled={listingPage >= listingTotalPages || listingsLoading} onClick={() => setListingPage((p) => p + 1)} className="rounded-full border-[#E5E0D8] gap-1">
+                Suivant <CaretRight size={18} />
+              </Button>
+            </nav>
+          )}
         </TabsContent>
 
         <TabsContent value="reports" className="mt-5">
@@ -297,7 +423,7 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="users" className="mt-5">
-          <div className="bg-white border border-[#E5E0D8] rounded-2xl overflow-hidden divide-y divide-[#E5E0D8]">
+          <div className={`bg-white border border-[#E5E0D8] rounded-2xl overflow-hidden divide-y divide-[#E5E0D8] ${usersLoading ? "opacity-60" : ""}`}>
             {users.map((u) => (
               <div key={u.id} className="p-4 flex flex-wrap items-center gap-3">
                 <div className="flex-1 min-w-0">
@@ -315,11 +441,14 @@ export default function Admin() {
                 )}
               </div>
             ))}
+            {users.length === 0 && !usersLoading && (
+              <p className="p-6 text-center text-[#4A5D50]">Aucun utilisateur</p>
+            )}
           </div>
         </TabsContent>
 
         <TabsContent value="payments" className="mt-5">
-          <div className="bg-white border border-[#E5E0D8] rounded-2xl overflow-hidden divide-y divide-[#E5E0D8]">
+          <div className={`bg-white border border-[#E5E0D8] rounded-2xl overflow-hidden divide-y divide-[#E5E0D8] ${paymentsLoading ? "opacity-60" : ""}`}>
             {payments.map((p) => (
               <div key={p.id} className="p-4 flex flex-wrap items-center gap-3">
                 <div className="flex-1 min-w-0">
@@ -329,6 +458,9 @@ export default function Admin() {
                 <StatusBadge status={p.status} />
               </div>
             ))}
+            {payments.length === 0 && !paymentsLoading && (
+              <p className="p-6 text-center text-[#4A5D50]">Aucun paiement</p>
+            )}
           </div>
         </TabsContent>
       </Tabs>
@@ -340,7 +472,7 @@ export default function Admin() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!viewListing || viewLoading} onOpenChange={(o) => !o && !viewLoading && setViewListing(null)}>
+      <Dialog open={listingDialogOpen} onOpenChange={(o) => { if (!o) closeListingDialog(); else setListingDialogOpen(true); }}>
         <DialogContent className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-heading pr-8">{viewListing?.title || "Chargement…"}</DialogTitle>

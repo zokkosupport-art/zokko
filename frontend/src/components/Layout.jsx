@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import PageSeo from "@/components/PageSeo";
 import NotificationBell from "@/components/NotificationBell";
 import RouteErrorBoundary from "@/components/RouteErrorBoundary";
+import { useUnlockBodyOnNavigate } from "@/lib/useResetOnNavigate";
 
 const TRUST_TIPS = [
   "Rencontrez le vendeur en personne dans un lieu public",
@@ -35,6 +36,8 @@ export default function Layout() {
       ];
 
   const isActive = (to) => location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
+
+  useUnlockBodyOnNavigate();
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col">
