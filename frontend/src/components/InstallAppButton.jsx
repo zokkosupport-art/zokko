@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DeviceMobile, ShareNetwork } from "@phosphor-icons/react";
+import { DownloadSimple, ShareNetwork } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,17 +31,17 @@ export default function InstallAppButton() {
         onClick={handleClick}
         className="rounded-full border-2 border-[#E5E0D8] font-semibold text-[#1A2E22] hover:text-[#D84315] hover:border-[#D84315]/40 px-3"
         data-testid="pwa-install-btn"
-        title="Installer Zokko"
-        aria-label="Installer Zokko"
+        title="Télécharger Zokko"
+        aria-label="Télécharger Zokko"
       >
-        <DeviceMobile size={18} weight="bold" />
-        <span className="hidden lg:inline ml-1.5">Installer l&apos;app</span>
+        <DownloadSimple size={18} weight="bold" />
+        <span className="hidden sm:inline ml-1.5">Télécharger</span>
       </Button>
 
       <Dialog open={iosDialogOpen} onOpenChange={setIosDialogOpen}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="font-heading text-[#1A2E22]">Installer Zokko</DialogTitle>
+            <DialogTitle className="font-heading text-[#1A2E22]">Télécharger Zokko</DialogTitle>
             <DialogDescription asChild>
               <div className="text-[#4A5D50] text-left space-y-3 pt-1 text-sm">
                 <p>Ajoutez Zokko à votre écran d&apos;accueil pour y accéder comme une application.</p>
