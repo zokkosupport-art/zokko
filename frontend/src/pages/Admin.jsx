@@ -23,15 +23,19 @@ const LISTING_FILTERS = [
   { key: "all", label: "Toutes" },
 ];
 
-const ADMIN_LISTING_PAGE_SIZE = 50;
+const ADMIN_PAGE_SIZE = 24;
 
 export default function Admin() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
+  const [usersTotal, setUsersTotal] = useState(0);
+  const [usersPage, setUsersPage] = useState(1);
   const [listings, setListings] = useState([]);
   const [listingsTotal, setListingsTotal] = useState(0);
   const [listingPage, setListingPage] = useState(1);
   const [payments, setPayments] = useState([]);
+  const [paymentsTotal, setPaymentsTotal] = useState(0);
+  const [paymentsPage, setPaymentsPage] = useState(1);
   const [pendingPayments, setPendingPayments] = useState([]);
   const [reports, setReports] = useState([]);
   const [tab, setTab] = useState("dashboard");
@@ -78,9 +82,9 @@ export default function Admin() {
   const loadListings = async (filter = listingFilter, page = listingPage) => {
     setListingsLoading(true);
     try {
-      const skip = (page - 1) * ADMIN_LISTING_PAGE_SIZE;
+      const skip = (page - 1) * ADMIN_PAGE_SIZE;
       const { data } = await api.get("/admin/listings", {
-        params: { status: filter, skip, limit: ADMIN_LISTING_PAGE_SIZE },
+        params: { status: filter, skip, limit: ADMIN_PAGE_SIZE },
       });
       if (!mounted.current) return;
       setListings(data.items || []);
@@ -92,11 +96,14 @@ export default function Admin() {
     }
   };
 
-  const loadUsers = async () => {
+  const loadUsers = async (page = usersPage) => {
     setUsersLoading(true);
     try {
-      const { data } = await api.get("/admin/users");
-      if (mounted.current) setUsers(data);
+      const skip = (page - 1) * ADMIN_PAGE_SIZE;
+      const { data } = await api.get("/admin/users", { params: { skip, limit: ADMIN_PAGE_SIZE } });
+      if (!mounted.current) return;
+      setUsers(data.items || []);
+      setUsersTotal(typeof data.total === "number" ? data.total : (data.items || []).length);
     } catch {
       if (mounted.current) toast.error("Erreur chargement utilisateurs");
     } finally {
@@ -104,11 +111,14 @@ export default function Admin() {
     }
   };
 
-  const loadPayments = async () => {
+  const loadPayments = async (page = paymentsPage) => {
     setPaymentsLoading(true);
     try {
-      const { data } = await api.get("/admin/payments");
-      if (mounted.current) setPayments(data);
+      const skip = (page - 1) * ADMIN_PAGE_SIZE;
+      const { data } = await api.get("/admin/payments", { params: { skip, limit: ADMIN_PAGE_SIZE } });
+      if (!mounted.current) return;
+      setPayments(data.items || []);
+      setPaymentsTotal(typeof data.total === "number" ? data.total : (data.items || []).length);
     } catch {
       if (mounted.current) toast.error("Erreur chargement paiements");
     } finally {
@@ -138,9 +148,12 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
-    if (tab === "users" && users.length === 0 && !usersLoading) loadUsers();
-    if (tab === "payments" && payments.length === 0 && !paymentsLoading) loadPayments();
-  }, [tab]);
+    if (tab === "users") loadUsers(usersPage);
+  }, [tab, usersPage]);
+
+  useEffect(() => {
+    if (tab === "payments") loadPayments(paymentsPage);
+  }, [tab, paymentsPage]);
 
   useEffect(() => {
     loadListings(listingFilter, listingPage);
@@ -148,7 +161,9 @@ export default function Admin() {
 
   const pendingCount = stats?.listings_pending ?? listings.filter((l) => l.status === "pending").length;
 
-  const listingTotalPages = Math.max(1, Math.ceil(listingsTotal / ADMIN_LISTING_PAGE_SIZE));
+  const listingTotalPages = Math.max(1, Math.ceil(listingsTotal / ADMIN_PAGE_SIZE));
+  const usersTotalPages = Math.max(1, Math.ceil(usersTotal / ADMIN_PAGE_SIZE));
+  const paymentsTotalPages = Math.max(1, Math.ceil(paymentsTotal / ADMIN_PAGE_SIZE));
 
   const filteredListings = listings;
 
@@ -220,7 +235,7 @@ export default function Admin() {
   const block = async (id, blocked) => {
     if (blocked) { await api.post(`/admin/users/${id}/unblock`); toast.success("Utilisateur débloqué"); }
     else { await api.post(`/admin/users/${id}/block`); toast.success("Utilisateur bloqué"); }
-    loadUsers();
+    loadUsers(usersPage);
   };
   const resolveReport = async (id) => { await api.post(`/admin/reports/${id}/resolve`); toast.success("Signalement résolu"); refreshReports(); };
   const validatePayment = async (id) => {
@@ -387,15 +402,7 @@ export default function Admin() {
             )}
           </div>
           {listingTotalPages > 1 && (
-            <nav className="flex items-center justify-center gap-2 flex-wrap" aria-label="Pagination admin">
-              <Button type="button" variant="outline" disabled={listingPage <= 1 || listingsLoading} onClick={() => setListingPage((p) => p - 1)} className="rounded-full border-[#E5E0D8] gap-1">
-                <CaretLeft size={18} /> Précédent
-              </Button>
-              <span className="text-sm text-[#4A5D50] px-2">{listingPage} / {listingTotalPages}</span>
-              <Button type="button" variant="outline" disabled={listingPage >= listingTotalPages || listingsLoading} onClick={() => setListingPage((p) => p + 1)} className="rounded-full border-[#E5E0D8] gap-1">
-                Suivant <CaretRight size={18} />
-              </Button>
-            </nav>
+            <AdminPager page={listingPage} totalPages={listingTotalPages} loading={listingsLoading} onPageChange={setListingPage} />
           )}
         </TabsContent>
 
@@ -422,7 +429,11 @@ export default function Admin() {
           </div>
         </TabsContent>
 
-        <TabsContent value="users" className="mt-5">
+        <TabsContent value="users" className="mt-5 space-y-3">
+          <p className="text-sm text-[#4A5D50]">
+            {usersTotal} utilisateur{usersTotal > 1 ? "s" : ""}
+            {usersTotalPages > 1 && ` · page ${usersPage} / ${usersTotalPages}`}
+          </p>
           <div className={`bg-white border border-[#E5E0D8] rounded-2xl overflow-hidden divide-y divide-[#E5E0D8] ${usersLoading ? "opacity-60" : ""}`}>
             {users.map((u) => (
               <div key={u.id} className="p-4 flex flex-wrap items-center gap-3">
@@ -445,9 +456,14 @@ export default function Admin() {
               <p className="p-6 text-center text-[#4A5D50]">Aucun utilisateur</p>
             )}
           </div>
+          <AdminPager page={usersPage} totalPages={usersTotalPages} loading={usersLoading} onPageChange={setUsersPage} />
         </TabsContent>
 
-        <TabsContent value="payments" className="mt-5">
+        <TabsContent value="payments" className="mt-5 space-y-3">
+          <p className="text-sm text-[#4A5D50]">
+            {paymentsTotal} paiement{paymentsTotal > 1 ? "s" : ""}
+            {paymentsTotalPages > 1 && ` · page ${paymentsPage} / ${paymentsTotalPages}`}
+          </p>
           <div className={`bg-white border border-[#E5E0D8] rounded-2xl overflow-hidden divide-y divide-[#E5E0D8] ${paymentsLoading ? "opacity-60" : ""}`}>
             {payments.map((p) => (
               <div key={p.id} className="p-4 flex flex-wrap items-center gap-3">
@@ -462,6 +478,7 @@ export default function Admin() {
               <p className="p-6 text-center text-[#4A5D50]">Aucun paiement</p>
             )}
           </div>
+          <AdminPager page={paymentsPage} totalPages={paymentsTotalPages} loading={paymentsLoading} onPageChange={setPaymentsPage} />
         </TabsContent>
       </Tabs>
 
@@ -563,6 +580,21 @@ export default function Admin() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function AdminPager({ page, totalPages, loading, onPageChange }) {
+  if (totalPages <= 1) return null;
+  return (
+    <nav className="flex items-center justify-center gap-2 flex-wrap" aria-label="Pagination admin">
+      <Button type="button" variant="outline" disabled={page <= 1 || loading} onClick={() => onPageChange(page - 1)} className="rounded-full border-[#E5E0D8] gap-1">
+        <CaretLeft size={18} /> Précédent
+      </Button>
+      <span className="text-sm text-[#4A5D50] px-2">{page} / {totalPages}</span>
+      <Button type="button" variant="outline" disabled={page >= totalPages || loading} onClick={() => onPageChange(page + 1)} className="rounded-full border-[#E5E0D8] gap-1">
+        Suivant <CaretRight size={18} />
+      </Button>
+    </nav>
   );
 }
 

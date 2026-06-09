@@ -1808,9 +1808,10 @@ async def admin_storage_check(_admin=Depends(get_admin_user)):
 
 
 @api.get("/admin/users")
-async def admin_users(_admin=Depends(get_admin_user), skip: int = 0, limit: int = 100):
+async def admin_users(_admin=Depends(get_admin_user), skip: int = 0, limit: int = 24):
+    total = await db.users.count_documents({})
     users = await db.users.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
-    return [public_user(u) for u in users]
+    return {"items": [public_user(u) for u in users], "total": total}
 
 @api.post("/admin/users/{user_id}/block")
 async def admin_block_user(user_id: str, _admin=Depends(get_admin_user)):
@@ -1827,7 +1828,7 @@ async def admin_listings(
     _admin=Depends(get_admin_user),
     status: Optional[str] = None,
     skip: int = 0,
-    limit: int = 50,
+    limit: int = 24,
 ):
     q = {}
     if status and status != "all":
@@ -1897,9 +1898,10 @@ async def admin_delete_listing(listing_id: str, _admin=Depends(get_admin_user)):
     return {"success": True}
 
 @api.get("/admin/payments")
-async def admin_payments(_admin=Depends(get_admin_user)):
-    items = await db.payments.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
-    return items
+async def admin_payments(_admin=Depends(get_admin_user), skip: int = 0, limit: int = 24):
+    total = await db.payments.count_documents({})
+    items = await db.payments.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    return {"items": items, "total": total}
 
 # ---------------- Reports ----------------
 @api.post("/reports")
