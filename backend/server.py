@@ -454,6 +454,132 @@ async def enrich_listings(items: list) -> list:
     return enriched
 
 
+def _set_api_cache(response: Response, *, max_age: int, stale: Optional[int] = None) -> None:
+    swr = stale if stale is not None else max_age * 2
+    response.headers["Cache-Control"] = f"public, max-age={max_age}, stale-while-revalidate={swr}"
+
+
+def _build_listings_query(
+    *,
+    category: Optional[str],
+    city: Optional[str],
+    quartier: Optional[str],
+    q: Optional[str],
+    type: Optional[str],
+    owner_id: Optional[str],
+    status: Optional[str],
+) -> dict:
+    parts: list[dict] = []
+    if status and status != "all":
+        parts.append({"status": status})
+    if category:
+        parts.append({"category": category})
+    if city:
+        parts.append({"city": city})
+    if quartier:
+        parts.append({"quartier": {"$regex": f"^{re.escape(quartier)}$", "$options": "i"}})
+    if type:
+        parts.append({"type": type})
+    if owner_id:
+        parts.append({"owner_id": owner_id})
+    if q and q.strip():
+        term = q.strip()
+        parts.append({"$text": {"$search": term}})
+    if not parts:
+        return {}
+    if len(parts) == 1:
+        return parts[0]
+    return {"$and": parts}
+
+
+async def _list_browse_listings(query: dict, skip: int, limit: int) -> tuple[list, int]:
+    """Paginated public browse with premium/boost/pro sort — only loads one page from MongoDB."""
+    now_iso_str = datetime.now(timezone.utc).isoformat()
+    pipeline = [
+        {"$match": query},
+        {
+            "$lookup": {
+                "from": "users",
+                "localField": "owner_id",
+                "foreignField": "id",
+                "as": "_owner",
+            }
+        },
+        {"$set": {"_owner_doc": {"$arrayElemAt": ["$_owner", 0]}}},
+        {
+            "$set": {
+                "owner_is_pro": {
+                    "$and": [
+                        {"$eq": [{"$ifNull": ["$_owner_doc.is_pro", False]}, True]},
+                        {"$ne": [{"$ifNull": ["$_owner_doc.pro_until", None]}, None]},
+                        {"$gt": ["$_owner_doc.pro_until", now_iso_str]},
+                    ]
+                },
+                "_sort_premium": {
+                    "$cond": [{"$eq": [{"$ifNull": ["$premium", False]}, True]}, 0, 1]
+                },
+                "_sort_boost": {
+                    "$cond": [
+                        {
+                            "$and": [
+                                {"$ne": [{"$ifNull": ["$boosted_until", None]}, None]},
+                                {"$gt": ["$boosted_until", now_iso_str]},
+                            ]
+                        },
+                        0,
+                        1,
+                    ]
+                },
+                "_sort_pro": {"$cond": ["$owner_is_pro", 0, 1]},
+            }
+        },
+        {
+            "$facet": {
+                "meta": [{"$count": "total"}],
+                "items": [
+                    {
+                        "$sort": {
+                            "_sort_premium": 1,
+                            "_sort_boost": 1,
+                            "_sort_pro": 1,
+                            "created_at": -1,
+                        }
+                    },
+                    {"$skip": skip},
+                    {"$limit": limit},
+                    {
+                        "$project": {
+                            "_id": 0,
+                            "id": 1,
+                            "title": 1,
+                            "price": 1,
+                            "currency": 1,
+                            "city": 1,
+                            "quartier": 1,
+                            "photos": 1,
+                            "category": 1,
+                            "type": 1,
+                            "premium": 1,
+                            "boosted_until": 1,
+                            "created_at": 1,
+                            "owner_id": 1,
+                            "status": 1,
+                            "views": 1,
+                            "owner_is_pro": 1,
+                        }
+                    },
+                ],
+            }
+        },
+    ]
+    rows = await db.listings.aggregate(pipeline).to_list(1)
+    if not rows:
+        return [], 0
+    block = rows[0]
+    total = block["meta"][0]["total"] if block.get("meta") else 0
+    return block.get("items") or [], total
+
+
 def public_user(u: dict) -> dict:
     return {
         "id": u["id"], "name": u.get("name"), "username": u.get("username"),
@@ -521,6 +647,13 @@ async def _initialize_app():
     await db.listings.create_index("owner_id")
     await db.listings.create_index("category")
     await db.listings.create_index("city")
+    await db.listings.create_index([("status", 1), ("created_at", -1)])
+    await db.listings.create_index([("status", 1), ("category", 1), ("city", 1)])
+    with suppress(Exception):
+        await db.listings.create_index(
+            [("title", "text"), ("description", "text")],
+            name="listings_text_search",
+        )
     await db.messages.create_index("conversation_key")
     await db.notifications.create_index("user_id")
     await db.notifications.create_index([("user_id", 1), ("read", 1), ("created_at", -1)])
@@ -1000,23 +1133,27 @@ async def update_me(body: UserUpdate, user=Depends(get_current_user)):
 
 # ---------------- Categories ----------------
 @api.get("/categories")
-async def list_categories():
+async def list_categories(response: Response):
+    _set_api_cache(response, max_age=86400)
     return CATEGORIES
 
 @api.get("/public/stats")
-async def public_stats():
+async def public_stats(response: Response):
     """Honest public counters for the landing page."""
+    _set_api_cache(response, max_age=120)
     users = await db.users.count_documents({})
     listings = await db.listings.count_documents({"status": "approved"})
     return {"users": users, "listings": listings}
 
 @api.get("/cities")
-async def list_cities():
+async def list_cities(response: Response):
+    _set_api_cache(response, max_age=86400)
     return GUINEA_CITIES
 
 # ---------------- Listings ----------------
 @api.get("/listings")
 async def list_listings(
+    response: Response,
     category: Optional[str] = None,
     city: Optional[str] = None,
     quartier: Optional[str] = None,
@@ -1027,35 +1164,67 @@ async def list_listings(
     skip: int = 0,
     limit: int = 50,
 ):
-    query = {}
-    if status and status != "all":
-        query["status"] = status
-    if category:
-        query["category"] = category
-    if city:
-        query["city"] = city
-    if quartier:
-        query["quartier"] = {"$regex": f"^{re.escape(quartier)}$", "$options": "i"}
-    if type:
-        query["type"] = type
-    if owner_id:
-        query["owner_id"] = owner_id
-    if q:
-        query["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
-        ]
-    total = await db.listings.count_documents(query)
-    if status in (None, "approved", "") and not owner_id:
-        # Tri premium/boost/pro puis pagination (ordre cohérent entre pages)
-        browse_cap = min(total, 1000)
-        cursor = db.listings.find(query, {"_id": 0}).sort("created_at", -1).limit(browse_cap)
-        all_items = await cursor.to_list(browse_cap)
-        all_items = await enrich_listings(all_items)
-        items = all_items[skip : skip + limit]
-    else:
-        cursor = db.listings.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit)
-        items = await cursor.to_list(limit)
+    skip = max(0, skip)
+    limit = min(max(1, limit), 100)
+    use_ranked_browse = status in (None, "approved", "") and not owner_id
+    query = _build_listings_query(
+        category=category,
+        city=city,
+        quartier=quartier,
+        q=q,
+        type=type,
+        owner_id=owner_id,
+        status=status,
+    )
+    try:
+        if use_ranked_browse:
+            items, total = await _list_browse_listings(query, skip, limit)
+        else:
+            total = await db.listings.count_documents(query)
+            cursor = (
+                db.listings.find(query, {"_id": 0, "description": 0})
+                .sort("created_at", -1)
+                .skip(skip)
+                .limit(limit)
+            )
+            items = await cursor.to_list(limit)
+    except PyMongoError as e:
+        if q and q.strip() and "text index" in str(e).lower():
+            regex_query = _build_listings_query(
+                category=category,
+                city=city,
+                quartier=quartier,
+                q=None,
+                type=type,
+                owner_id=owner_id,
+                status=status,
+            )
+            term = re.escape(q.strip())
+            regex_clause = {
+                "$or": [
+                    {"title": {"$regex": term, "$options": "i"}},
+                    {"description": {"$regex": term, "$options": "i"}},
+                ]
+            }
+            if regex_query:
+                query = {"$and": [regex_query, regex_clause]}
+            else:
+                query = regex_clause
+            if use_ranked_browse:
+                items, total = await _list_browse_listings(query, skip, limit)
+            else:
+                total = await db.listings.count_documents(query)
+                cursor = (
+                    db.listings.find(query, {"_id": 0, "description": 0})
+                    .sort("created_at", -1)
+                    .skip(skip)
+                    .limit(limit)
+                )
+                items = await cursor.to_list(limit)
+        else:
+            raise
+    if use_ranked_browse:
+        _set_api_cache(response, max_age=45)
     return {"items": items, "total": total}
 
 @api.get("/listings/{listing_id}")
@@ -1149,6 +1318,25 @@ async def delete_listing(listing_id: str, user=Depends(get_current_user)):
     return {"success": True}
 
 # ---------------- Upload ----------------
+def _optimize_upload_image(data: bytes, content_type: str, *, max_width: int = 960) -> tuple[bytes, str]:
+    """Resize and re-encode uploads as WebP to cut listing payload size on mobile."""
+    from PIL import Image
+
+    try:
+        img = Image.open(io.BytesIO(data))
+        img = img.convert("RGB")
+        w, h = img.size
+        if w > max_width:
+            ratio = max_width / w
+            img = img.resize((max_width, int(h * ratio)), Image.LANCZOS)
+        out = io.BytesIO()
+        img.save(out, format="WEBP", quality=80, method=4)
+        return out.getvalue(), "image/webp"
+    except Exception as e:
+        logger.warning("Upload optimize skipped: %s", e)
+        return data, content_type
+
+
 @api.post("/upload")
 async def upload_image(file: UploadFile = File(...), user=Depends(get_current_user)):
     if file.content_type not in ["image/jpeg", "image/png", "image/webp", "image/jpg"]:
@@ -1156,10 +1344,11 @@ async def upload_image(file: UploadFile = File(...), user=Depends(get_current_us
     data = await file.read()
     if len(data) > 5 * 1024 * 1024:
         raise HTTPException(400, "Image trop volumineuse (max 5MB)")
-    ext = file.filename.split(".")[-1].lower() if "." in file.filename else "jpg"
+    data, content_type = _optimize_upload_image(data, file.content_type or "image/jpeg")
+    ext = "webp" if content_type == "image/webp" else "jpg"
     path = f"{APP_NAME}/uploads/{user['id']}/{uuid.uuid4()}.{ext}"
     try:
-        result = put_object(path, data, file.content_type)
+        result = put_object(path, data, content_type)
     except Exception as e:
         logger.error(f"Upload failed: {e}")
         raise HTTPException(500, "Échec du téléversement")
@@ -1167,7 +1356,7 @@ async def upload_image(file: UploadFile = File(...), user=Depends(get_current_us
         "id": str(uuid.uuid4()),
         "storage_path": result["path"],
         "owner_id": user["id"],
-        "content_type": file.content_type,
+        "content_type": content_type,
         "size": result.get("size", len(data)),
         "is_deleted": False,
         "created_at": now_iso(),

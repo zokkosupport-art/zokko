@@ -6,7 +6,7 @@ export const BACKEND_URL =
 
 export const API = `${BACKEND_URL}/api`;
 
-const api = axios.create({ baseURL: API });
+const api = axios.create({ baseURL: API, timeout: 15000 });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("gm_token");

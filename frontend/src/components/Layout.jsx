@@ -7,6 +7,7 @@ import PageSeo from "@/components/PageSeo";
 import NotificationBell from "@/components/NotificationBell";
 import InstallAppButton from "@/components/InstallAppButton";
 import RouteErrorBoundary from "@/components/RouteErrorBoundary";
+import NavigationProgress from "@/components/NavigationProgress";
 import { useUnlockBodyOnNavigate } from "@/lib/useResetOnNavigate";
 
 const TRUST_TIPS = [
@@ -42,6 +43,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col">
+      <NavigationProgress />
       <PageSeo />
       {/* Top bar - desktop */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E0D8]">

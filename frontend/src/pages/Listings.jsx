@@ -274,7 +274,14 @@ export default function Listings() {
             onClose={() => {}}
           />
         </aside>
-        <div className={softLoading ? "opacity-60 pointer-events-none transition-opacity" : "transition-opacity"}>
+        <div className={softLoading ? "opacity-75 transition-opacity relative" : "transition-opacity"}>
+          {softLoading && (
+            <div className="absolute inset-0 z-10 flex items-start justify-center pt-8 pointer-events-none">
+              <span className="bg-white/90 text-[#4A5D50] text-sm px-3 py-1.5 rounded-full shadow-sm border border-[#E5E0D8]">
+                Mise à jour…
+              </span>
+            </div>
+          )}
           {fetchError && (
             <div className="bg-[#FFF3E0] border border-[#FFCC80] rounded-2xl p-4 mb-4 text-sm text-[#1A2E22]">
               Impossible de charger les annonces. Vérifiez votre connexion et réessayez.
