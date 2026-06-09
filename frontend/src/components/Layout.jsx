@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import PageSeo from "@/components/PageSeo";
 import NotificationBell from "@/components/NotificationBell";
+import InstallAppButton from "@/components/InstallAppButton";
 import RouteErrorBoundary from "@/components/RouteErrorBoundary";
 import { useUnlockBodyOnNavigate } from "@/lib/useResetOnNavigate";
 
@@ -57,6 +58,7 @@ export default function Layout() {
             {user?.role === "admin" && <Link to="/admin" className={`px-3 py-2 rounded-full text-sm font-medium ${isActive("/admin") ? "text-[#D84315]" : "text-[#1A2E22] hover:text-[#D84315]"}`} data-testid="top-nav-admin">Admin</Link>}
           </nav>
           <div className="flex items-center gap-2">
+            <InstallAppButton />
             {user && <NotificationBell />}
             {user?.role === "admin" && (
               <Link
