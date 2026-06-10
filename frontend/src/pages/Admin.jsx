@@ -6,7 +6,7 @@ import {
   CaretLeft, CaretRight,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import api, { formatPrice, fileUrl } from "@/lib/api";
+import api, { formatPrice, fileUrl, withApiRetry, waitForBackendReady } from "@/lib/api";
 import AdminPhoto, { AdminPhotoThumb } from "@/components/AdminPhoto";
 import { listingStatusLabel, listingShareUrl, listingOgShareUrl, listingFacebookPostText, pendingPaymentLabel } from "@/lib/listingLabels";
 import { formatGnPhoneDisplay, waMeUrl } from "@/lib/phone";
@@ -46,6 +46,7 @@ export default function Admin() {
   const [listingDialogOpen, setListingDialogOpen] = useState(false);
   const [storageHealth, setStorageHealth] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [backendWarming, setBackendWarming] = useState(true);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
@@ -65,17 +66,17 @@ export default function Admin() {
   useResetOnNavigate(closeAllOverlays);
 
   const refreshStats = async () => {
-    const { data } = await api.get("/admin/stats");
+    const { data } = await withApiRetry(() => api.get("/admin/stats"));
     if (mounted.current) setStats(data);
   };
 
   const refreshPending = async () => {
-    const { data } = await api.get("/admin/payments/pending");
+    const { data } = await withApiRetry(() => api.get("/admin/payments/pending"));
     if (mounted.current) setPendingPayments(data);
   };
 
   const refreshReports = async () => {
-    const { data } = await api.get("/admin/reports");
+    const { data } = await withApiRetry(() => api.get("/admin/reports"));
     if (mounted.current) setReports(data);
   };
 
@@ -83,14 +84,14 @@ export default function Admin() {
     setListingsLoading(true);
     try {
       const skip = (page - 1) * ADMIN_PAGE_SIZE;
-      const { data } = await api.get("/admin/listings", {
+      const { data } = await withApiRetry(() => api.get("/admin/listings", {
         params: { status: filter, skip, limit: ADMIN_PAGE_SIZE },
-      });
+      }));
       if (!mounted.current) return;
       setListings(data.items || []);
       setListingsTotal(typeof data.total === "number" ? data.total : (data.items || []).length);
     } catch {
-      if (mounted.current) toast.error("Erreur chargement annonces");
+      if (mounted.current) toast.error("Erreur chargement annonces — réessayez dans un instant");
     } finally {
       if (mounted.current) setListingsLoading(false);
     }
@@ -100,7 +101,7 @@ export default function Admin() {
     setUsersLoading(true);
     try {
       const skip = (page - 1) * ADMIN_PAGE_SIZE;
-      const { data } = await api.get("/admin/users", { params: { skip, limit: ADMIN_PAGE_SIZE } });
+      const { data } = await withApiRetry(() => api.get("/admin/users", { params: { skip, limit: ADMIN_PAGE_SIZE } }));
       if (!mounted.current) return;
       setUsers(data.items || []);
       setUsersTotal(typeof data.total === "number" ? data.total : (data.items || []).length);
@@ -115,7 +116,7 @@ export default function Admin() {
     setPaymentsLoading(true);
     try {
       const skip = (page - 1) * ADMIN_PAGE_SIZE;
-      const { data } = await api.get("/admin/payments", { params: { skip, limit: ADMIN_PAGE_SIZE } });
+      const { data } = await withApiRetry(() => api.get("/admin/payments", { params: { skip, limit: ADMIN_PAGE_SIZE } }));
       if (!mounted.current) return;
       setPayments(data.items || []);
       setPaymentsTotal(typeof data.total === "number" ? data.total : (data.items || []).length);
@@ -131,7 +132,7 @@ export default function Admin() {
     try {
       await Promise.all([refreshStats(), refreshPending(), refreshReports()]);
     } catch {
-      if (mounted.current) toast.error("Erreur chargement admin — réessayez");
+      if (mounted.current) toast.error("Erreur chargement admin — le serveur démarre peut-être, réessayez");
     } finally {
       if (mounted.current) setInitialLoading(false);
     }
@@ -139,25 +140,36 @@ export default function Admin() {
 
   useEffect(() => {
     mounted.current = true;
-    loadInitial();
-    fetch(`${window.location.origin}/health/storage`)
-      .then((r) => r.json())
-      .then((data) => { if (mounted.current) setStorageHealth(data); })
-      .catch(() => { if (mounted.current) setStorageHealth(null); });
+    (async () => {
+      setBackendWarming(true);
+      try {
+        await waitForBackendReady();
+      } catch {
+        if (mounted.current) toast.error("Serveur lent à démarrer — patientez puis actualisez");
+      } finally {
+        if (mounted.current) setBackendWarming(false);
+      }
+      if (!mounted.current) return;
+      await loadInitial();
+      fetch(`${window.location.origin}/health/storage`)
+        .then((r) => r.json())
+        .then((data) => { if (mounted.current) setStorageHealth(data); })
+        .catch(() => { if (mounted.current) setStorageHealth(null); });
+    })();
     return () => { mounted.current = false; };
   }, []);
 
   useEffect(() => {
-    if (tab === "users") loadUsers(usersPage);
-  }, [tab, usersPage]);
+    if (tab === "users" && !backendWarming) loadUsers(usersPage);
+  }, [tab, usersPage, backendWarming]);
 
   useEffect(() => {
-    if (tab === "payments") loadPayments(paymentsPage);
-  }, [tab, paymentsPage]);
+    if (tab === "payments" && !backendWarming) loadPayments(paymentsPage);
+  }, [tab, paymentsPage, backendWarming]);
 
   useEffect(() => {
-    loadListings(listingFilter, listingPage);
-  }, [listingFilter, listingPage]);
+    if (tab === "listings" && !backendWarming) loadListings(listingFilter, listingPage);
+  }, [tab, listingFilter, listingPage, backendWarming]);
 
   const pendingCount = stats?.listings_pending ?? listings.filter((l) => l.status === "pending").length;
 
@@ -255,7 +267,14 @@ export default function Admin() {
         <ShieldWarning size={28} className="text-[#D84315]" /> Administration
       </h1>
 
-      {initialLoading && !stats && (
+      {backendWarming && (
+        <div className="mb-4 rounded-2xl border border-[#FBC02D]/50 bg-[#FFF8E1] px-4 py-3 text-sm text-[#1A2E22]">
+          <p className="font-semibold">Réveil du serveur Zokko…</p>
+          <p className="text-[#4A5D50] mt-1">Connexion à la base de données (Railway). Quelques secondes après inactivité, c&apos;est normal.</p>
+        </div>
+      )}
+
+      {(initialLoading && !stats) && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-[#F0EBE1] rounded-2xl animate-pulse" />)}
         </div>

@@ -45,6 +45,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 # ---------------- MongoDB (lazy — import must not crash if env missing; start.sh validates) ----------------
 _mongo_client: Optional[AsyncIOMotorClient] = None
 _db = None
+_startup_ready = asyncio.Event()
 
 
 def _mongo_url() -> str:
@@ -634,6 +635,8 @@ async def _run_startup():
         await _initialize_app()
     except Exception as e:
         logger.exception("Startup initialization failed (app remains up for health): %s", e)
+    finally:
+        _startup_ready.set()
 
 
 async def _initialize_app():
@@ -787,6 +790,21 @@ async def mongo_error_handler(request: Request, exc: PyMongoError):
 async def health():
     """Liveness for Railway — must not depend on Mongo or startup task."""
     return {"status": "ok", "service": APP_NAME}
+
+
+@app.get("/health/ready")
+@app.head("/health/ready")
+async def health_ready():
+    """Readiness — Mongo up + startup indexes finished (admin panel should wait for this)."""
+    if not _startup_ready.is_set():
+        return JSONResponse(status_code=503, content={"status": "starting", "detail": "Initialisation en cours"})
+    if not os.environ.get("MONGO_URL", "").strip():
+        return JSONResponse(status_code=503, content={"status": "error", "detail": "MONGO_URL is not set"})
+    try:
+        await get_db().command("ping")
+        return {"status": "ok", "ready": True}
+    except (RuntimeError, PyMongoError) as e:
+        return JSONResponse(status_code=503, content={"status": "error", "detail": str(e)})
 
 
 @app.get("/health/db")

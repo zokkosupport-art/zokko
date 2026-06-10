@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ShieldWarning, User, Lock, ArrowLeft } from "@phosphor-icons/react";
-import api, { formatApiError } from "@/lib/api";
+import api, { formatApiError, waitForBackendReady } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,11 @@ export default function AdminLogin() {
       const { data } = await api.post("/auth/admin-login", { username: username.trim(), password });
       login(data.access_token, data.user);
       toast.success(`Bienvenue ${data.user.name}`);
+      try {
+        await waitForBackendReady({ maxWaitMs: 90000 });
+      } catch {
+        toast.message("Serveur en cours de démarrage…");
+      }
       nav("/admin");
     } catch (err) {
       toast.error(formatApiError(err));
