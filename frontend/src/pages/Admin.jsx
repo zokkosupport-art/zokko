@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useResetOnNavigate } from "@/lib/useResetOnNavigate";
 import {
   Users, Package, CurrencyEur, ShieldWarning, CheckCircle, Flag, Receipt,
@@ -12,6 +13,7 @@ import { listingStatusLabel, listingShareUrl, listingOgShareUrl, listingFacebook
 import { formatGnPhoneDisplay, waMeUrl } from "@/lib/phone";
 import { purposeBadgeClass, purposeLabel } from "@/lib/offerColors";
 import { Button } from "@/components/ui/button";
+import PushNotificationToggle from "@/components/PushNotificationToggle";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -26,6 +28,7 @@ const LISTING_FILTERS = [
 const ADMIN_PAGE_SIZE = 24;
 
 export default function Admin() {
+  const [searchParams] = useSearchParams();
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [usersTotal, setUsersTotal] = useState(0);
@@ -50,6 +53,7 @@ export default function Admin() {
   const [listingsLoading, setListingsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [pushTestBusy, setPushTestBusy] = useState(false);
   const mounted = useRef(true);
 
   const closeListingDialog = useCallback(() => {
@@ -64,6 +68,24 @@ export default function Admin() {
   }, [closeListingDialog]);
 
   useResetOnNavigate(closeAllOverlays);
+
+  const initialTab = searchParams.get("tab");
+  useEffect(() => {
+    const allowed = ["dashboard", "pending-payments", "listings", "reports", "users", "payments"];
+    if (initialTab && allowed.includes(initialTab)) setTab(initialTab);
+  }, [initialTab]);
+
+  const sendPushTest = async () => {
+    setPushTestBusy(true);
+    try {
+      await api.post("/admin/push/test");
+      toast.success("Notification test envoyée — vérifiez votre téléphone");
+    } catch {
+      toast.error("Test impossible — activez les notifications et vérifiez VAPID sur Railway");
+    } finally {
+      setPushTestBusy(false);
+    }
+  };
 
   const refreshStats = async () => {
     const { data } = await withApiRetry(() => api.get("/admin/stats"));
@@ -273,6 +295,8 @@ export default function Admin() {
           <p className="text-[#4A5D50] mt-1">Connexion à la base de données (Railway). Quelques secondes après inactivité, c&apos;est normal.</p>
         </div>
       )}
+
+      <PushNotificationToggle variant="admin" onTest={sendPushTest} testBusy={pushTestBusy} />
 
       {(initialLoading && !stats) && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

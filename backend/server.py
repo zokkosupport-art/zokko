@@ -1002,6 +1002,12 @@ async def phone_pin_auth(body: PhonePinAuth):
                 await db.users.update_one({"id": referrer["id"]}, {"$inc": {"boost_credits": 1}})
         await db.users.insert_one(user)
         user.pop("_id", None)
+        asyncio.create_task(notify_admins(
+            "admin_new_user",
+            "Nouvel utilisateur",
+            f"{user.get('name', 'Utilisateur')} · {user.get('city', 'Conakry')}",
+            link="/admin?tab=users",
+        ))
 
     token = create_jwt(user["id"], user.get("role", "user"))
     return {"access_token": token, "token_type": "bearer", "user": public_user(user), "is_new": is_new}
@@ -1083,6 +1089,7 @@ async def verify_otp(body: OTPVerify):
         raise HTTPException(400, "Code OTP expiré")
 
     user = await find_user_by_phone(phone)
+    is_new_user = user is None
 
     if not user:
         user = {
@@ -1112,6 +1119,12 @@ async def verify_otp(body: OTPVerify):
                 await db.users.update_one({"id": referrer["id"]}, {"$inc": {"boost_credits": 1}})
         await db.users.insert_one(user)
         user.pop("_id", None)
+        asyncio.create_task(notify_admins(
+            "admin_new_user",
+            "Nouvel utilisateur",
+            f"{user.get('name', 'Utilisateur')} · {user.get('city', 'Conakry')}",
+            link="/admin?tab=users",
+        ))
     else:
         updates = {"verified": True}
         if not user.get("referral_code"):
@@ -1310,6 +1323,14 @@ async def create_listing(body: ListingCreate, user=Depends(get_current_user)):
             link=f"/listings/{listing['id']}",
             listing_id=listing["id"],
         )
+    else:
+        asyncio.create_task(notify_admins(
+            "admin_listing_pending",
+            "Annonce à valider",
+            f"{listing['title'][:80]} · {listing.get('city', '')}",
+            link="/admin?tab=listings",
+            listing_id=listing["id"],
+        ))
     return listing
 
 @api.patch("/listings/{listing_id}")
@@ -1440,6 +1461,22 @@ async def create_notification(
     }
     await db.notifications.insert_one(doc)
     await push_notifications.send_push_to_user(db, user_id, title, body, link=link)
+
+
+async def notify_admins(
+    notif_type: str,
+    title: str,
+    body: str,
+    *,
+    link: str = "/admin",
+    listing_id: Optional[str] = None,
+):
+    """In-app notification + Web Push for every admin account."""
+    admins = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1}).to_list(20)
+    for admin in admins:
+        await create_notification(
+            admin["id"], notif_type, title, body, link=link, listing_id=listing_id,
+        )
 
 
 @api.get("/notifications/push/vapid-public-key")
@@ -1926,6 +1963,12 @@ async def manual_om_submit(body: ManualOMSubmit, user=Depends(get_current_user))
     }
     await db.payments.insert_one(payment)
     payment.pop("_id", None)
+    asyncio.create_task(notify_admins(
+        "admin_payment_pending",
+        "Paiement en attente",
+        f"{amount} GNF · {user.get('name', 'Client')} · {body.purpose}",
+        link="/admin?tab=pending-payments",
+    ))
     if body.listing_id and body.purpose in ("premium", "boost"):
         await db.listings.update_one(
             {"id": body.listing_id, "owner_id": user["id"]},
@@ -2014,6 +2057,20 @@ async def my_payments(user=Depends(get_current_user)):
     return items
 
 # ---------------- Admin ----------------
+@api.post("/admin/push/test")
+async def admin_push_test(admin=Depends(get_admin_user)):
+    """Send a test Web Push to the current admin (requires VAPID + subscription)."""
+    if not push_notifications.is_push_configured():
+        raise HTTPException(503, "VAPID non configuré sur le serveur")
+    await create_notification(
+        admin["id"],
+        "admin_test",
+        "Test Zokko Admin",
+        "Les alertes admin fonctionnent.",
+        link="/admin",
+    )
+    return {"success": True, "message": "Notification test envoyée"}
+
 @api.get("/admin/stats")
 async def admin_stats(_admin=Depends(get_admin_user)):
     rev_rows = await db.payments.aggregate([

@@ -1,5 +1,6 @@
 import { Bell, BellSlash, BellRinging } from "@phosphor-icons/react";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/lib/usePushNotifications";
 
 const STATUS_LABELS = {
@@ -13,8 +14,20 @@ const STATUS_LABELS = {
   enabled: "Activées",
 };
 
-export default function PushNotificationToggle() {
+const ADMIN_COPY = {
+  title: "Alertes admin (push)",
+  description:
+    "Recevez sur votre téléphone : nouvel utilisateur, paiement Orange Money en attente, annonce à valider.",
+};
+
+const USER_COPY = {
+  title: "Notifications push",
+  description: "Recevez des alertes même quand Zokko n'est pas ouvert (messages, annonces validées…).",
+};
+
+export default function PushNotificationToggle({ variant = "user", onTest, testBusy }) {
   const { status, busy, error, isSupported, isEnabled, toggle } = usePushNotifications();
+  const copy = variant === "admin" ? ADMIN_COPY : USER_COPY;
 
   const canToggle = isSupported && status !== "denied" && status !== "unavailable" && status !== "loading";
 
@@ -43,10 +56,8 @@ export default function PushNotificationToggle() {
             aria-hidden
           />
           <div className="min-w-0">
-            <p className="font-heading font-semibold text-lg text-[#1A2E22]">Notifications push</p>
-            <p className="text-sm text-[#4A5D50] mt-1">
-              Recevez des alertes même quand Zokko n&apos;est pas ouvert (messages, annonces validées…).
-            </p>
+            <p className="font-heading font-semibold text-lg text-[#1A2E22]">{copy.title}</p>
+            <p className="text-sm text-[#4A5D50] mt-1">{copy.description}</p>
             <p
               className={`text-xs mt-2 font-medium ${
                 status === "enabled"
@@ -60,6 +71,19 @@ export default function PushNotificationToggle() {
               {STATUS_LABELS[status] || STATUS_LABELS.prompt}
             </p>
             {error && <p className="text-xs text-[#C62828] mt-1">{error}</p>}
+            {variant === "admin" && isEnabled && onTest && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={testBusy || busy}
+                onClick={onTest}
+                className="mt-3 rounded-full border-[#E5E0D8] text-xs"
+                data-testid="admin-push-test-btn"
+              >
+                {testBusy ? "Envoi…" : "Envoyer une notification test"}
+              </Button>
+            )}
           </div>
         </div>
         {canToggle && (

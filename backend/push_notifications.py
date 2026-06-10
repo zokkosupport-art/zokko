@@ -73,3 +73,18 @@ async def send_push_to_user(
         await db.push_subscriptions.delete_many(
             {"user_id": user_id, "endpoint": {"$in": expired_endpoints}}
         )
+
+
+async def send_push_to_admins(
+    db: Any,
+    title: str,
+    body: str,
+    *,
+    link: str = "/admin",
+) -> None:
+    """Web Push to every admin account with an active subscription."""
+    if not is_push_configured():
+        return
+    admins = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1}).to_list(20)
+    for admin in admins:
+        await send_push_to_user(db, admin["id"], title, body, link=link)
